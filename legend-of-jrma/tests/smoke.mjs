@@ -14,8 +14,12 @@ const check = (ok, msg) => { if (!ok) failures.push(msg); };
 /* ---------- 1. Static content checks ---------- */
 const sandbox = { window: {} };
 vm.createContext(sandbox);
-for (const f of ['content/calls.js', 'content/exams.js']) vm.runInContext(readFileSync(path.join(root, f), 'utf8'), sandbox);
+for (const f of ['content/crew.js', 'content/calls.js', 'content/exams.js']) vm.runInContext(readFileSync(path.join(root, f), 'utf8'), sandbox);
 const { CALLS, EXAMS, PEARLS, LEVELS, ORDER } = sandbox.window.JRMA;
+const { CREW } = sandbox.window.JRMA;
+for (const k of ['chief', 'partner', 'trainer']) check(CREW[k] && CREW[k].name && CREW[k].look, `crew: missing ${k}`);
+const allText = readFileSync(path.join(root, 'content/calls.js'), 'utf8') + readFileSync(path.join(root, 'content/exams.js'), 'utf8') + readFileSync(path.join(root, 'index.html'), 'utf8');
+for (const m of allText.matchAll(/'[^'\n]*(?<!\$)\{([a-z]+)\}[^'\n]*'/g)) check(m[1] in CREW, `unknown role token {${m[1]}}`);
 const html = readFileSync(path.join(root, 'index.html'), 'utf8');
 const npcIds = new Set([...html.matchAll(/\{ id: '([a-z0-9]+)', name:/g)].map((m) => m[1]));
 const ids = new Set([...CALLS.map((c) => c.id), ...Object.keys(EXAMS)]);
@@ -128,6 +132,7 @@ for (const id of ORDER) {
 const saved = await page.evaluate(() => window.__jrma.save.done);
 check(ORDER.every((id) => saved.includes(id)), 'not every objective was recorded as done');
 check((await page.textContent('#hud-license')).includes('Legend'), 'HUD did not show the Legend title at the end');
+check(!/\{(chief|partner|trainer)\}/.test(await page.evaluate(() => document.body.innerText)), 'a role token was shown unreplaced');
 
 // Phone width layout: no horizontal scroll.
 await page.setViewportSize({ width: 390, height: 844 });

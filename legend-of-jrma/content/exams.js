@@ -18,7 +18,7 @@ window.JRMA = window.JRMA || {};
 
 window.JRMA.EXAMS = {
   'trial-emt': {
-    id: 'trial-emt', type: 'exam', level: 1, grants: 'AEMT', npc: 'drhale', count: 8, misses: 2,
+    id: 'trial-emt', type: 'exam', level: 1, grants: 'AEMT', npc: 'trainer', count: 8, misses: 2,
     title: 'EMT Trial: Earn Your AEMT', loc: 'JRMA Station', dir: 'home',
     domain: 'Phase 2 boss: EMT-level protocols',
     urgent: 'Phase two. Prove you know your EMT protocols and the AEMT license is yours. Eight questions. Miss three and the Binder wins.',
@@ -104,7 +104,7 @@ window.JRMA.EXAMS = {
     ],
   },
   'trial-aemt': {
-    id: 'trial-aemt', type: 'exam', level: 2, grants: 'Paramedic', npc: 'drhale', count: 8, misses: 2,
+    id: 'trial-aemt', type: 'exam', level: 2, grants: 'Paramedic', npc: 'trainer', count: 8, misses: 2,
     title: 'AEMT Trial: Earn Your Paramedic', loc: 'JRMA Station', dir: 'home',
     domain: 'Phase 2 boss: AEMT-level protocols',
     urgent: 'Phase two. AEMT protocols, eight questions. Pass and you walk out a paramedic. Miss three and the Binder wins.',
@@ -174,7 +174,7 @@ window.JRMA.EXAMS = {
     ],
   },
   'trial-medic': {
-    id: 'trial-medic', type: 'exam', level: 3, grants: 'Legend of JRMA', npc: 'drhale', count: 10, misses: 2,
+    id: 'trial-medic', type: 'exam', level: 3, grants: 'Legend of JRMA', npc: 'trainer', count: 10, misses: 2,
     title: 'Paramedic Trial: Become a Legend', loc: 'JRMA Station', dir: 'home',
     domain: 'Final boss phase 2: Paramedic-level protocols',
     urgent: 'The final trial. Ten paramedic questions. Pass, and they will tell stories about you at shift change.',

@@ -160,7 +160,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <div><span class="lbl">License</span><span class="val" id="hud-license">EMT</span></div>
     <div><span class="lbl">CEUs</span><span class="val" id="hud-ceu">0</span></div>
     <div><span class="lbl">Pearls</span><span class="val" id="hud-pearls">0/8</span></div>
-    <div class="hud-call"><span class="lbl" id="hud-call-lbl">Objective</span><span class="val" id="hud-call">Report to Chief Barnaby</span></div>
+    <div class="hud-call"><span class="lbl" id="hud-call-lbl">Objective</span><span class="val" id="hud-call">Report to the Chief</span></div>
     <div class="minimap" id="minimap" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     <button class="icon-btn" id="btn-mute" type="button" aria-pressed="false">Sound on</button>
   </header>
@@ -204,7 +204,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         <div class="actions" id="b-actions"></div>
         <div class="mini" id="b-mini" hidden></div>
         <div class="b-foot" id="b-foot">
-          <button type="button" id="b-hint">Ask Sully</button>
+          <button type="button" id="b-hint">Ask your partner</button>
           <button type="button" id="b-flee">Abandon call</button>
         </div>
       </div>
@@ -229,6 +229,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   <div class="sr-only" id="sr" aria-live="polite"></div>
 </main>
 
+<script src="content/crew.js"></script>
 <script src="content/calls.js"></script>
 <script src="content/exams.js"></script>
 <script>
@@ -260,7 +261,16 @@ const ln = (g, x1, y1, x2, y2, w, c) => { g.strokeStyle = c; g.lineWidth = w; g.
 /* ============================================================
    Content (content/calls.js, content/exams.js)
    ============================================================ */
-const { CALLS, EXAMS, PEARLS, LEVELS, ORDER } = window.JRMA;
+const { CALLS, EXAMS, PEARLS, LEVELS, ORDER, CREW } = window.JRMA;
+/* Role tokens in text ({chief}, {partner}, {trainer}) become officer names from content/crew.js. */
+const fill = (s) => s.replace(/\{(chief|partner|trainer)\}/g, (_, k) => CREW[k].name);
+function deepFill(v) {
+  if (typeof v === 'string') return fill(v);
+  if (Array.isArray(v)) { v.forEach((x, i) => { v[i] = deepFill(x); }); return v; }
+  if (v && typeof v === 'object') { for (const k of Object.keys(v)) v[k] = deepFill(v[k]); return v; }
+  return v;
+}
+deepFill(CALLS); deepFill(EXAMS); deepFill(PEARLS);
 const OBJ = {};
 CALLS.forEach((c) => { OBJ[c.id] = Object.assign({ type: 'call' }, c); });
 Object.values(EXAMS).forEach((e) => { OBJ[e.id] = e; });
@@ -270,9 +280,9 @@ const LICENSES = ['EMT', 'AEMT', 'Paramedic'];
 
 const LOOKS = {
   player: { skin: '#e8b48a', hair: '#5a3a22', shirt: '#2c3f6e', pants: '#1d2744', accent: '#cfd6e0', hat: '#22335c' },
-  chief:  { skin: '#d9a070', hair: '#dcdcdc', shirt: '#f2f2ee', pants: '#1d2744', accent: '#f2b632', hat: '#f2f2ee' },
-  sully:  { skin: '#f0c29a', hair: '#8a5a33', shirt: '#2c3f6e', pants: '#1d2744', accent: '#cfd6e0', beard: true },
-  hale:   { skin: '#7a4a2e', hair: '#1e1e1e', shirt: '#f4f4f4', pants: '#3a4a6a', accent: '#63b6f2', glasses: true },
+  chief:  CREW.chief.look,
+  partner: CREW.partner.look,
+  trainer: CREW.trainer.look,
   bob:    { skin: '#c68e62', hair: '#2b2b2b', shirt: '#e07b39', pants: '#4a5a7a', phone: true },
   ghost:  { skin: '#cfe9ff', hair: '#eef8ff', shirt: '#a6cdf0', pants: '#86aed6', accent: '#ffffff', ghost: true },
   clerk:  { skin: '#8d5a3b', hair: '#1e1e1e', shirt: '#2f8a57', pants: '#2d3342', accent: '#f2d24a' },
@@ -299,19 +309,19 @@ const LOOKS = {
 };
 
 const SIGNS = {
-  '1,1': 'JRMA STATION. Home of the Endless Coffee Pot. "Clean up after yourself. This means you, B-shift."',
-  '1,0': 'GAS-N-GO. Gas. Snacks. Scratch tickets. Restroom for customers only.',
-  '0,0': 'WHISPERING PINES LOGGING. Days since last chainsaw incident: 0. (The 0 is painted on.)',
-  '0,1': 'GRANITE STATE HONEY FAIR. Today: the Bee Beard Contest and the Hay Bale Maze! Allergic? Please do not.',
-  '2,0': 'CUBICLE KEEP. Home of Synergy. Potluck today, 3rd floor.',
-  '2,1': '12 MAPLE LANE. The Hendersons. Beware of the zucchini bread.',
-  '3,0': 'ROUTE 119. Moose crossing next 6 miles. The moose do not read signs.',
+  '1,1': 'JRMA STATION. Jaffrey-Rindge Memorial Ambulance. Home of the Endless Coffee Pot. "Clean up after yourself. This means you, B-shift."',
+  '1,0': 'ROUTE 202 NORTH. Peterborough this way. GAS-N-GO: gas, snacks, scratch tickets. Restroom for customers only.',
+  '0,0': 'MOUNT MONADNOCK, 3,165 FT. Reportedly one of the most-climbed mountains on Earth. Gary\'s woodlot: days since last chainsaw incident: 0. (The 0 is painted on.)',
+  '0,1': 'JAFFREY CENTER. Meetinghouse built 1775, Monadnock view included. Craft fair on the Common today: Bee Beard Contest and Hay Bale Maze! Allergic? Please do not.',
+  '2,0': 'DOWNTOWN JAFFREY. CUBICLE KEEP: Home of Synergy. Potluck today, 3rd floor.',
+  '2,1': 'EAST SIDE. The Hendersons. Beware of the zucchini bread.',
+  '3,0': 'ROUTE 124, TURNPIKE ROAD. Jaffrey airport ahead. Moose crossing. The moose do not read signs.',
   '3,1': 'PINE HOLLOW APARTMENTS. No grilling on balconies. The elevator is "temporarily" out of order.',
 };
 const DOORS = {
   '1,0': 'Locked. The restroom key is attached to a hubcap, and the hubcap is missing.',
   '0,0': "Gary's cabin. Smells like bar oil and bad decisions.",
-  '0,1': 'The honey tent. Sticky. Extremely sticky.',
+  '0,1': 'The craft fair honey tent. Sticky. Extremely sticky.',
   '2,0': 'The badge reader beeps. Access denied. Kevin from IT can help. Kevin will not help.',
   '2,1': "Doris's front door. The welcome mat says GO AWAY in cross-stitch.",
   '3,1': 'Pine Hollow lobby. The elevator has been out of order since 2019. Bring the stair chair.',
@@ -319,19 +329,19 @@ const DOORS = {
 
 /* NPCs: `lines` are idle chatter. Call text (urgent/after) lives with each call. */
 const NPC_DEFS = [
-  { id: 'chief', name: 'Chief Barnaby', scr: [1, 1], x: 3, y: 7, look: 'chief', lines: [
-    [{ who: 'Chief Barnaby', text: "The patient's emergency is not your emergency. Walk in calm. Talk calm. Then work fast." }],
-    [{ who: 'Chief Barnaby', text: 'Rough call? Talk to someone. Peer support is part of the job, not a weakness. My door is open. So is the coffee pot.' }],
-    [{ who: 'Chief Barnaby', text: 'Each license level has a boss. Beat it, then pass Dr. Hale\'s trial, and you move up.' }] ] },
-  { id: 'sully', name: 'Sully', scr: [1, 1], x: 13, y: 3, look: 'sully', lines: [
-    [{ who: 'Sully', text: 'Twenty-seven years on the job. Powered entirely by iced coffee, including in January.' }],
-    [{ who: 'Sully', text: 'Every cardiac arrest happens in the smallest bathroom in the house. I do not make the rules.' }],
-    [{ who: 'Sully', text: 'Lift with your legs, Probie. Sprains and strains from lifting are among the most common EMS injuries.' }] ] },
-  { id: 'drhale', name: 'Dr. Hale, Medical Director', scr: [1, 1], x: 6, y: 8, look: 'hale', lines: [
-    [{ who: 'Dr. Hale', text: 'Medical control is a phone call away. Calling is not weakness. Guessing is.' }],
-    [{ who: 'Dr. Hale', text: 'Protocols are the floor, not the ceiling. Know them cold, then think.' }] ] },
+  { id: 'chief', name: '{chief}', scr: [1, 1], x: 3, y: 7, look: 'chief', lines: [
+    [{ who: '{chief}', text: "The patient's emergency is not your emergency. Walk in calm. Talk calm. Then work fast." }],
+    [{ who: '{chief}', text: 'Rough call? Talk to someone. Peer support is part of the job, not a weakness. My door is open. So is the coffee pot.' }],
+    [{ who: '{chief}', text: 'Each license level has a boss. Beat it, then pass the Protocol Trial with {trainer}, and you move up.' }] ] },
+  { id: 'partner', name: '{partner}', scr: [1, 1], x: 13, y: 3, look: 'partner', lines: [
+    [{ who: '{partner}', text: 'I ride with you on every call. Stuck? Hit "Ask" and I will point you the right way. Costs you CEUs, though.' }],
+    [{ who: '{partner}', text: 'Every cardiac arrest happens in the smallest bathroom in the house. I do not make the rules.' }],
+    [{ who: '{partner}', text: 'Lift with your legs, Probie. Sprains and strains from lifting are among the most common EMS injuries.' }] ] },
+  { id: 'trainer', name: '{trainer}', scr: [1, 1], x: 6, y: 8, look: 'trainer', lines: [
+    [{ who: '{trainer}', text: 'Medical control is a phone call away. Calling is not weakness. Guessing is.' }],
+    [{ who: '{trainer}', text: 'Protocols are the floor, not the ceiling. Know them cold, then think.' }] ] },
   { id: 'bob', name: 'Bystander Bob', scr: [1, 1], x: 9, y: 8, look: 'bob', lines: [
-    [{ who: 'Bystander Bob', text: 'I did not do CPR, but I got it in 4K.' }, { who: 'Bystander Bob', text: 'The Chief says bystander CPR can double or triple the chance of surviving cardiac arrest. So now I film horizontally AND I took a CPR class.' }] ] },
+    [{ who: 'Bystander Bob', text: 'I did not do CPR, but I got it in 4K.' }, { who: 'Bystander Bob', text: '{chief} says bystander CPR can double or triple the chance of surviving cardiac arrest. So now I film horizontally AND I took a CPR class.' }] ] },
   { id: 'ghost', name: 'Ghost of Medic Past', scr: [1, 0], x: 13, y: 8, look: 'ghost', lines: [
     [{ who: 'Ghost of Medic Past', text: 'Boooo. In my day we loosened tourniquets every 15 minutes and put everybody in MAST pants.' }, { who: 'Ghost of Medic Past', text: 'Evidence changes, kid. Keep reading the protocols, or you end up haunting a gas station like me.' }] ] },
   { id: 'clerk', name: 'Dana the Clerk', scr: [1, 0], x: 10, y: 4, look: 'clerk', lines: [
@@ -339,11 +349,11 @@ const NPC_DEFS = [
   { id: 'gary', name: 'Gary', scr: [0, 0], x: 8, y: 3, look: 'gary', lines: [
     [{ who: 'Gary', text: 'Just sharpening the chain! What could go wrong?' }] ] },
   { id: 'qwiz', name: 'The Q-Word Wizard', scr: [0, 0], x: 11, y: 7, look: 'qwiz', lines: [
-    [{ who: 'The Q-Word Wizard', text: 'Ah, a slow shift. It is so qu-' }, { who: 'Sully', text: 'DO NOT. SAY. IT.' }, { who: 'The Q-Word Wizard', text: 'Studies of full moons mostly find no change in ER volume. Nobody has studied the Q-word. Nobody dares.' }] ] },
+    [{ who: 'The Q-Word Wizard', text: 'Ah, a slow shift. It is so qu-' }, { who: '{partner}', text: 'DO NOT. SAY. IT.' }, { who: 'The Q-Word Wizard', text: 'Studies of full moons mostly find no change in ER volume. Nobody has studied the Q-word. Nobody dares.' }] ] },
   { id: 'kevin', name: 'Kevin from IT', scr: [2, 0], x: 7, y: 7, look: 'kevin', lines: [
     [{ who: 'Kevin', text: 'Have you tried turning it off and on again? Not you. The building.' }] ] },
   { id: 'frank', name: 'Frank', scr: [2, 0], x: 14, y: 2, look: 'frank', lines: [
-    [{ who: 'Frank', text: 'Third time this week! Do you guys do punch cards?' }, { who: 'Sully', text: 'Frank is okay. A lot of frequent callers have needs 911 cannot fix: housing, food, meds, loneliness. Community paramedicine programs exist for exactly that.' }] ] },
+    [{ who: 'Frank', text: 'Third time this week! Do you guys do punch cards?' }, { who: '{partner}', text: 'Frank is okay. A lot of frequent callers have needs 911 cannot fix: housing, food, meds, loneliness. Community paramedicine programs exist for exactly that.' }] ] },
   { id: 'todd', name: 'Todd', scr: [0, 1], x: 10, y: 2, look: 'todd', lines: [
     [{ who: 'Todd', text: 'Bee beard contest at noon! I am only a LITTLE allergic.' }] ] },
   { id: 'lou', name: 'Lou, Hay Maze Operator', scr: [0, 1], x: 13, y: 2, look: 'lou', lines: [
@@ -352,12 +362,14 @@ const NPC_DEFS = [
   { id: 'doris', name: 'Doris', scr: [2, 1], x: 7, y: 4, look: 'doris', lines: [
     [{ who: 'Doris', text: 'Harold is watching Jeopardy. He is fine, dear. Take some zucchini bread. Take two.' }] ] },
   { id: 'trooper', name: 'Trooper Mack', scr: [3, 0], x: 11, y: 5, look: 'trooper', lines: [
-    [{ who: 'Trooper Mack', text: 'Route 119. Moose, deer, and people who think the speed limit is a suggestion.' }] ] },
+    [{ who: 'Trooper Mack', text: 'Route 124. Moose, deer, and people who think the speed limit is a suggestion.' }] ] },
   { id: 'reyes', name: 'Sgt. Reyes', scr: [3, 1], x: 12, y: 8, look: 'reyes', lines: [
     [{ who: 'Sgt. Reyes', text: 'This lot is our staging spot. Out of sight, easy exit. Remember it.' }] ] },
   { id: 'june', name: 'June', scr: [3, 1], x: 5, y: 7, look: 'june', lines: [
     [{ who: 'June', text: 'Walt and I have lived here 30 years. The elevator has worked for about four of them.' }] ] },
 ];
+
+deepFill(NPC_DEFS);
 
 /* ============================================================
    World maps: 4 x 2 screens, 16 x 11 tiles each.
@@ -366,7 +378,7 @@ const NPC_DEFS = [
    F fence  C chest    S sign  h hive  g gas pump  A a ambulance  V v wreck
    ============================================================ */
 const SCREENS = {
-  '0,0': { name: 'Whispering Pines', roof: '#6d4a2c', wall: '#9a6a3c', rows: [
+  '0,0': { name: 'Gary\'s woodlot, below Mount Monadnock', roof: '#6d4a2c', wall: '#9a6a3c', rows: [
     'PPPPPPPPPPPPPPPP',
     'PP..k..PP..k.CPP',
     'P..RRRR....k...P',
@@ -378,7 +390,7 @@ const SCREENS = {
     'PP.::.,....k..PP',
     'PP.::....PP...PP',
     'PPP::PPPPPPPPPPP'] },
-  '1,0': { name: 'Gas-n-Go', roof: '#2f7f7a', wall: '#d9d2c2', rows: [
+  '1,0': { name: 'Route 202 North', roof: '#2f7f7a', wall: '#d9d2c2', rows: [
     'TTTTTTTTTTTTTTTT',
     'T..RRRRRRRR..C.T',
     'T..RRRRRRRR....T',
@@ -390,7 +402,7 @@ const SCREENS = {
     'T.,....==...t..T',
     'T......==....,.T',
     'TTTTTTT==TTTTTTT'] },
-  '2,0': { name: 'Cubicle Keep', roof: '#6b7280', wall: '#b9bfc9', rows: [
+  '2,0': { name: 'Downtown Jaffrey', roof: '#6b7280', wall: '#b9bfc9', rows: [
     'TTTTTTTTTTTTTTTT',
     'T.RRRRRRRRRR.C.T',
     'T.RRRRRRRRRR...T',
@@ -402,7 +414,7 @@ const SCREENS = {
     'T.,........==.,T',
     'T....t.....==..T',
     'TTTTTTTTTTT==TTT'] },
-  '3,0': { name: 'Route 119', roof: '#555', wall: '#777', rows: [
+  '3,0': { name: 'Route 124 (Turnpike Road)', roof: '#555', wall: '#777', rows: [
     'TTTTTTTTTTTTTTTT',
     'T.............CT',
     'T..,......,....T',
@@ -414,7 +426,7 @@ const SCREENS = {
     'T.,.....==..t..T',
     'T.......==.....T',
     'TTTTTTTT==TTTTTT'] },
-  '0,1': { name: 'Honey Fair', roof: '#d8433f', roof2: '#f4efe4', wall: '#e8dcc0', rows: [
+  '0,1': { name: 'Jaffrey Center', roof: '#d8433f', roof2: '#f4efe4', wall: '#e8dcc0', rows: [
     'PPP::PPPPPPPPPPP',
     'P..::..h.h.h...P',
     'P..::..........P',
@@ -438,7 +450,7 @@ const SCREENS = {
     'T..t.......t...T',
     'T.....,.....C..T',
     'TTTTTTTTTTTTTTTT'] },
-  '2,1': { name: 'Maple Lane', roof: '#4d6a8a', wall: '#e9e0cf', rows: [
+  '2,1': { name: 'the east side', roof: '#4d6a8a', wall: '#e9e0cf', rows: [
     'TTTTTTTTTTT==TTT',
     'T,..F.F....==..T',
     'T..RRRR....==..T',
@@ -450,7 +462,7 @@ const SCREENS = {
     'T..t......~~~~.T',
     'T...,..C..~~~..T',
     'TTTTTTTTTTTTTTTT'] },
-  '3,1': { name: 'Pine Hollow Apartments', roof: '#7a5a8a', wall: '#d8cfc0', rows: [
+  '3,1': { name: 'Pine Hollow Apartments, east side', roof: '#7a5a8a', wall: '#d8cfc0', rows: [
     'TTTTTTTT==TTTTTT',
     'T.RRRRRR==.....T',
     'T.RRRRRR==..,..T',
@@ -841,9 +853,9 @@ function levelProgress(o) {
   return { L, done: L.monsters.filter((m) => save.done.includes(m)).length, total: L.monsters.length };
 }
 function objectiveText(o) {
-  if (!o) return save.gloves ? 'All levels cleared. Replay anything from the dayroom.' : 'Report to Chief Barnaby';
+  if (!o) return save.gloves ? 'All levels cleared. Replay anything from the dayroom.' : `Report to ${CREW.chief.name}`;
   const lv = `Lv ${o.levelIdx + 1}`;
-  if (o.type === 'exam') return `${lv} boss, phase 2: ${o.title}. See Dr. Hale at the station.`;
+  if (o.type === 'exam') return `${lv} boss, phase 2: ${o.title}. See ${CREW.trainer.name} at the station.`;
   if (o.boss) return `${lv} BOSS: ${o.monster.cond}. ${o.loc} (head ${o.dir})`;
   const p = levelProgress(o);
   return `${lv} (${p.done}/${p.total}): ${o.monster.cond}. ${o.loc} (head ${o.dir})`;
@@ -924,16 +936,16 @@ function updateDialog() {
 function introPages() {
   return [
     { who: 'Dispatch', text: 'Medic 1... er, Probie. Welcome to your first shift at JRMA.', sound: 'radio' },
-    { who: 'Dispatch', text: 'The Granite Kingdom is in peril. Bleeding, breathing, sugar, bees, and bathrooms threaten its citizens.' },
+    { who: 'Dispatch', text: 'Jaffrey and Rindge are in peril. Bleeding, breathing, sugar, bees, and bathrooms threaten its citizens.' },
     { who: 'Dispatch', text: 'Three levels stand between you and legend: EMT, AEMT, Paramedic. Each ends in a boss. Beat the boss and its Protocol Trial to move up.' },
-    { who: 'Dispatch', text: 'Report to Chief Barnaby outside the station. Walk with the arrow keys. Talk with Space.' },
+    { who: 'Dispatch', text: `Report to ${CREW.chief.name} outside the station. Walk with the arrow keys. Talk with Space.` },
   ];
 }
 function chiefGloves() {
   say([
-    { who: 'Chief Barnaby', text: "Probie! There you are. It's dangerous to go alone. Take this." },
+    { who: CREW.chief.name, text: "Probie! There you are. It's dangerous to go alone. Take this." },
     { who: '', text: 'You got NITRILE GLOVES! Body substance isolation: step one on every call. Size medium. They will still tear.', icon: 'gloves', fanfare: true },
-    { who: 'Chief Barnaby', text: 'Scene safety and PPE come first on every call. Every. Single. One. Sully is your partner. Dispatch will send you out.' },
+    { who: CREW.chief.name, text: `Scene safety and PPE come first on every call. Every. Single. One. ${CREW.partner.name} is your partner. Dispatch will send you out.` },
   ], () => { save.gloves = true; writeSave(); updateHUD(); dispatch(activeObjective()); });
 }
 function dispatch(o) {
@@ -941,14 +953,14 @@ function dispatch(o) {
   if (!o) return;
   if (o.type === 'exam') {
     say([
-      { who: 'Dispatch', text: 'Medic 1, return to quarters. Dr. Hale, the medical director, is waiting for you.', sound: 'radio' },
-      { who: 'Sully', text: `Translation: boss phase two. ${o.title}. Dr. Hale is outside the station.` },
+      { who: 'Dispatch', text: `Medic 1, return to quarters. ${CREW.trainer.name} is waiting for you.`, sound: 'radio' },
+      { who: CREW.partner.name, text: `Translation: boss phase two. ${o.title}. ${CREW.trainer.name} is outside the station.` },
     ]);
     return;
   }
   const pages = [{ who: 'Dispatch', text: o.dispatch, sound: 'radio' }];
-  if (o.boss) pages.push({ who: 'Sully', text: `That is the level ${o.levelIdx + 1} boss call. Big one. ${o.loc}, head ${o.dir}. Look for the red "!".` });
-  else pages.push({ who: 'Sully', text: `That's ${o.loc}. Head ${o.dir} from the station and look for the person with the red "!" over their head.` });
+  if (o.boss) pages.push({ who: CREW.partner.name, text: `That is the level ${o.levelIdx + 1} boss call. Big one. ${o.loc}, head ${o.dir}. Look for the red "!".` });
+  else pages.push({ who: CREW.partner.name, text: `That's ${o.loc}. Head ${o.dir} from the station and look for the person with the red "!" over their head.` });
   say(pages);
 }
 function afterObjective(id) {
@@ -1149,7 +1161,7 @@ function openDayroom(view = 'root') {
 function showEnding() {
   openMenu(`
     <h2>Legend of JRMA</h2>
-    <p>You cleared all three levels, beat every boss, and survived the Protocol Binder three times. The Granite Kingdom sleeps (until 0300).</p>
+    <p>You cleared all three levels, beat every boss, and survived the Protocol Binder three times. Jaffrey and Rindge sleep (until 0300).</p>
     <ul>
       <li>Gary kept the leg. Deb finished the reports. Todd is banned from bee beards for life.</li>
       <li>Jordan got help, and every responder went home. The rollover driver flew to UMass and will walk again.</li>
@@ -1205,7 +1217,7 @@ function startCall(id, replay) {
   $('#b-hearts-lbl').textContent = 'Patient';
   $('#b-clock').hidden = false;
   $('#b-hint').hidden = false;
-  $('#b-hint').textContent = call.tier === 2 ? `Call medical control (-${HINT_COST[2]} CEUs)` : `Ask Sully (-${HINT_COST[call.tier]} CEUs)`;
+  $('#b-hint').textContent = call.tier === 2 ? `Call medical control (-${HINT_COST[2]} CEUs)` : `Ask ${CREW.partner.name} (-${HINT_COST[call.tier]} CEUs)`;
   $('#b-flee').textContent = 'Abandon call';
   renderBars(); renderVitals();
   showMsg('info', call.boss ? 'Boss call' : 'On scene', `<b>Dispatch:</b> ${esc(call.dispatch)}</p><p>${esc(call.scene)}</p><p>A wild <b>${esc(call.monster.cond.toUpperCase())}</b> appears! It calls itself ${esc(call.monster.name)}. Choose interventions in priority order. Wrong moves cost the patient hearts.`);
@@ -1265,7 +1277,7 @@ function choose(o) {
   } else {
     B.gone.add(o.idx); B.time += 2;
     Sound.honk();
-    showMsg('info', 'Sully stares at you', `<b>${esc(o.label)}.</b> ${esc(o.why)}`);
+    showMsg('info', `${CREW.partner.name} stares at you`, `<b>${esc(o.label)}.</b> ${esc(o.why)}`);
   }
   renderBars(); renderVitals();
   if (B.hearts <= 0) return failCall();
@@ -1318,7 +1330,7 @@ function winCall() {
   let first;
   if (trialId && !save.done.includes(trialId)) {
     first = addButton(`Phase 2: ${OBJ[trialId].title}`, 'primary', () => { B = null; startExam(OBJ[trialId], false); });
-    addButton('Back to the map (trial waits with Dr. Hale)', '', endCall);
+    addButton(`Back to the map (trial waits with ${CREW.trainer.name})`, '', endCall);
   } else {
     first = addButton('Back to the map', 'primary', endCall);
   }
@@ -1330,7 +1342,7 @@ function failCall() {
   $('#b-foot').hidden = true;
   $('#b-msg').innerHTML = `
     <div class="tag bad">Patient crashed</div>
-    <p>${esc(B.call.monster.cond)} wins this round. Sully spills his iced coffee. This is a simulation, so the patient respawns. Review, reset, run it again.</p>
+    <p>${esc(B.call.monster.cond)} wins this round. ${esc(CREW.partner.name)} spills an iced coffee. This is a simulation, so the patient respawns. Review, reset, run it again.</p>
     ${missesHTML(['bad'])}`;
   $('#b-actions').innerHTML = '';
   const retry = addButton('Retry the call', 'primary', () => startCall(B.call.id, B.replay));
@@ -1347,8 +1359,8 @@ function endCallThen(then, newly, id) {
   if (newly) {
     const o = OBJ[id];
     if (o.type === 'call' && o.boss && !then) {
-      // Boss beaten but trial skipped for now: point the player at Dr. Hale.
-      say([{ who: '', text: `BOSS DEFEATED: ${o.monster.cond}! Phase two waits with Dr. Hale at the station.`, icon: 'badge', fanfare: true }], () => dispatch(activeObjective()));
+      // Boss beaten but trial skipped for now: point the player at the Training Officer.
+      say([{ who: '', text: `BOSS DEFEATED: ${o.monster.cond}! Phase two waits with ${CREW.trainer.name} at the station.`, icon: 'badge', fanfare: true }], () => dispatch(activeObjective()));
       return;
     }
     if (then) { say([{ who: '', text: `${o.type === 'exam' ? 'Trial passed' : 'Condition cleared'}: ${o.type === 'exam' ? o.title : o.monster.cond}!`, icon: 'badge', fanfare: true }], then); return; }
@@ -1363,7 +1375,7 @@ function hint() {
   const s = B.call.steps.find((st, i) => !B.used.has(i) && st.g === g);
   if (!s) return;
   addCEU(-HINT_COST[B.call.tier]); Sound.select();
-  showMsg('info', B.call.tier === 2 ? 'Medical control says' : 'Sully leans over', esc(s.hint));
+  showMsg('info', B.call.tier === 2 ? 'Medical control says' : `${CREW.partner.name} leans over`, esc(s.hint));
 }
 function flee() {
   if (!B) return;
@@ -1379,13 +1391,13 @@ function startExam(o, replay) {
   B = freshBattle(o, replay, { qs, qi: 0, correct: 0, hearts, maxHearts: hearts });
   showBattlePanel();
   $('#b-title').textContent = `BOSS PHASE 2 · ${o.title}`;
-  $('#b-sub').textContent = `${o.domain} · Dr. Hale, Medical Director${replay ? ' · Replay' : ''}`;
+  $('#b-sub').textContent = `${o.domain} · ${CREW.trainer.name}, ${CREW.trainer.role}${replay ? ' · Replay' : ''}`;
   $('#b-mname').innerHTML = `<b>${esc(o.monster.cond.toUpperCase())}</b> "${esc(o.monster.name)}"`;
   $('#b-hearts-lbl').textContent = 'Misses left';
   $('#b-clock').hidden = true; $('#b-hint').hidden = true;
   $('#b-flee').textContent = 'Leave the trial';
   examStats(); renderBars(); renderVitals();
-  showMsg('info', 'Dr. Hale', `${esc(o.urgent)}</p><p>The defeated boss collapses... and reforms as <b>${esc(o.monster.name)}</b>!</p><p class="fine">Every question is checked against the NH Patient Care Protocols v9.3, and each answer names its section.`);
+  showMsg('info', CREW.trainer.name, `${esc(o.urgent)}</p><p>The defeated boss collapses... and reforms as <b>${esc(o.monster.name)}</b>!</p><p class="fine">Every question is checked against the NH Patient Care Protocols v9.3, and each answer names its section.`);
   beginButton('Open the binder', renderQuestion);
 }
 function examStats() {
@@ -1954,7 +1966,7 @@ function beginGame(isNew) {
   if (isNew) { say(introPages()); return; }
   const o = activeObjective();
   if (o) say([{ who: 'Dispatch', text: `Welcome back, ${licenseName()}. Current objective: ${objectiveText(o)}`, sound: 'radio' }]);
-  else if (!save.gloves) say([{ who: 'Dispatch', text: 'Welcome back. Report to Chief Barnaby outside the station.', sound: 'radio' }]);
+  else if (!save.gloves) say([{ who: 'Dispatch', text: `Welcome back. Report to ${CREW.chief.name} outside the station.`, sound: 'radio' }]);
 }
 $('#btn-new').addEventListener('click', () => {
   const hasProgress = save.gloves || save.done.length;

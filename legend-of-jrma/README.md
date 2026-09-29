@@ -29,6 +29,12 @@ Progress saves in the browser on that device.
 
 Also in the world: 8 clinical pearls hidden in chests, a goose, and a ghost who still loosens tourniquets.
 
+## Places and people
+
+- **Places are real Jaffrey spots:** Mount Monadnock, the Jaffrey Center Meetinghouse and Common, downtown, Route 202 north, and Route 124 (Turnpike Road) toward the airport.
+- **Homes and businesses are fictional,** for example Gas-n-Go and the Hendersons. They sit on real roads so that no real household or business is tied to an overdose, a psych call, or a death.
+- **Officers play the recurring roles:** the Chief, your partner/FTO, and the Training Officer who runs the trials. They are set in `content/crew.js`; see `docs/how-to/add-officers.md`. Until the roster is filled in, fictional stand-ins hold those slots.
+
 ## Project layout
 
 ```
