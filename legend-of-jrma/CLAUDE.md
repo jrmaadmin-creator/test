@@ -2,6 +2,8 @@
 
 EMS training RPG for JRMA crews. Levels: EMT, AEMT, Paramedic. Each level: a few condition "monsters", one boss call, then a protocol trial that advances the license.
 
+**Start with `HANDOFF.md`:** current status, links, decisions, and open items.
+
 ## Layout
 - `index.html`: engine (canvas overworld, call and trial panels, sprites, sound).
 - `content/`: all medical content. See `content/CLAUDE.md` before editing.
@@ -12,6 +14,7 @@ EMS training RPG for JRMA crews. Levels: EMT, AEMT, Paramedic. Each level: a few
 ## Commands
 - Test: `npm test` (set `SHOTS_DIR=/some/dir` for screenshots)
 - One-file build: `npm run bundle` -> `dist/legend-of-jrma.html`
+- Shared-link page: `npm run bundle -- --artifact <file>`, then publish that file to the URL in `HANDOFF.md`
 - Play locally: open `index.html` in a browser
 
 ## Rules

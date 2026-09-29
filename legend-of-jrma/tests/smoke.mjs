@@ -88,6 +88,24 @@ const heartsLost = await page.evaluate(() => {
 });
 check(heartsLost >= 1, 'a harmful choice did not cost a heart');
 
+// Tourniquet by real gestures: drag the strap tab down, drag circles around the rod, tap the clip.
+async function windlassByMouse() {
+  const box = await page.locator('#tq-svg').boundingBox();
+  const at = (x, y) => [box.x + (x * box.width) / 240, box.y + (y * box.height) / 200];
+  await page.mouse.move(...at(84, 150)); await page.mouse.down();
+  for (let y = 150; y <= 198; y += 4) await page.mouse.move(...at(84, y));
+  await page.mouse.up();
+  await page.mouse.move(...at(84 + 40, 100)); await page.mouse.down();
+  for (let deg = 0; deg <= 540; deg += 10) { const r = (deg * Math.PI) / 180; await page.mouse.move(...at(84 + 40 * Math.cos(r), 100 + 40 * Math.sin(r))); }
+  await page.mouse.up();
+  await page.mouse.click(...at(49, 100));
+}
+async function windlassByKeys() {
+  for (let k = 0; k < 4; k++) await page.keyboard.press('ArrowDown');
+  for (let k = 0; k < 18; k++) await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Space');
+}
+let useMouse = true;
 async function playCall(id) {
   await page.evaluate((x) => window.__jrma.startObjective(x), id);
   await page.click('#b-actions button');
@@ -98,11 +116,11 @@ async function playCall(id) {
       const left = B.call.steps.map((s, i) => ({ s, i })).filter((x) => !B.used.has(x.i));
       const g = Math.min(...left.map((x) => x.s.g));
       const idx = B.opts.findIndex((o) => o.kind === 'step' && !B.used.has(o.i) && o.g === g);
-      return { idx, mini: B.opts[idx].mini ? B.opts[idx].mini.type : null, need: B.opts[idx].mini ? B.opts[idx].mini.need : 0 };
+      return { idx, mini: B.opts[idx].mini ? B.opts[idx].mini.type : null };
     });
     if (state.done) break;
     await page.evaluate((i) => window.__jrma.choose(i), state.idx);
-    if (state.mini === 'mash') for (let k = 0; k < state.need; k++) await page.evaluate(() => window.__jrma.miniTap());
+    if (state.mini === 'windlass') await (useMouse ? windlassByMouse() : windlassByKeys());
     if (state.mini === 'rhythm') for (let k = 0; k < 12; k++) { await page.evaluate(() => window.__jrma.miniTap()); await page.waitForTimeout(540); }
   }
   return page.evaluate(() => window.__jrma.battle.won);
@@ -126,6 +144,7 @@ async function playExam(id) {
 for (const id of ORDER) {
   const isExam = !!EXAMS[id];
   const won = isExam ? await playExam(id) : await playCall(id);
+  if (id === 'bleed') useMouse = false;
   check(won, `${id}: could not be completed with the correct answers`);
   if (shots && (id === 'bleed' || id === 'trial-emt' || id === 'rollover')) await page.screenshot({ path: `${shots}/03-${id}.png` });
 }
@@ -133,6 +152,9 @@ const saved = await page.evaluate(() => window.__jrma.save.done);
 check(ORDER.every((id) => saved.includes(id)), 'not every objective was recorded as done');
 check((await page.textContent('#hud-license')).includes('Legend'), 'HUD did not show the Legend title at the end');
 check(!/\{(chief|partner|trainer)\}/.test(await page.evaluate(() => document.body.innerText)), 'a role token was shown unreplaced');
+
+// Tourniquet by keyboard (replay of the first call).
+check(await playCall('bleed'), 'bleed: tourniquet could not be applied with the keyboard');
 
 // Phone width layout: no horizontal scroll.
 await page.setViewportSize({ width: 390, height: 844 });

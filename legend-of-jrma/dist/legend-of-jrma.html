@@ -134,6 +134,13 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .gauge-lbls{display:flex;justify-content:space-between;width:100%;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .rate{font-family:var(--font-display);font-size:34px;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1}
 .rate small{font-size:13px;color:var(--muted)}
+.tq-svg{width:min(360px,100%);height:auto;display:block;touch-action:none;user-select:none;-webkit-user-select:none;background:#0c111d;border:2px solid #000;cursor:grab}
+.tq-svg:active{cursor:grabbing}
+.tq-steps{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:0;padding:0;list-style:none;font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.tq-steps li{border:2px solid var(--line);padding:3px 8px;color:var(--muted)}
+.tq-steps li.now{border-color:var(--gold);color:var(--gold)}
+.tq-steps li.ok{border-color:var(--ok);color:var(--ok)}
+.tq-status{min-height:1.4em;text-align:center;font-weight:600}
 @media (max-width:700px){.b-grid{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:460px){.actions{grid-template-columns:minmax(0,1fr)}}
 @keyframes shake{33%{transform:translateX(-3px)}66%{transform:translateX(3px)}}
@@ -309,8 +316,8 @@ window.JRMA.CALLS = [
       { g: 0, label: 'Shut off the chainsaw, gloves on', hint: 'Before you touch Gary, what here can hurt YOU?',
         why: 'Scene safety first. A running chainsaw is a hazard with teeth, and his blood is a hazard without them. A rescuer who gets hurt becomes patient number two.' },
       { g: 1, label: 'Tourniquet on bare skin, 2-3 in above the wound', hint: 'What is leaving his body fastest, and what stops it?',
-        mini: { type: 'mash', need: 14, secs: 5 },
-        why: 'Spurting bright red blood from a limb is life-threatening, and pressure on a chainsaw wound is impractical. NH: on bare skin, 2-3 inches above the bleeding site, never over a joint. Tighten until the bleeding stops. Still bleeding? Add a second one right next to it. It will hurt. That is how you know it works.',
+        mini: { type: 'windlass', halfTurns: 3, secs: 25 },
+        why: 'Spurting bright red blood from a limb is life-threatening, and pressure on a chainsaw wound is impractical. NH: on bare skin, 2-3 inches above the bleeding site, never over a joint. Pull the strap snug, twist the rod until the bleeding stops, and lock it in the clip. With a snug strap that usually takes 3 half turns or fewer (CAT training). Still bleeding? Add a second one right next to it. It will hurt. That is how you know it works.',
         early: 'Right tool, but the chainsaw is still running next to your face. Make the scene safe first.',
         vitals: { HR: '122/min', Skin: 'Pale, cool. Bleeding controlled' } },
       { g: 2, label: 'Write the time on the tourniquet', hint: 'The surgeon is going to ask one question about that tourniquet.',
@@ -2385,21 +2392,15 @@ function failExam() {
   addButton('Back to the map', '', endCall);
 }
 
-/* Mini-games: tourniquet windlass (mash) and CPR rhythm */
+/* Mini-games: tourniquet windlass (drag gestures) and CPR rhythm (tap tempo) */
 function startMini(o) {
   B.phase = 'mini';
   B.mini = { o, type: o.mini.type, count: 0, taps: [], start: 0, done: false };
   if (document.activeElement) document.activeElement.blur();
   $('#b-actions').hidden = true; $('#b-foot').hidden = true;
   const box = $('#b-mini'); box.hidden = false;
-  if (o.mini.type === 'mash') {
-    box.innerHTML = `
-      <h3>Crank the windlass!</h3>
-      <p>Twist until the bleeding stops: ${o.mini.need} twists in ${o.mini.secs} seconds. Tap the button or press Space. The timer starts on your first twist.</p>
-      <div class="meter" aria-hidden="true"><div id="mini-fill"></div></div>
-      <div class="meter timer" aria-hidden="true"><div id="mini-timer" style="width:100%"></div></div>
-      <button type="button" class="mini-btn" id="mini-btn" tabindex="-1">Twist</button>`;
-  } else {
+  if (o.mini.type === 'windlass') { startWindlass(o, box); return; }
+  {
     box.innerHTML = `
       <h3>Compressions!</h3>
       <p>Tap 12 compressions at 100-120 per minute. Space works too. Pausing more than 2 seconds restarts the count.</p>
@@ -2417,13 +2418,7 @@ function miniTap() {
   const m = B && B.mini; if (!m || m.done) return;
   const now = performance.now();
   const btn = $('#mini-btn'); if (btn) { btn.classList.add('pressed'); setTimeout(() => btn.classList.remove('pressed'), 80); }
-  if (m.type === 'mash') {
-    if (!m.start) m.start = now;
-    m.count++; Sound.twist();
-    $('#mini-fill').style.width = `${Math.min(100, (m.count / m.o.mini.need) * 100)}%`;
-    if (m.count >= m.o.mini.need) finishMini(true, '');
-    return;
-  }
+  if (m.type !== 'rhythm') return;
   if (m.taps.length && now - m.taps[m.taps.length - 1] > 2000) {
     m.taps = [];
     $('#mini-rate').textContent = '--';
@@ -2447,6 +2442,124 @@ function miniTap() {
     else finishMini(false, `Your rate: ${rate}/min. Too fast: above 120 the heart cannot refill and depth suffers. Try again.`);
   }
 }
+/* CAT-style tourniquet: pull the strap snug, twist the windlass rod (drag in
+   circles around it), then lock the rod in the clip. Arrow keys work too. */
+const TQ = { cx: 84, cy: 100, rod: 30, clipAngle: 180 };
+function startWindlass(o, box) {
+  const m = B.mini;
+  Object.assign(m, { stage: 0, slack: 0, turn: 0, lastA: null, dragging: false, start: 0, drops: [], secs: o.mini.secs, need: o.mini.halfTurns * 180 });
+  box.innerHTML = `
+    <h3>Apply the tourniquet</h3>
+    <ol class="tq-steps" aria-hidden="true"><li id="tq-s0">1. Pull strap</li><li id="tq-s1">2. Twist rod</li><li id="tq-s2">3. Lock in clip</li></ol>
+    <svg class="tq-svg" id="tq-svg" viewBox="0 0 240 200" role="img" aria-label="Tourniquet on the thigh. Drag the strap tab down, drag in circles to twist the rod, then tap the clip.">
+      <rect x="0" y="0" width="240" height="200" fill="#0c111d"/>
+      <rect x="6" y="72" width="228" height="56" rx="26" fill="#e2a77a"/>
+      <rect x="6" y="72" width="228" height="10" rx="5" fill="#f0c29a"/>
+      <ellipse cx="176" cy="100" rx="13" ry="7" fill="#7a0f14"/>
+      <ellipse cx="176" cy="99" rx="9" ry="4" fill="#c8232a"/>
+      <g id="tq-drops"></g>
+      <rect x="70" y="66" width="28" height="68" rx="4" fill="#1b1d22" stroke="#000"/>
+      <rect id="tq-tail" x="74" y="134" width="20" height="48" fill="#1b1d22" stroke="#000"/>
+      <rect id="tq-tab" x="68" y="176" width="32" height="16" rx="3" fill="#f2b632" stroke="#000"/>
+      <text id="tq-tab-lbl" x="84" y="188" text-anchor="middle" font-size="9" font-family="Silkscreen, monospace" fill="#000">PULL</text>
+      <circle id="tq-ring" cx="${TQ.cx}" cy="${TQ.cy}" r="44" fill="none" stroke="#f2b632" stroke-width="2" stroke-dasharray="4 5" opacity="0"/>
+      <g id="tq-clip"><path d="M ${TQ.cx - TQ.rod - 10} ${TQ.cy - 9} h 10 v 18 h -10" fill="none" stroke="#9aa3ad" stroke-width="4"/></g>
+      <line id="tq-rod" x1="${TQ.cx - TQ.rod}" y1="${TQ.cy}" x2="${TQ.cx + TQ.rod}" y2="${TQ.cy}" stroke="#000" stroke-width="9" stroke-linecap="round"/>
+      <line id="tq-rod2" x1="${TQ.cx - TQ.rod}" y1="${TQ.cy}" x2="${TQ.cx + TQ.rod}" y2="${TQ.cy}" stroke="#d9dde3" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="${TQ.cx}" cy="${TQ.cy}" r="7" fill="#333" stroke="#000"/>
+    </svg>
+    <p class="tq-status" id="tq-status" aria-live="polite"></p>
+    <div class="meter" aria-hidden="true"><div id="mini-fill"></div></div>
+    <div class="meter timer" aria-hidden="true"><div id="mini-timer" style="width:100%"></div></div>
+    <p class="fine">Finger or mouse: drag the tab down, then drag in circles around the rod. Keys: Down to pull, Left/Right to twist, Space to lock. The ${m.secs}-second clock starts when you touch it.</p>`;
+  const svg = $('#tq-svg');
+  const toSvg = (e) => { const r = svg.getBoundingClientRect(); return { x: (e.clientX - r.left) * 240 / r.width, y: (e.clientY - r.top) * 200 / r.height }; };
+  svg.addEventListener('pointerdown', (e) => {
+    e.preventDefault(); svg.setPointerCapture(e.pointerId);
+    const p = toSvg(e);
+    if (m.stage === 2) { windlassLock(p); return; }
+    m.dragging = true; m.lastY = p.y; m.lastA = Math.atan2(p.y - TQ.cy, p.x - TQ.cx);
+    if (!m.start) m.start = performance.now();
+  });
+  svg.addEventListener('pointermove', (e) => {
+    if (!m.dragging || m.done) return;
+    const p = toSvg(e);
+    if (m.stage === 0) { const dy = p.y - m.lastY; m.lastY = p.y; if (dy > 0) windlassPull(dy / 90); }
+    else if (m.stage === 1) {
+      const a = Math.atan2(p.y - TQ.cy, p.x - TQ.cx);
+      let d = a - m.lastA; m.lastA = a;
+      if (d > Math.PI) d -= 2 * Math.PI; else if (d < -Math.PI) d += 2 * Math.PI;
+      if (Math.hypot(p.x - TQ.cx, p.y - TQ.cy) > 8) windlassTwist(d * 180 / Math.PI);
+    }
+  });
+  const stop = () => { m.dragging = false; };
+  svg.addEventListener('pointerup', stop); svg.addEventListener('pointercancel', stop);
+  renderWindlass(m);
+}
+function windlassPull(frac) {
+  const m = B.mini; if (m.stage !== 0) return;
+  if (!m.start) m.start = performance.now();
+  m.slack = Math.min(1, m.slack + frac);
+  if (Math.floor(m.slack * 5) !== Math.floor((m.slack - frac) * 5)) Sound.twist();
+  if (m.slack >= 1) { m.stage = 1; Sound.select(); }
+  renderWindlass(m);
+}
+function windlassTwist(deg) {
+  const m = B.mini; if (m.stage !== 1) return;
+  const before = Math.floor(Math.abs(m.turn) / 30);
+  m.turn += deg;
+  if (Math.floor(Math.abs(m.turn) / 30) !== before) Sound.twist();
+  if (Math.abs(m.turn) >= m.need) { m.stage = 2; Sound.select(); }
+  renderWindlass(m);
+}
+function rodAligned(m) {
+  const a = ((Math.abs(m.turn) % 180) + 180) % 180;
+  return a < 22 || a > 158;
+}
+function windlassLock(p) {
+  const m = B.mini; if (m.stage !== 2 || m.done) return;
+  if (p && Math.hypot(p.x - (TQ.cx - TQ.rod - 5), p.y - TQ.cy) > 40) { $('#tq-status').textContent = 'Tap the clip to lock the rod.'; return; }
+  if (!rodAligned(m)) { $('#tq-status').textContent = 'Line the rod up with the clip first.'; m.stage = 1; renderWindlass(m); return; }
+  Sound.chest();
+  finishMini(true, ' Strap snug, rod twisted until the bleeding stopped, rod locked in the clip. Now write the time.');
+}
+function windlassKey(act) {
+  const m = B.mini; if (!m || m.done) return;
+  if (!m.start) m.start = performance.now();
+  if (act === 'pull' || (act === 'lock' && m.stage === 0)) windlassPull(0.25);
+  else if (act === 'cw') { if (m.stage === 2) m.stage = 1; windlassTwist(30); }
+  else if (act === 'ccw') { if (m.stage === 2) m.stage = 1; windlassTwist(-30); }
+  else if (act === 'lock') windlassLock(null);
+}
+function renderWindlass(m) {
+  const ang = (m.turn * Math.PI) / 180, dx = Math.cos(ang) * TQ.rod, dy = Math.sin(ang) * TQ.rod;
+  for (const id of ['#tq-rod', '#tq-rod2']) { const r = $(id); r.setAttribute('x1', TQ.cx - dx); r.setAttribute('y1', TQ.cy - dy); r.setAttribute('x2', TQ.cx + dx); r.setAttribute('y2', TQ.cy + dy); }
+  const tail = 48 * (1 - m.slack);
+  $('#tq-tail').setAttribute('height', Math.max(2, tail));
+  $('#tq-tab').setAttribute('y', 134 + tail - 6); $('#tq-tab-lbl').setAttribute('y', 134 + tail + 6);
+  $('#tq-ring').setAttribute('opacity', m.stage === 1 ? 0.9 : 0);
+  const aligned = m.stage === 2 && rodAligned(m);
+  $('#tq-clip').querySelector('path').setAttribute('stroke', aligned ? '#86d993' : '#9aa3ad');
+  ['#tq-s0', '#tq-s1', '#tq-s2'].forEach((id, i) => { $(id).className = i < m.stage ? 'ok' : i === m.stage ? 'now' : ''; });
+  const half = Math.min(m.need / 180, Math.floor(Math.abs(m.turn) / 180));
+  const status = m.stage === 0 ? `Pull the strap snug: ${Math.round(m.slack * 100)}%. Slack now means extra turns later.`
+    : m.stage === 1 ? `Twist! Half turns: ${half} of ${m.need / 180}. Keep going until the bleeding stops.`
+    : 'Bleeding stopped. Lock the rod in the clip (tap the clip or press Space).';
+  const st = $('#tq-status'); if (st.dataset.last !== status) { st.textContent = status; st.dataset.last = status; }
+  $('#mini-fill').style.width = `${Math.round((m.stage === 0 ? m.slack * 0.3 : m.stage === 1 ? 0.3 + 0.7 * Math.min(1, Math.abs(m.turn) / m.need) : 1) * 100)}%`;
+}
+function updateWindlass(m) {
+  const bleed = m.stage === 0 ? 1 : m.stage === 1 ? Math.max(0, 1 - Math.abs(m.turn) / m.need) : 0;
+  if (Math.random() < bleed * 0.5) m.drops.push({ x: 170 + Math.random() * 12, y: 104, v: 0.6 + Math.random() * 0.6 });
+  m.drops = m.drops.filter((d) => (d.y += d.v * 2) < 200);
+  const g = $('#tq-drops');
+  if (g) g.innerHTML = m.drops.map((d) => `<circle cx="${d.x.toFixed(1)}" cy="${d.y.toFixed(1)}" r="2" fill="#d8262c"/>`).join('');
+  if (m.start) {
+    const left = 1 - (performance.now() - m.start) / (m.secs * 1000);
+    $('#mini-timer').style.width = `${Math.max(0, left) * 100}%`;
+    if (left <= 0) finishMini(false, m.stage === 0 ? 'Too slow, and the strap was never snug. Pull out the slack first so the rod only needs a few turns.' : 'Too slow. Bright red blood is still coming. Twist until the bleeding stops, then lock the rod.');
+  }
+}
 function finishMini(ok, text) {
   const m = B.mini; m.done = true;
   $('#b-mini').hidden = true; $('#b-actions').hidden = false; $('#b-foot').hidden = false;
@@ -2454,7 +2567,7 @@ function finishMini(ok, text) {
   if (ok) return doCorrect(m.o, text);
   B.time += 1; renderBars();
   Sound.warn();
-  showMsg('warn', 'Not quite', m.type === 'mash' ? 'Not tight enough. Bright red blood is still coming. A tourniquet goes on until the bleeding stops. Pick the tourniquet again to retry.' : `${text} Pick compressions again to retry.`);
+  showMsg('warn', 'Not quite', m.type === 'windlass' ? `${text} Pick the tourniquet again to retry.` : `${text} Pick compressions again to retry.`);
   renderActions();
 }
 function updateBattle() {
@@ -2463,11 +2576,7 @@ function updateBattle() {
   if (B.won && B.deadT < 1) B.deadT = Math.min(1, B.deadT + 0.02);
   if (B.fleeArm > 0) { B.fleeArm--; if (B.fleeArm === 0) $('#b-flee').textContent = B.kind === 'exam' ? 'Leave the trial' : 'Abandon call'; }
   const m = B.mini;
-  if (m && m.type === 'mash' && m.start && !m.done) {
-    const left = 1 - (performance.now() - m.start) / (m.o.mini.secs * 1000);
-    $('#mini-timer').style.width = `${Math.max(0, left) * 100}%`;
-    if (left <= 0) finishMini(false, '');
-  }
+  if (m && m.type === 'windlass' && !m.done) updateWindlass(m);
 }
 
 /* ============================================================
@@ -2834,6 +2943,11 @@ addEventListener('keydown', (e) => {
   const k = e.code;
   Sound.unlock();
   if (mode === 'battle') {
+    if (B && B.phase === 'mini' && B.mini && B.mini.type === 'windlass') {
+      const act = { ArrowDown: 'pull', KeyS: 'pull', ArrowRight: 'cw', KeyD: 'cw', ArrowLeft: 'ccw', KeyA: 'ccw' }[k] || (A_KEYS.has(k) ? 'lock' : null);
+      if (act) { e.preventDefault(); windlassKey(act); }
+      return;
+    }
     if (B && B.phase === 'mini' && A_KEYS.has(k)) { e.preventDefault(); if (!e.repeat) miniTap(); return; }
     if (B && (B.phase === 'act' || B.phase === 'q') && /^Digit[0-9]$/.test(k)) {
       const n = k === 'Digit0' ? '10' : k.slice(5);
@@ -2912,6 +3026,7 @@ window.__jrma = {
   choose: (i) => B && choose(B.opts[i]),
   answer: (i) => answer(i),
   miniTap: () => miniTap(),
+  windlassKey: (act) => windlassKey(act),
   warp: (sx, sy) => { player.x = sx * VW + 128; player.y = sy * VH + 6 * T + 12; scr.x = sx; scr.y = sy; cam.x = sx * VW; cam.y = sy * VH; mode = 'world'; updateHUD(); },
   get battle() { return B; }, get mode() { return mode; }, get save() { return save; },
 };

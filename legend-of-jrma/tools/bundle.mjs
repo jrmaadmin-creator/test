@@ -16,3 +16,18 @@ mkdirSync(path.join(root, 'dist'), { recursive: true });
 const out = path.join(root, 'dist', 'legend-of-jrma.html');
 writeFileSync(out, html);
 console.log(`Wrote ${path.relative(root, out)} (${(html.length / 1024).toFixed(0)} KB)`);
+
+// --artifact <file>: also write the version published as the claude.ai link.
+// The publisher adds its own doctype/head/body, so strip ours.
+const ai = process.argv.indexOf('--artifact');
+if (ai > -1) {
+  const dest = process.argv[ai + 1];
+  if (!dest) throw new Error('Usage: npm run bundle -- --artifact <output.html>');
+  let page = html;
+  for (const re of [/<!doctype html>\s*/i, /<html lang="en">\s*/i, /<head>\s*/i, /<meta charset="utf-8">\s*/i, /<meta name="viewport"[^>]*>\s*/i, /<\/head>\s*/i, /<body>\s*/i, /<\/body>\s*/i, /<\/html>\s*/i]) {
+    if (!re.test(page)) throw new Error(`Artifact strip failed: ${re}`);
+    page = page.replace(re, '');
+  }
+  writeFileSync(dest, page);
+  console.log(`Wrote artifact page ${dest}`);
+}
