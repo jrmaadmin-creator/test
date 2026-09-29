@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Heart Conduction Lab</title>
+<meta name="description" content="Interactive 3D heart conduction system with synchronized EKG rhythm strips for EMS and paramedic students.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Barlow+Semi+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<!-- @styles -->
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 48 24" aria-hidden="true"><path d="M0 14h10l3-4 3 4h4l2 3 3-15 3 19 2-7h4l4-4 4 4h3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      <div>
+        <h1>Heart Conduction Lab</h1>
+        <p class="brand-sub">Watch the impulse, read the strip</p>
+      </div>
+    </div>
+    <label class="rhythm-select" for="rhythm-select">
+      <span class="sr-only">Choose a rhythm</span>
+      <select id="rhythm-select"></select>
+    </label>
+    <div class="controls">
+      <button type="button" id="play" class="btn btn-primary" aria-pressed="true">Pause</button>
+      <div class="seg" role="group" aria-label="Playback speed" id="speed">
+        <button type="button" data-speed="0.1">0.1×</button>
+        <button type="button" data-speed="0.25">0.25×</button>
+        <button type="button" data-speed="0.5">0.5×</button>
+        <button type="button" data-speed="1">1×</button>
+      </div>
+      <div class="toggles">
+        <label class="toggle"><input type="checkbox" id="opt-labels" checked> <span>3D labels</span></label>
+        <label class="toggle"><input type="checkbox" id="opt-waves" checked> <span>Wave labels</span></label>
+        <label class="toggle"><input type="checkbox" id="opt-intervals"> <span>Intervals</span></label>
+      </div>
+    </div>
+  </header>
+
+  <nav class="rail" aria-label="Rhythms">
+    <div id="rhythm-list"></div>
+  </nav>
+
+  <main class="stage">
+    <div class="monitor">
+    <div class="viewport" id="viewport">
+      <div class="label-layer" id="labels"></div>
+      <ul class="legend" aria-label="Color key">
+        <li><i class="k-normal"></i>Impulse from SA node</li>
+        <li><i class="k-ectopic"></i>Other origin</li>
+        <li><i class="k-block"></i>Blocked</li>
+      </ul>
+      <button type="button" id="reset-view" class="btn-ghost">Reset view</button>
+      <p class="hint-drag">Drag to rotate · scroll or pinch to zoom</p>
+    </div>
+    <p class="caption" id="caption"></p>
+    </div>
+    <ol class="pathway" id="pathway" aria-label="Conduction pathway, lit as the impulse passes">
+      <li data-step="0"><span>SA node</span></li>
+      <li data-step="1"><span>Atria</span></li>
+      <li data-step="2"><span>AV node</span></li>
+      <li data-step="3"><span>His bundle</span></li>
+      <li data-step="4"><span>Bundle branches</span></li>
+      <li data-step="5"><span>Purkinje</span></li>
+      <li data-step="6"><span>Ventricles</span></li>
+    </ol>
+  </main>
+
+  <aside class="info" aria-label="Rhythm details">
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tab-rhythm" aria-controls="panel-rhythm" aria-selected="true">Rhythm</button>
+      <button type="button" role="tab" id="tab-anatomy" aria-controls="panel-anatomy" aria-selected="false">Pathway</button>
+      <button type="button" role="tab" id="tab-reading" aria-controls="panel-reading" aria-selected="false">Reading a strip</button>
+    </div>
+    <div class="panel" role="tabpanel" id="panel-rhythm" aria-labelledby="tab-rhythm"></div>
+    <div class="panel" role="tabpanel" id="panel-anatomy" aria-labelledby="tab-anatomy" hidden></div>
+    <div class="panel" role="tabpanel" id="panel-reading" aria-labelledby="tab-reading" hidden></div>
+  </aside>
+
+  <section class="strip-wrap" aria-label="Rhythm strip">
+    <div class="strip-head">
+      <div class="strip-title">
+        <strong id="strip-name">Normal sinus rhythm</strong>
+        <span class="strip-spec" id="strip-spec">Lead II · 25 mm/s · 10 mm/mV</span>
+      </div>
+      <dl class="readouts">
+        <div title="Average of the R-R intervals in the last 6 seconds"><dt>Rate</dt><dd id="ro-rate">—</dd></div>
+        <div title="6-second method: QRS complexes in the last 6 seconds, times 10. Fast, and close enough for irregular rhythms."><dt>6-s count</dt><dd id="ro-count">—</dd></div>
+        <div id="ro-atrial-wrap" hidden><dt>Atrial</dt><dd id="ro-atrial">—</dd></div>
+        <div><dt>PR</dt><dd id="ro-pr">—</dd></div>
+        <div><dt>QRS</dt><dd id="ro-qrs">—</dd></div>
+      </dl>
+      <p class="strip-hint" id="strip-hint">Pause, then drag across the strip to measure with calipers.</p>
+    </div>
+    <div class="strip-canvas"><canvas id="strip" aria-label="Animated rhythm strip"></canvas></div>
+  </section>
+</div>
+<!-- @script -->
+</body>
+</html>
