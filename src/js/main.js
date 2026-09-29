@@ -6,7 +6,7 @@ import { Strip } from './strip.js';
 import { HeartView, STRUCTURE_SEGS } from './heart3d.js';
 import { LEADS, LEAD_NAMES, vectorAt } from './ecg.js';
 import { TwelveLead, drawAxes, axisWords } from './twelve.js';
-import { TREATMENT, TREATMENT_FOR, TWELVE, TWELVE_BASICS, NH_STATUS, SOURCES, INSTABILITY, treatQuestionFor } from './clinical.js';
+import { TREATMENT, TREATMENT_FOR, TWELVE, TWELVE_BASICS, NH_STATUS, SOURCES, INSTABILITY, treatQuestionFor, TREATMENT_PEDS, PEDS_NOTE } from './clinical.js';
 import { ScenarioView } from './scenarios.js';
 import { CompareView, SETS } from './compare.js';
 import { Quiz } from './quiz.js';
@@ -49,6 +49,7 @@ const state = {
   pulse: store.get('pulse', true),
   compareSet: store.get('compareSet', 'avblocks'),
   tabs: store.get('tabs', {}),
+  treatAge: store.get('treatAge', 'adult'),
 };
 
 const engine = new Engine();
@@ -75,13 +76,17 @@ const quiz = new Quiz($('#panel-quiz'), {
     loadRhythm(id);
   },
   onAnswer: (stats) => {
-    crew?.save(stats);
+    crew?.save({ total: stats.total, correct: stats.correct, best: stats.best, per: stats.per, treat: stats.treat || null });
     $('#strip-name').textContent = quiz.answered ? byId[quiz.current].name : 'Unknown rhythm';
   },
   onSettings: () => applyModeLayout(),
   treatQuestion: treatQuestionFor,
 });
-const scenario = new ScenarioView($('#panel-scenario'), { byId, onRhythm: (id) => loadRhythm(id, { quiz: true }) });
+const scenario = new ScenarioView($('#panel-scenario'), {
+  byId,
+  onRhythm: (id) => loadRhythm(id, { quiz: true }),
+  onComplete: (scen) => crew?.save({ scen }),
+});
 const QUIZLIKE = new Set(['quiz', 'scenario']);
 
 const el = (tag, cls, text) => {
@@ -200,9 +205,10 @@ function setMode(mode) {
     renderTwelvePanel();
   }
   if (mode === 'compare') renderComparePanel();
-  const first = [...document.querySelectorAll('#tabs button')].find((b) => b.dataset.modes === mode);
+  const tabs = [...document.querySelectorAll('#tabs button')];
+  const first = tabs.find((b) => b.dataset.modes === mode) || tabs.find((b) => b.dataset.modes.split(' ').includes(mode));
   const saved = state.tabs[mode];
-  const valid = saved && $(`#tab-${saved}`)?.dataset.modes === mode;
+  const valid = saved && $(`#tab-${saved}`)?.dataset.modes.split(' ').includes(mode);
   selectTab(valid ? saved : first.id.replace('tab-', ''));
   writeHash();
 }
@@ -216,7 +222,7 @@ function applyModeLayout() {
   $('#pathway').hidden = m !== 'learn';
   $('#twelve-view').hidden = m !== 'twelve';
   $('#compare-view').hidden = m !== 'compare';
-  for (const b of document.querySelectorAll('#tabs button')) b.hidden = b.dataset.modes !== m;
+  for (const b of document.querySelectorAll('#tabs button')) b.hidden = !b.dataset.modes.split(' ').includes(m);
   heart?.setVectorMode(state.vector && m === 'learn', state.lead, LEADS[state.lead].axis);
   $('#caption').hidden = quizlike;
   $('#opt-labels').closest('label').hidden = quizlike;
@@ -301,12 +307,38 @@ function pager(r) {
 function renderTreatmentPanel(r) {
   const p = $('#panel-treat');
   p.replaceChildren();
-  const t = TREATMENT[TREATMENT_FOR[r.id]] || TREATMENT.none;
-  p.append(el('p', 'eyebrow', 'Treatment'), el('h2', null, r.name), el('p', 'summary', t.title));
+  const key = TREATMENT_FOR[r.id];
+  const peds = state.treatAge === 'peds';
+  const t = peds ? TREATMENT_PEDS[key] : TREATMENT[key] || TREATMENT.none;
+  const seg = el('div', 'seg age-pick');
+  seg.setAttribute('role', 'group');
+  seg.setAttribute('aria-label', 'Patient age');
+  for (const [k, label] of [['adult', 'Adult'], ['peds', 'Pediatric']]) {
+    const b = el('button', null, label);
+    b.type = 'button';
+    b.setAttribute('aria-pressed', String(state.treatAge === k));
+    b.addEventListener('click', () => {
+      state.treatAge = k;
+      store.set('treatAge', k);
+      renderTreatmentPanel(r);
+    });
+    seg.appendChild(b);
+  }
+  p.append(el('p', 'eyebrow', 'Treatment'), el('h2', null, r.name), seg);
+  if (!t) {
+    p.append(
+      el('p', 'summary', 'No rhythm-specific NH pediatric protocol'),
+      el('p', null, 'Routine Patient Care (1.0). Treat the cause and contact Medical Control as needed. Switch to Adult to see the adult steps.'),
+      el('p', 'source', PEDS_NOTE),
+    );
+    return;
+  }
+  p.appendChild(el('p', 'summary', t.title));
+  if (peds) p.appendChild(el('p', 'source', PEDS_NOTE));
   const warn = el('div', 'protocol-note');
   warn.append(el('b', null, NH_STATUS.version), el('span', null, NH_STATUS.note));
   p.appendChild(warn);
-  if (t.steps.some((x) => x[2] === '3.5A' || x[2] === '3.1A')) p.appendChild(el('p', 'unstable', INSTABILITY));
+  if (t.steps.some((x) => /3\.(1|5)[AP]/.test(x[2]))) p.appendChild(el('p', 'unstable', peds ? 'Hemodynamically unstable (NH 3.5P): hypotension, acutely altered mental status, or signs of shock.' : INSTABILITY));
   const ol = el('ol', 'treat-steps');
   const LVL = { All: 'all', 'EMR/EMT': 'emt', AEMT: 'aemt', Paramedic: 'para', AHA: 'aha' };
   for (const [lvl, text, cite] of t.steps) {

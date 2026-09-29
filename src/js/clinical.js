@@ -11,7 +11,7 @@
 export const NH_STATUS = {
   version: 'NH Patient Care Protocols v9.3',
   verified: true,
-  note: 'Adult steps from protocols 3.1A, 3.2A, 3.4, 3.5A and 3.6. Sedation options, pediatric doses and full pearls are in the protocol book. Medical control and your protocol book govern care.',
+  note: 'Adult steps from protocols 3.1A, 3.2A, 3.4, 3.5A and 3.6; pediatric from 3.1P, 3.2P and 3.5P. Sedation options, pediatric doses and full pearls are in the protocol book. Medical control and your protocol book govern care.',
 };
 
 export const SOURCES = {
@@ -294,3 +294,77 @@ export function treatQuestionFor(rhythmId) {
   if (!list) return null;
   return list[Math.floor(Math.random() * list.length)];
 }
+
+// Pediatric steps: NH v9.3 3.1P, 3.2P, 3.5P. NH defines a pediatric patient as
+// a child who fits on a length-based resuscitation tape up to 36 kg or 145 cm.
+export const PEDS_NOTE = 'Pediatric = fits a length-based resuscitation tape up to 36 kg (79 lb) or 145 cm (57 in). Doses are weight-based; use the tape.';
+
+const P_CPR = ['EMR/EMT', 'Immediate high-performance CPR with minimal interruptions (metronome if possible); 100% oxygen by BVM. One provider 30:2, two providers 15:2. Apply the AED as soon as possible; pediatric pads from birth to age 8 (adult pads if they do not overlap).', '3.2P'];
+const P_AIR = ['EMR/EMT', 'BVM is preferred. If unsuccessful, supraglottic airway without interrupting compressions (EMT). With an advanced airway: continuous compressions, 1 breath every 2–3 seconds.', '3.2P'];
+const P_IV = ['AEMT', 'IV/IO without interrupting compressions; 10–20 mL/kg fluid bolus. Correct treatable causes: hypoxia, overdose/poisoning, hypothermia, hypoglycemia, hypovolemia.', '3.2P'];
+const P_CAUSES = ['Paramedic', 'Suspected hyperkalemia or calcium channel/beta blocker overdose: calcium gluconate 100 mg/kg IV/IO (max 3 g) or calcium chloride 20 mg/kg (max 1 g). Hyperkalemia or tricyclic overdose: sodium bicarbonate 1 mEq/kg (max 50 mEq). Not routine in arrest. Consider tension pneumothorax.', '3.2P'];
+
+export const TREATMENT_PEDS = {
+  brady: {
+    title: 'Bradycardia – Pediatric (3.1P)',
+    steps: [
+      ['All', 'Routine Patient Care. Consider underlying causes: hypoxia, hypoglycemia, hypovolemia, hypothermia. 12-lead ECG if available.', '3.1P'],
+      ['All', 'Infants and neonates: begin or continue CPR if the heart rate is under 60 with hypoperfusion despite adequate ventilation and oxygenation.', '3.1P'],
+      ['Paramedic', 'Symptomatic and unstable: epinephrine 0.01 mg/kg IV (0.1 mL/kg of 0.1 mg/mL) every 3–5 min, max single dose 1 mg.', '3.1P'],
+      ['Paramedic', 'Atropine 0.02 mg/kg IV for increased vagal tone or AV block; may repeat once (min single dose 0.1 mg, max 0.5 mg).', '3.1P'],
+      ['Paramedic', 'Transcutaneous pacing, with procedural sedation if feasible (e.g., midazolam 0.05 mg/kg IV, max 2.5 mg).', '3.1P'],
+    ],
+    note: 'In children, bradycardia is usually from hypoxia: oxygenation and ventilation come first.',
+  },
+  svt: {
+    title: 'Tachycardia – Pediatric (3.5P): narrow / probable SVT',
+    steps: [
+      ['All', 'Routine Patient Care. 12-lead ECG if available. Probable SVT: infants usually over 220/min, children over 180/min, no variability, P waves absent or abnormal.', '3.5P'],
+      ['Paramedic', 'Stable: consider vagal maneuvers. Adenosine 0.1 mg/kg IV (max 6 mg); may repeat once at 0.2 mg/kg (max 12 mg).', '3.5P'],
+      ['Paramedic', 'Unstable: synchronized cardioversion 0.5–1 J/kg; if unsuccessful increase to 2 J/kg. Sedate if feasible. Adenosine may be given if IV access is ready.', '3.5P'],
+    ],
+  },
+  wideTach: {
+    title: 'Tachycardia – Pediatric (3.5P): wide complex',
+    steps: [
+      ['EMR/EMT', 'Check for a pulse. No pulse: Cardiac Arrest – Pediatric 3.2P.', '3.2P'],
+      ['Paramedic', 'Stable, regular, monomorphic QRS only: consider vagal maneuvers and adenosine 0.1 mg/kg (max 6 mg), repeat once at 0.2 mg/kg (max 12 mg).', '3.5P'],
+      ['Paramedic', 'Stable wide complex: contact online Medical Control to consider amiodarone 5 mg/kg IV (max 300 mg) over 20–60 minutes.', '3.5P'],
+      ['Paramedic', 'Unstable: synchronized cardioversion 0.5–1 J/kg, increase to 2 J/kg if unsuccessful.', '3.5P'],
+    ],
+  },
+  shockable: {
+    title: 'Cardiac Arrest – Pediatric (3.2P): VF / pulseless VT',
+    steps: [
+      P_CPR,
+      P_AIR,
+      P_IV,
+      ['Paramedic', 'Defibrillate at 2 J/kg; CPR 2 minutes. Second shock 4 J/kg. Subsequent shocks 4 J/kg or more, max 10 J/kg or the adult dose.', '3.2P'],
+      ['Paramedic', 'After the second defibrillation: epinephrine 0.01 mg/kg (0.1 mL/kg of 0.1 mg/mL) IV/IO, repeat every other cycle.', '3.2P'],
+      ['Paramedic', 'After the second defibrillation, consider amiodarone 5 mg/kg IV/IO (max 300 mg), may repeat up to 2 times; OR lidocaine 1 mg/kg (max 100 mg).', '3.2P'],
+      ['Paramedic', 'Torsades: magnesium sulfate 25–50 mg/kg (max 2 g) IV/IO over 1–2 minutes.', '3.2P'],
+      P_CAUSES,
+    ],
+    note: 'Do not use mechanical CPR devices on children (3.2P pearl).',
+  },
+  nonShockable: {
+    title: 'Cardiac Arrest – Pediatric (3.2P): asystole / PEA',
+    steps: [
+      P_CPR,
+      P_AIR,
+      P_IV,
+      ['Paramedic', 'Epinephrine 0.01 mg/kg (0.1 mL/kg of 0.1 mg/mL) IV/IO, repeat every other cycle. CPR 2 minutes, then check rhythm; continue until a pulse, a shockable rhythm, or a decision to stop with Medical Direction.', '3.2P'],
+      P_CAUSES,
+    ],
+    note: 'Cardiac arrest in children usually follows respiratory failure: optimize oxygenation and ventilation (3.2P pearl).',
+  },
+};
+TREATMENT_PEDS.ivr = TREATMENT_PEDS.brady;
+TREATMENT_PEDS.torsades = {
+  title: 'Torsades – Pediatric (3.2P, 3.5P)',
+  steps: [
+    ['EMR/EMT', 'Check for a pulse. No pulse: Cardiac Arrest – Pediatric 3.2P.', '3.2P'],
+    ['Paramedic', 'Pulseless torsades: magnesium sulfate 25–50 mg/kg (max 2 g) IV/IO over 1–2 minutes, with defibrillation per 3.2P.', '3.2P'],
+    ['Paramedic', 'With a pulse: wide complex, contact online Medical Control (3.5P).', '3.5P'],
+  ],
+};

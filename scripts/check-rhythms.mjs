@@ -4,7 +4,7 @@
 import { RHYTHMS } from '../src/js/rhythms.js';
 import { Engine } from '../src/js/engine.js';
 import { leadSignal, qrsAxis, LEADS } from '../src/js/ecg.js';
-import { TREATMENT, TREATMENT_FOR, TREAT_Q } from '../src/js/clinical.js';
+import { TREATMENT, TREATMENT_FOR, TREAT_Q, TREATMENT_PEDS } from '../src/js/clinical.js';
 import { SCENARIOS } from '../src/js/scenarios.js';
 
 const SECONDS = 60;
@@ -142,6 +142,10 @@ console.log('(QRS axes)');
 // ---- Clinical content integrity ----
 for (const r of RHYTHMS) expectTrue(`treatment mapped for ${r.id}`, TREATMENT[TREATMENT_FOR[r.id]]);
 for (const [k, t] of Object.entries(TREATMENT)) for (const st of t.steps) expectTrue(`treatment ${k} step has level, text and citation`, st.length === 3 && st[0] && st[1] && st[2]);
+for (const [k, t] of Object.entries(TREATMENT_PEDS)) {
+  expectTrue(`pediatric ${k} matches an adult key`, TREATMENT[k]);
+  for (const st of t.steps) expectTrue(`pediatric ${k} step cites a pediatric NH protocol`, st.length === 3 && /^3\.\dP$/.test(st[2]));
+}
 for (const [k, list] of Object.entries(TREAT_Q)) {
   expectTrue(`treatment question key ${k} exists`, TREATMENT[k]);
   for (const q of list) expectTrue(`question "${q.q.slice(0, 40)}" has 3 distinct distractors`, q.x.length === 3 && !q.x.includes(q.a) && new Set(q.x).size === 3);

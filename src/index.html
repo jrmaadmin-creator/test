@@ -97,8 +97,8 @@
       <button type="button" role="tab" id="tab-twelve" aria-controls="panel-twelve" data-modes="twelve">12-lead</button>
       <button type="button" role="tab" id="tab-compare" aria-controls="panel-compare" data-modes="compare">Compare</button>
       <button type="button" role="tab" id="tab-quiz" aria-controls="panel-quiz" data-modes="quiz">Quiz</button>
-      <button type="button" role="tab" id="tab-crew" aria-controls="panel-crew" data-modes="quiz">Crew</button>
       <button type="button" role="tab" id="tab-scenario" aria-controls="panel-scenario" data-modes="scenario">Scenario</button>
+      <button type="button" role="tab" id="tab-crew" aria-controls="panel-crew" data-modes="quiz scenario">Crew</button>
     </div>
     <div class="panel" role="tabpanel" id="panel-rhythm" aria-labelledby="tab-rhythm"></div>
     <div class="panel" role="tabpanel" id="panel-treat" aria-labelledby="tab-treat" hidden></div>
@@ -113,10 +113,10 @@
       <h2>Crew progress</h2>
       <p id="crew-status">Checking whether this page can share results…</p>
       <table class="facts crew-table">
-        <thead><tr><th>Name</th><th>Answered</th><th>Accuracy</th><th>Mastered</th></tr></thead>
+        <thead><tr><th>Name</th><th>Answered</th><th>Accuracy</th><th>Mastered</th><th>Calls</th></tr></thead>
         <tbody id="crew-rows"></tbody>
       </table>
-      <p class="muted">Mastered: answered correctly at least 3 times, with at least twice as many right answers as misses.</p>
+      <p class="muted">Mastered: answered correctly at least 3 times, with at least twice as many right answers as misses. Calls: scenarios completed with no wrong turns, out of scenarios run.</p>
     </div>
   </aside>
 

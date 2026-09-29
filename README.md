@@ -16,7 +16,7 @@ Double-click `dist/heart-conduction-lab.html`. It is one self-contained file and
 | 12-lead | A 10-second 12-lead with calibration pulses and a lead II rhythm strip; frontal and horizontal axis diagrams with the measured QRS axis; how a 12-lead works. Click a lead to put it on the monitor |
 | Compare | Rhythms stacked on the same time scale with timelines: AV blocks, fast and narrow, wide complexes, cardiac arrest, where the beat starts, real vs artifact |
 | Quiz | Heart and strip only. Multiple choice or hard mode (all rhythms), strip-only option, misses come back more often, plus an NH treatment question after each rhythm. Crew progress table in the shared online version |
-| Scenarios | 7 adult calls (complete heart block, SVT, VF arrest to ROSC, narrow PEA, wide PEA/hyperkalemia, stable-to-unstable VT, torsades). Each decision graded against NH v9.3 with the protocol cited; the monitor changes as you treat |
+| Scenarios | 9 calls: 7 adult (complete heart block, SVT, VF arrest to ROSC, narrow PEA, wide PEA/hyperkalemia, stable-to-unstable VT, torsades) and 2 pediatric (hypoxic infant bradycardia, commotio cordis VF). Graded against NH v9.3 with the protocol cited; monitor and vitals change as you treat. Optional timed mode (20 s per decision). Results count toward crew progress |
 
 ## Contents
 
@@ -27,7 +27,7 @@ Double-click `dist/heart-conduction-lab.html`. It is one self-contained file and
 | Strip | Any of the 12 leads. Standard paper (25 mm/s, 10 mm/mV), always 6 seconds (two 3-second rows on phones). Wave labels, PR/QRS brackets, calipers, auto-gain |
 | Timeline | Ladder diagram (A / AV / V tiers) under the strip: where each impulse starts, how long it takes, where it is blocked |
 | Pulse | Arterial pulse per beat from filling time, atrial kick and coordination. Shows pulse deficit, PEA and arrest |
-| Treatment | NH Patient Care Protocols v9.3 adult steps (3.1A, 3.2A, 3.4, 3.5A, 3.6), tagged by level and cited by protocol number (ADR 0004) |
+| Treatment | NH Patient Care Protocols v9.3, adult (3.1A, 3.2A, 3.4, 3.5A, 3.6) and pediatric (3.1P, 3.2P, 3.5P) with an Adult/Pediatric switch; tagged by level and cited by protocol number (ADR 0004) |
 
 Controls: Space plays/pauses, left/right arrows change rhythm, 1–4 answer quiz questions, Enter goes to the next one. Links: `#avb2-1` (learn), `#12lead.rbbb`, `#compare.avblocks`, `#quiz`, `#scenario`.
 

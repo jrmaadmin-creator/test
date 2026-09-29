@@ -578,3 +578,10 @@ kbd { font: 600 0.72rem var(--font-mono); border: 1px solid var(--line); border-
 @media (prefers-reduced-motion: reduce) {
   .pathway li { transition: none; }
 }
+
+.age-pick { margin-top: 8px; }
+.age-pick button { font-family: var(--font-display); font-size: var(--step--1); padding: 5px 12px; }
+.case-timer { font-weight: 700; color: var(--accent); }
+.case-timer[data-low="1"] { color: var(--block); }
+.case-record { font: 600 0.75rem var(--font-mono); color: var(--accent); }
+.struct strong small { margin-left: auto; }

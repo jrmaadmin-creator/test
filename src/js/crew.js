@@ -2,7 +2,8 @@
 // are saved to the page's shared database so the officer can see who has
 // practiced what. The offline file has no shared database; it says so.
 //
-// Storage: progress/<viewer id> = { total, correct, best, per: { rhythmId: { r, w } }, updated }
+// Storage: progress/<viewer id> = { total, correct, best, per: { rhythmId: { r, w } },
+//   treat: { r, w }, scen: { scenarioId: { runs, clean, best } }, updated }
 // Only ids are stored; names are resolved at render time.
 
 export async function initCrew(panel, rhythms) {
@@ -36,7 +37,7 @@ export async function initCrew(panel, rhythms) {
     if (!rows.length) {
       const tr = document.createElement('tr');
       const td = document.createElement('td');
-      td.colSpan = 4;
+      td.colSpan = 5;
       td.className = 'muted';
       td.textContent = 'No results yet. Answer a quiz question to start the table.';
       tr.appendChild(td);
@@ -47,12 +48,15 @@ export async function initCrew(panel, rhythms) {
     for (const r of sorted) {
       const p = people[r.id];
       const mastered = Object.values(r.per || {}).filter((x) => x.r >= 3 && x.r >= 2 * x.w).length;
+      const calls = Object.values(r.scen || {});
+      const clean = calls.filter((x) => x.clean > 0).length;
       const tr = document.createElement('tr');
       const cells = [
         p?.isMe ? `${p.name || 'You'} (you)` : p?.name || 'Crew member',
         String(r.total || 0),
         r.total ? `${Math.round((100 * (r.correct || 0)) / r.total)}%` : '—',
         `${mastered} of ${rhythms.length}`,
+        calls.length ? `${clean} clean / ${calls.length} run` : '—',
       ];
       for (const c of cells) {
         const td = document.createElement('td');
@@ -92,10 +96,22 @@ export async function initCrew(panel, rhythms) {
     if (pending) flush();
   };
 
+  // Quiz and scenario results share one document; start from what is stored.
+  let current = {};
+  if (uid) {
+    try {
+      const snap = await db.doc(`progress/${uid}`).get();
+      if (snap.exists) current = { ...snap.data() };
+    } catch {
+      /* start empty; the first save creates the document */
+    }
+  }
+
   return {
-    save(stats) {
+    save(fields) {
       if (!uid) return;
-      pending = { total: stats.total, correct: stats.correct, best: stats.best, per: stats.per, updated: Date.now() };
+      current = { ...current, ...fields, updated: Date.now() };
+      pending = current;
       flush();
     },
   };

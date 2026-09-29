@@ -25,7 +25,7 @@
 | `show` | string[] | Optional 3D structures to display |
 | `expect` | `{ vRate, aRate, pr, qrs, regular }` | Ranges enforced by `npm run check` |
 
-Clinical text lives in `src/js/clinical.js`: `TWELVE[id]` (12-lead findings), `TREATMENT_FOR[id]` → a key in `TREATMENT` (steps are `[level, text, NH protocol number or 'AHA']`), and `TREAT_Q[key]` quiz questions (`{ q, a, x: [3 distractors], cite }`). Scenarios in `src/js/scenarios.js`: `{ id, title, dispatch, patient, vitals, rhythm, steps: [{ q, o: [[text, correct, feedback]], rhythm? }] }`.
+Clinical text lives in `src/js/clinical.js`: `TWELVE[id]` (12-lead findings), `TREATMENT_FOR[id]` → a key in `TREATMENT` (steps are `[level, text, NH protocol number or 'AHA']`), and `TREATMENT_PEDS[key]` (pediatric, cites 3.xP), `TREAT_Q[key]` quiz questions (`{ q, a, x: [3 distractors], cite }`). Scenarios in `src/js/scenarios.js`: `{ id, title, dispatch, patient, vitals, rhythm, peds?, steps: [{ q, o: [[text, correct, feedback]], rhythm?, vitals? }] }`. Crew progress document: `progress/<viewer id>` = `{ total, correct, best, per, treat, scen: { id: { runs, clean, best } }, updated }`.
 
 ## Beat (`src/js/engine.js`)
 
