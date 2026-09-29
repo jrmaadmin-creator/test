@@ -16,7 +16,7 @@ window.JRMA = window.JRMA || {};
 window.JRMA.CREW = {
   // Hands out your gloves on day one; station wisdom.
   chief: {
-    name: 'Chief Barnaby', role: 'Chief', placeholder: true,
+    name: 'Chief Adam', role: 'Chief',
     look: { skin: '#d9a070', hair: '#dcdcdc', shirt: '#f2f2ee', pants: '#1d2744', accent: '#f2b632', hat: '#f2f2ee' },
   },
   // Rides with you on every call and gives the hints ("Ask ...").
@@ -26,7 +26,7 @@ window.JRMA.CREW = {
   },
   // Runs the Protocol Trials that advance your license.
   trainer: {
-    name: 'Lt. Hale', role: 'Training Officer', placeholder: true,
+    name: 'Capt. Joshua', role: 'Captain and Training Officer',
     look: { skin: '#7a4a2e', hair: '#1e1e1e', shirt: '#2c3f6e', pants: '#1d2744', accent: '#f2b632', glasses: true },
   },
 };

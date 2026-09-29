@@ -1391,7 +1391,7 @@ function startExam(o, replay) {
   B = freshBattle(o, replay, { qs, qi: 0, correct: 0, hearts, maxHearts: hearts });
   showBattlePanel();
   $('#b-title').textContent = `BOSS PHASE 2 · ${o.title}`;
-  $('#b-sub').textContent = `${o.domain} · ${CREW.trainer.name}, ${CREW.trainer.role}${replay ? ' · Replay' : ''}`;
+  $('#b-sub').textContent = `${o.domain} · ${CREW.trainer.name}, ${CREW.trainer.role.replace(/^Captain and /, '')}${replay ? ' · Replay' : ''}`;
   $('#b-mname').innerHTML = `<b>${esc(o.monster.cond.toUpperCase())}</b> "${esc(o.monster.name)}"`;
   $('#b-hearts-lbl').textContent = 'Misses left';
   $('#b-clock').hidden = true; $('#b-hint').hidden = true;

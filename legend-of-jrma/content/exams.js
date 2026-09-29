@@ -108,7 +108,7 @@ window.JRMA.EXAMS = {
     title: 'AEMT Trial: Earn Your Paramedic', loc: 'JRMA Station', dir: 'home',
     domain: 'Phase 2 boss: AEMT-level protocols',
     urgent: 'Phase two. AEMT protocols, eight questions. Pass and you walk out a paramedic. Miss three and the Binder wins.',
-    after: 'Paramedic. Top of the scope. When you are not sure, call medical control. That is what we are here for.',
+    after: 'Paramedic. Top of the scope. When you are not sure, call medical control. That is what it is there for.',
     monster: { cond: 'The Protocol Binder, Revised', name: 'Binder of Infinite Pages (Revised)', draw: 'binder2', hit: 'loses a tab divider', win: 'is recycled' },
     bank: [
       { q: 'Adult diabetic responds only to pain. Glucose 31 mg/dL. IV attempts failed. Best next medication?',

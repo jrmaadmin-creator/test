@@ -249,7 +249,7 @@ window.JRMA = window.JRMA || {};
 window.JRMA.CREW = {
   // Hands out your gloves on day one; station wisdom.
   chief: {
-    name: 'Chief Barnaby', role: 'Chief', placeholder: true,
+    name: 'Chief Adam', role: 'Chief',
     look: { skin: '#d9a070', hair: '#dcdcdc', shirt: '#f2f2ee', pants: '#1d2744', accent: '#f2b632', hat: '#f2f2ee' },
   },
   // Rides with you on every call and gives the hints ("Ask ...").
@@ -259,7 +259,7 @@ window.JRMA.CREW = {
   },
   // Runs the Protocol Trials that advance your license.
   trainer: {
-    name: 'Lt. Hale', role: 'Training Officer', placeholder: true,
+    name: 'Capt. Joshua', role: 'Captain and Training Officer',
     look: { skin: '#7a4a2e', hair: '#1e1e1e', shirt: '#2c3f6e', pants: '#1d2744', accent: '#f2b632', glasses: true },
   },
 };
@@ -995,7 +995,7 @@ window.JRMA.EXAMS = {
     title: 'AEMT Trial: Earn Your Paramedic', loc: 'JRMA Station', dir: 'home',
     domain: 'Phase 2 boss: AEMT-level protocols',
     urgent: 'Phase two. AEMT protocols, eight questions. Pass and you walk out a paramedic. Miss three and the Binder wins.',
-    after: 'Paramedic. Top of the scope. When you are not sure, call medical control. That is what we are here for.',
+    after: 'Paramedic. Top of the scope. When you are not sure, call medical control. That is what it is there for.',
     monster: { cond: 'The Protocol Binder, Revised', name: 'Binder of Infinite Pages (Revised)', draw: 'binder2', hit: 'loses a tab divider', win: 'is recycled' },
     bank: [
       { q: 'Adult diabetic responds only to pain. Glucose 31 mg/dL. IV attempts failed. Best next medication?',
@@ -2307,7 +2307,7 @@ function startExam(o, replay) {
   B = freshBattle(o, replay, { qs, qi: 0, correct: 0, hearts, maxHearts: hearts });
   showBattlePanel();
   $('#b-title').textContent = `BOSS PHASE 2 · ${o.title}`;
-  $('#b-sub').textContent = `${o.domain} · ${CREW.trainer.name}, ${CREW.trainer.role}${replay ? ' · Replay' : ''}`;
+  $('#b-sub').textContent = `${o.domain} · ${CREW.trainer.name}, ${CREW.trainer.role.replace(/^Captain and /, '')}${replay ? ' · Replay' : ''}`;
   $('#b-mname').innerHTML = `<b>${esc(o.monster.cond.toUpperCase())}</b> "${esc(o.monster.name)}"`;
   $('#b-hearts-lbl').textContent = 'Misses left';
   $('#b-clock').hidden = true; $('#b-hint').hidden = true;
