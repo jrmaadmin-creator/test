@@ -8,6 +8,7 @@ EMS training RPG for JRMA crews. Levels: EMT, AEMT, Paramedic. Each level: a few
 - `index.html`: engine (canvas overworld, call and trial panels, sprites, sound).
 - `content/`: all medical content. See `content/CLAUDE.md` before editing.
 - `content/crew.js`: which JRMA officer plays each role. Text uses `{chief}`, `{partner}`, `{trainer}` tokens, never names.
+- `content/scenes.js`: art and hotspots for hands-on simulations. Steps opt in with a `sim` field (ADR-0002).
 - `docs/`: Diataxis docs. ADRs in `docs/adr/`.
 - `tests/smoke.mjs`: content validation plus a full playthrough in Chromium.
 

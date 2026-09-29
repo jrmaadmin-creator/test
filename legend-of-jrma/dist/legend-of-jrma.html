@@ -134,13 +134,45 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .gauge-lbls{display:flex;justify-content:space-between;width:100%;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .rate{font-family:var(--font-display);font-size:34px;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1}
 .rate small{font-size:13px;color:var(--muted)}
-.tq-svg{width:min(360px,100%);height:auto;display:block;touch-action:none;user-select:none;-webkit-user-select:none;background:#0c111d;border:2px solid #000;cursor:grab}
-.tq-svg:active{cursor:grabbing}
-.tq-steps{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:0;padding:0;list-style:none;font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
-.tq-steps li{border:2px solid var(--line);padding:3px 8px;color:var(--muted)}
-.tq-steps li.now{border-color:var(--gold);color:var(--gold)}
-.tq-steps li.ok{border-color:var(--ok);color:var(--ok)}
-.tq-status{min-height:1.4em;text-align:center;font-weight:600}
+.sim-svg{width:min(360px,100%);height:auto;display:block;touch-action:none;user-select:none;-webkit-user-select:none;background:#0c111d;border:2px solid #000}
+.sim-svg .zone{fill:transparent;outline:none}
+.sim-svg .zone:focus-visible{stroke:var(--gold);stroke-width:2;stroke-dasharray:3 3}
+.sim-svg .coach{fill:none;stroke:var(--ok);stroke-width:2;stroke-dasharray:4 3;animation:blink 1s steps(2) infinite}
+.sim-svg .tok{cursor:grab}
+#tq-svg{cursor:grab}
+.sim-steps{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:0;padding:0;list-style:none;font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.sim-steps li{border:2px solid var(--line);padding:3px 8px;color:var(--muted)}
+.sim-steps li.now{border-color:var(--gold);color:var(--gold)}
+.sim-steps li.ok{border-color:var(--ok);color:var(--ok)}
+.sim-prompt{font-weight:600}
+.sim-body,.sim-ctl{width:100%;display:flex;flex-direction:column;align-items:center;gap:8px}
+.sim-ctl:empty{display:none}
+.sim-ctl .actions{width:100%}
+.sim-status{min-height:1.4em;text-align:center;font-weight:600}
+.sim-status.bad{color:var(--siren)}.sim-status.good{color:var(--ok)}
+.sim-read{font-family:var(--font-display);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sim-read b{font-size:26px;color:var(--gold);font-weight:400}
+.sim-art{width:min(360px,100%);height:auto;display:block}
+.sim-art.flow{width:min(220px,100%)}
+.sim-strip{width:min(360px,100%);height:auto;display:block;border:2px solid #000}
+.dial-row{display:flex;gap:8px;align-items:center;width:min(360px,100%)}
+.dial-row input{flex:1;min-width:0;accent-color:var(--gold)}
+.dial-btn{justify-content:center;min-width:48px;font-size:20px;font-family:var(--font-display)}
+.sim-order{align-self:stretch;margin:0;padding-left:1.4em;color:var(--ok)}
+.sim-order:empty{display:none}
+.radio{display:flex;gap:10px;align-items:center;border:2px solid var(--line);padding:10px 12px;width:min(360px,100%);min-height:3.4em}
+.radio .led{width:12px;height:12px;border-radius:50%;background:#554;flex:none}
+.radio.live{border-color:var(--ok)}.radio.live .led{background:var(--ok)}
+.sim-back{background:transparent;border:2px solid var(--line);padding:4px 10px;font-family:var(--font-display);font-size:10px;letter-spacing:.06em;cursor:pointer;color:var(--muted)}
+.sim-back:hover{border-color:var(--gold)}
+#shock-hands{transition:transform .3s steps(3),opacity .3s steps(3)}
+#shock-hands.off{transform:translateY(-34px);opacity:.35}
+.bob{animation:bob .55s steps(2) infinite}
+.spin{transform-origin:120px 92px;animation:spin .5s linear infinite}
+.beat{animation:blink 1s steps(2) infinite}
+@keyframes bob{50%{transform:translateY(3px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes blink{50%{opacity:.25}}
 @media (max-width:700px){.b-grid{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:460px){.actions{grid-template-columns:minmax(0,1fr)}}
 @keyframes shake{33%{transform:translateX(-3px)}66%{transform:translateX(3px)}}
@@ -232,7 +264,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     </div>
   </div>
 
-  <p class="footnote">Move: <kbd>Arrows</kbd>/<kbd>WASD</kbd> · Talk, open: <kbd>Space</kbd>/<kbd>Z</kbd> · Calls: tap an action or press <kbd>1</kbd>-<kbd>9</kbd>. Training aid, not a protocol: the NH Patient Care Protocols and your medical director have the final word.</p>
+  <p class="footnote">Move: <kbd>Arrows</kbd>/<kbd>WASD</kbd> · Talk, open: <kbd>Space</kbd>/<kbd>Z</kbd> · Calls: tap an action or press <kbd>1</kbd>-<kbd>9</kbd>. Hands-on skills: drag, hold, or slide; keyboard uses <kbd>Tab</kbd>, <kbd>Space</kbd>, and arrows. Training aid, not a protocol: the NH Patient Care Protocols and your medical director have the final word.</p>
   <div class="sr-only" id="sr" aria-live="polite"></div>
 </main>
 
@@ -272,6 +304,366 @@ window.JRMA.CREW = {
 };
 </script>
 <script>
+/* inlined from content/scenes.js */
+/* Legend of JRMA: scenes for hands-on simulations.
+ *
+ * Each scene is SVG art (viewBox 240 x 200) plus hotspot `zones`. A `place`
+ * stage in content/calls.js names the zones that are right (`targets`) and
+ * the tempting wrong ones (`decoys`). Zone `why` is the default feedback when
+ * a player drops something on the wrong spot; a stage can override it.
+ *
+ * Coordinates: x 0-240 left to right, y 0-200 top to bottom. The patient's
+ * right side is on the viewer's left (patient faces up or toward you).
+ * Art inside an element with data-show="name" stays hidden until a stage
+ * lists that name in `show`; data-hide="name" hides art when it is listed.
+ */
+window.JRMA = window.JRMA || {};
+
+(() => {
+  const SKIN = '#e2a77a', SKIN_LO = '#d99a6c', CREASE = '#c98f63', INK = '#000';
+  const txt = (x, y, s, size = 8, fill = '#cfd6e0') => `<text x="${x}" y="${y}" text-anchor="middle" font-size="${size}" font-family="Silkscreen, monospace" fill="${fill}">${s}</text>`;
+  let tiles = '';
+  for (let y = 0; y < 200; y += 20) for (let x = 0; x < 240; x += 20) tiles += `<rect x="${x + 1}" y="${y + 1}" width="18" height="18" fill="${(x + y) % 40 ? '#d7dde3' : '#c9d0d8'}"/>`;
+  let pink = '';
+  for (let y = 0; y < 200; y += 14) for (let x = 0; x < 100; x += 14) pink += `<rect x="${x + 1}" y="${y + 1}" width="12" height="12" fill="${(x + y) % 28 ? '#f4c6d6' : '#efb6ca'}"/>`;
+  let grid = '';
+  for (let x = 0; x <= 240; x += 12) grid += `<line x1="${x}" y1="0" x2="${x}" y2="200" stroke="#fff" stroke-opacity=".04"/>`;
+  const ribs = [44, 56, 68, 80, 92].map((y) => `<path d="M112 ${y} Q88 ${y + 6} 62 ${y + 22}" stroke="#c98f63" stroke-opacity=".5" fill="none"/><path d="M128 ${y} Q152 ${y + 6} 178 ${y + 22}" stroke="#c98f63" stroke-opacity=".5" fill="none"/>`).join('');
+
+  window.JRMA.SCENES = {
+    face: {
+      label: 'The patient\'s face and neck, seen from the front.',
+      tok: [206, 184],
+      art: `
+        <rect x="94" y="120" width="52" height="80" fill="${SKIN_LO}"/>
+        <rect x="114" y="162" width="12" height="38" rx="5" fill="${CREASE}"/>
+        <ellipse cx="66" cy="92" rx="9" ry="17" fill="${SKIN_LO}" stroke="${INK}"/>
+        <ellipse cx="174" cy="92" rx="9" ry="17" fill="${SKIN_LO}" stroke="${INK}"/>
+        <ellipse cx="120" cy="86" rx="52" ry="62" fill="${SKIN}" stroke="${INK}" stroke-width="2"/>
+        <path d="M70 72 Q70 22 120 22 Q170 22 170 72 Q160 44 120 42 Q80 44 70 72 Z" fill="#5a3a22"/>
+        <path data-hide="awake" d="M92 80 q8 5 16 0 M132 80 q8 5 16 0" stroke="${INK}" stroke-width="2" fill="none"/>
+        <g data-show="awake"><ellipse cx="100" cy="80" rx="8" ry="4.5" fill="#fff" stroke="${INK}"/><ellipse cx="140" cy="80" rx="8" ry="4.5" fill="#fff" stroke="${INK}"/><circle cx="101" cy="80" r="2.6" fill="#3a2a1a"/><circle cx="139" cy="80" r="2.6" fill="#3a2a1a"/></g>
+        <path d="M120 80 L112 104 Q120 111 128 104" stroke="#8a5a3a" stroke-width="2" fill="none"/>
+        <ellipse cx="114" cy="107" rx="3.5" ry="2" fill="#4a2a1a"/>
+        <ellipse cx="126" cy="107" rx="3.5" ry="2" fill="#4a2a1a"/>
+        <path d="M104 126 Q120 120 136 126 Q120 134 104 126 Z" fill="#8a4a58" stroke="${INK}"/>
+        <path d="M108 142 Q120 148 132 142" stroke="${CREASE}" stroke-width="2" fill="none"/>
+        <g data-show="mask">
+          <path d="M120 92 L98 134 Q120 146 142 134 Z" fill="#bfe3ff" fill-opacity=".45" stroke="#9fd3ff" stroke-width="2"/>
+          <rect x="142" y="112" width="18" height="10" fill="#9fd3ff"/>
+          <ellipse id="bvm-bag" cx="196" cy="117" rx="36" ry="17" fill="#2f6fb0" stroke="${INK}" stroke-width="2"/>
+        </g>`,
+      zones: {
+        forehead: { x: 120, y: 50, r: 14, name: 'Forehead', why: 'That is the forehead.' },
+        chin: { x: 120, y: 142, r: 8, name: 'Bony point of the chin', why: 'That is the bony chin.' },
+        underChin: { x: 120, y: 156, r: 6, name: 'Soft tissue under the chin', why: 'That is soft tissue. Pressing there pushes the tongue back into the airway. Lift the bony part of the chin.' },
+        trachea: { x: 120, y: 182, r: 7, name: 'Windpipe', why: 'That is the windpipe. Slide your fingers off it, into the groove beside it.' },
+        carotidR: { x: 104, y: 180, r: 8, name: 'Groove beside the windpipe, patient\'s right', why: 'That is the carotid groove.' },
+        carotidL: { x: 136, y: 180, r: 8, name: 'Groove beside the windpipe, patient\'s left', why: 'That is the carotid groove.' },
+        nareR: { x: 114, y: 107, r: 5, name: 'Right nostril', why: 'That is a nostril.' },
+        nareL: { x: 126, y: 107, r: 5, name: 'Left nostril', why: 'That is a nostril.' },
+        noseTip: { x: 120, y: 97, r: 5, name: 'Tip of the nose', why: 'Tip of the nose to the earlobe is how you size an NPA, not an OPA.' },
+        mouth: { x: 120, y: 127, r: 7, name: 'Middle of the mouth, on the tongue', why: 'A glob on the tongue can slide back and choke him.' },
+        mouthCorner: { x: 104, y: 126, r: 5, name: 'Corner of the mouth', why: 'Corner of the mouth to the earlobe is how you size an OPA, not an NPA.' },
+        cheek: { x: 95, y: 122, r: 7, name: 'Inside the cheek, beside the gum', why: 'That is the cheek.' },
+        earlobeR: { x: 66, y: 106, r: 7, name: 'Right earlobe', why: 'That is the earlobe.' },
+        earlobeL: { x: 174, y: 106, r: 7, name: 'Left earlobe', why: 'That is the earlobe.' },
+        jawR: { x: 86, y: 126, r: 7, name: 'Angle of the jaw, right', why: 'That is the angle of the jaw.' },
+        jawL: { x: 154, y: 126, r: 7, name: 'Angle of the jaw, left', why: 'That is the angle of the jaw.' },
+      },
+    },
+
+    hand: {
+      label: 'A fingertip, palm side up, close up.',
+      tok: [206, 184],
+      art: `
+        <rect x="0" y="160" width="240" height="40" fill="#1b2233"/>
+        <path d="M88 200 L88 60 Q88 22 120 22 Q152 22 152 60 L152 200 Z" fill="${SKIN}" stroke="${INK}" stroke-width="2"/>
+        <circle cx="120" cy="68" r="6" fill="none" stroke="${CREASE}" stroke-opacity=".6"/>
+        <circle cx="120" cy="68" r="11" fill="none" stroke="${CREASE}" stroke-opacity=".6"/>
+        <circle cx="120" cy="68" r="16" fill="none" stroke="${CREASE}" stroke-opacity=".6"/>
+        <path d="M92 118 Q120 124 148 118" stroke="${CREASE}" stroke-width="2" fill="none"/>
+        <path d="M92 176 Q120 182 148 176" stroke="${CREASE}" stroke-width="2" fill="none"/>`,
+      zones: {
+        pad: { x: 120, y: 68, r: 12, name: 'Center of the fingertip pad', why: 'The center of the pad has the most nerve endings. Lance the side of the fingertip.' },
+        tip: { x: 120, y: 30, r: 7, name: 'Very tip of the finger', why: 'The very tip hurts the most. Lance the side of the fingertip.' },
+        sideR: { x: 94, y: 74, r: 7, name: 'Side of the fingertip (left edge)', why: 'That is the side of the fingertip.' },
+        sideL: { x: 146, y: 74, r: 7, name: 'Side of the fingertip (right edge)', why: 'That is the side of the fingertip.' },
+      },
+    },
+
+    legs: {
+      label: 'Both legs from the front, patient lying on his back.',
+      tok: [206, 184],
+      art: `
+        <path d="M44 0 H196 V32 Q120 42 44 32 Z" fill="#2c3f6e"/>
+        <path d="M46 30 L114 34 L106 116 L60 116 Z" fill="${SKIN}" stroke="${INK}" stroke-width="2"/>
+        <path d="M194 30 L126 34 L134 116 L180 116 Z" fill="${SKIN}" stroke="${INK}" stroke-width="2"/>
+        <ellipse cx="83" cy="120" rx="24" ry="10" fill="${SKIN_LO}" stroke="${INK}"/>
+        <ellipse cx="157" cy="120" rx="24" ry="10" fill="${SKIN_LO}" stroke="${INK}"/>
+        <circle cx="83" cy="118" r="6" fill="#efb88c"/><circle cx="157" cy="118" r="6" fill="#efb88c"/>
+        <path d="M62 124 L104 124 L98 200 L68 200 Z" fill="${SKIN}" stroke="${INK}" stroke-width="2"/>
+        <path d="M178 124 L136 124 L142 200 L172 200 Z" fill="${SKIN}" stroke="${INK}" stroke-width="2"/>
+        <path d="M83 130 L83 196 M157 130 L157 196" stroke="${CREASE}" stroke-opacity=".6"/>
+        <g data-show="wound">
+          <ellipse cx="80" cy="84" rx="12" ry="5" fill="#7a0f14"/>
+          <ellipse cx="80" cy="83" rx="8" ry="2.5" fill="#c8232a"/>
+          <path d="M84 89 q2 10 -1 18" stroke="#c8232a" stroke-width="3" fill="none"/>
+        </g>`,
+      zones: {
+        outerThighR: { x: 60, y: 70, r: 9, name: 'Outer thigh, right leg', why: 'That is the outer thigh.' },
+        outerThighL: { x: 180, y: 70, r: 9, name: 'Outer thigh, left leg', why: 'That is the outer thigh.' },
+        innerThighR: { x: 102, y: 70, r: 8, name: 'Inner thigh, right leg', why: 'The inner thigh has big blood vessels and nerves. Use the outer thigh.' },
+        innerThighL: { x: 138, y: 70, r: 8, name: 'Inner thigh, left leg', why: 'The inner thigh has big blood vessels and nerves. Use the outer thigh.' },
+        kneeR: { x: 83, y: 120, r: 10, name: 'Right knee', why: 'That is a joint. Never over, into, or through a joint.' },
+        kneeL: { x: 157, y: 120, r: 10, name: 'Left knee', why: 'That is a joint. Never over, into, or through a joint.' },
+        tibiaR: { x: 91, y: 140, r: 7, name: 'Flat inner face of the right shin, just below the knee', why: 'That is the proximal tibia.' },
+        tibiaL: { x: 149, y: 140, r: 7, name: 'Flat inner face of the left shin, just below the knee', why: 'That is the proximal tibia.' },
+        tqHigh: { x: 80, y: 42, r: 8, name: 'High on the thigh, at the groin crease', why: '"High and tight" is for an unsafe scene or a wound you cannot see. This scene is safe: NH wants bare skin, 2-3 inches above the wound.' },
+        tqAbove: { x: 80, y: 69, r: 6, name: 'On the thigh, 2-3 inches above the wound', why: 'That is 2-3 inches above the wound.' },
+        tqOver: { x: 80, y: 84, r: 7, name: 'Right on the wound', why: 'A tourniquet on the wound itself does not squeeze the artery that feeds it. Go 2-3 inches above.' },
+        tqBelow: { x: 80, y: 101, r: 7, name: 'Below the wound', why: 'Arterial blood comes from the heart, above the wound. A tourniquet below it does nothing.' },
+      },
+    },
+
+    chest: {
+      label: 'The patient\'s bare chest from the front, lying on his back. His right side is on your left. For lead placement, numbers mark the intercostal spaces (ICS) beside the sternum; dashed lines mark the midclavicular (MCL), anterior axillary (AAL), and midaxillary (MAL) lines.',
+      tok: [206, 190],
+      art: `
+        <rect x="104" y="0" width="32" height="26" fill="${SKIN_LO}"/>
+        <path d="M34 26 L10 40 L14 124 L36 112 Z" fill="${SKIN_LO}" stroke="${INK}"/>
+        <path d="M206 26 L230 40 L226 124 L204 112 Z" fill="${SKIN_LO}" stroke="${INK}"/>
+        <path d="M40 22 Q120 14 200 22 L206 60 Q196 110 186 150 L192 200 H48 L54 150 Q44 110 34 60 Z" fill="${SKIN}" stroke="${INK}" stroke-width="2"/>
+        ${ribs}
+        <path d="M118 26 Q90 20 58 28 M122 26 Q150 20 182 28" stroke="${CREASE}" stroke-width="3" fill="none"/>
+        <rect x="114" y="30" width="12" height="76" rx="4" fill="${SKIN_LO}"/>
+        <path d="M114 106 L120 116 L126 106 Z" fill="${SKIN_LO}"/>
+        <circle cx="86" cy="80" r="3" fill="#a0624a"/><circle cx="154" cy="80" r="3" fill="#a0624a"/>
+        <ellipse cx="120" cy="160" rx="2" ry="3" fill="#a0624a"/>
+        <path d="M70 186 Q96 180 110 200 M170 186 Q144 180 130 200" stroke="${CREASE}" stroke-width="2" fill="none"/>
+        <g data-show="ics">
+          ${[['2', 50], ['3', 62], ['4', 74], ['5', 86]].map(([n, y]) => txt(100, y + 3, n, 7, '#6b3a1a')).join('')}
+          ${[[88, 'MCL'], [152, 'MCL'], [174, 'AAL'], [192, 'MAL']].map(([x, l]) => `<line x1="${x}" y1="40" x2="${x}" y2="130" stroke="#6b3a1a" stroke-opacity=".45" stroke-dasharray="3 3"/>${txt(x, 37, l, 6, '#6b3a1a')}`).join('')}
+        </g>`,
+      zones: {
+        sternumLower: { x: 120, y: 90, r: 8, name: 'Center of the chest, lower half of the breastbone', why: 'That is the lower half of the breastbone.' },
+        sternumUpper: { x: 120, y: 44, r: 8, name: 'Upper breastbone', why: 'Too high. Center of the chest, on the lower half of the breastbone.' },
+        xiphoid: { x: 120, y: 113, r: 6, name: 'Tip of the breastbone (xiphoid)', why: 'Too low. Pushing on the tip of the breastbone can injure the liver. Move up onto the lower half of the breastbone.' },
+        heartL: { x: 150, y: 94, r: 9, name: 'Left chest, over the heart', why: 'Compressions go in the center of the chest, not over the heart on the left.' },
+        belly: { x: 120, y: 145, r: 12, name: 'Upper belly', why: 'That is the belly. Compressions go on the breastbone.' },
+        padR: { x: 82, y: 44, r: 12, name: 'Right upper chest, below the collarbone', why: 'That is the right upper chest.' },
+        padLat: { x: 184, y: 108, r: 12, name: 'Left side of the chest, below the armpit', why: 'That is the left side, below the armpit.' },
+        padLUp: { x: 158, y: 44, r: 11, name: 'Left upper chest', why: 'That is the left upper chest. The pads go right upper chest and left side, so the current crosses the heart.' },
+        V1: { x: 110, y: 74, r: 5, name: 'V1 spot', why: 'That is the V1 spot: 4th intercostal space, right edge of the sternum.' },
+        V2: { x: 130, y: 74, r: 5, name: 'V2 spot', why: 'That is the V2 spot: 4th intercostal space, left edge of the sternum.' },
+        V3: { x: 141, y: 83, r: 5, name: 'V3 spot', why: 'That is the V3 spot: halfway between V2 and V4.' },
+        V4: { x: 152, y: 92, r: 6, name: 'V4 spot', why: 'That is the V4 spot: 5th intercostal space, left midclavicular line.' },
+        V5: { x: 174, y: 92, r: 6, name: 'V5 spot', why: 'That is the V5 spot: left anterior axillary line, level with V4.' },
+        V6: { x: 192, y: 92, r: 6, name: 'V6 spot', why: 'That is the V6 spot: left midaxillary line, level with V4.' },
+        V4R: { x: 88, y: 92, r: 6, name: 'V4R spot', why: 'That is V4R: 5th intercostal space, right midclavicular line.' },
+        carotidR: { x: 112, y: 10, r: 6, name: 'Neck, right side', why: 'That is the carotid.' },
+        carotidL: { x: 128, y: 10, r: 6, name: 'Neck, left side', why: 'That is the carotid.' },
+        femoralR: { x: 92, y: 186, r: 8, name: 'Right groin', why: 'That is the femoral pulse.' },
+        femoralL: { x: 148, y: 186, r: 8, name: 'Left groin', why: 'That is the femoral pulse.' },
+      },
+    },
+
+    arm: {
+      label: 'The patient\'s right arm, palm up. Shoulder on the left, hand on the right.',
+      tok: [40, 180],
+      art: `
+        <rect x="0" y="146" width="240" height="54" fill="#1b2233"/>
+        <path d="M0 78 L96 84 Q108 86 120 88 L200 94 L212 96 L212 118 L200 120 L120 124 Q108 126 96 128 L0 134 Z" fill="${SKIN}" stroke="${INK}" stroke-width="2"/>
+        <path d="M210 94 Q240 90 240 104 L240 120 Q232 124 210 120 Z" fill="${SKIN}" stroke="${INK}" stroke-width="2"/>
+        <path d="M0 90 Q60 92 100 96 Q150 98 205 100" stroke="#5a78b8" stroke-width="3" stroke-opacity=".7" fill="none"/>
+        <path d="M0 124 Q60 122 98 118 Q150 116 205 114" stroke="#5a78b8" stroke-width="3" stroke-opacity=".7" fill="none"/>
+        <path d="M97 98 Q106 108 114 117" stroke="#4a68a8" stroke-width="4" stroke-opacity=".85" fill="none"/>
+        <path d="M104 90 Q109 106 104 124" stroke="${CREASE}" stroke-width="2" fill="none" stroke-dasharray="3 3"/>
+        <path d="M200 96 L200 120" stroke="${CREASE}" stroke-width="2"/>
+        <circle class="beat" cx="96" cy="124" r="3" fill="none" stroke="#c8232a" stroke-opacity=".5"/>`,
+      zones: {
+        upperArm: { x: 50, y: 106, r: 16, name: 'Upper arm, above the elbow', why: 'That is the upper arm.' },
+        forearmBand: { x: 160, y: 108, r: 12, name: 'Forearm', why: 'The band goes above the vein you want, on the upper arm, so the veins at the elbow fill.' },
+        acVein: { x: 106, y: 108, r: 7, name: 'Vein in the crook of the elbow', why: 'That is the antecubital vein.' },
+        brachial: { x: 96, y: 124, r: 6, name: 'Pulsing spot at the inner elbow', why: 'That one pulses: it is the brachial artery. Veins do not pulse.' },
+        wrist: { x: 204, y: 108, r: 8, name: 'Inner wrist', why: 'The inner wrist packs nerves, tendons, and the radial artery close together. Pick the straight, bouncy vein at the elbow.' },
+      },
+    },
+
+    floor: {
+      label: 'A gas station restroom floor. A used syringe lies by the patient\'s arm.',
+      tok: [112, 164],
+      art: `
+        ${tiles}
+        <path d="M0 150 Q30 146 64 152 L64 164 Q30 160 0 166 Z" fill="${SKIN}" stroke="${INK}"/>
+        <ellipse cx="60" cy="50" rx="24" ry="30" fill="#f2f2ee" stroke="${INK}" stroke-width="2"/>
+        <ellipse cx="60" cy="56" rx="14" ry="18" fill="#9fc3d9"/>
+        <rect x="40" y="12" width="40" height="12" fill="#f2f2ee" stroke="${INK}"/>
+        <rect x="170" y="36" width="44" height="50" rx="4" fill="#c8232a" stroke="${INK}" stroke-width="2"/>
+        <rect x="176" y="30" width="32" height="10" fill="#f2f2ee" stroke="${INK}"/>
+        ${txt(192, 66, 'SHARPS', 8, '#fff')}
+        <rect x="172" y="120" width="40" height="52" rx="3" fill="#6b7280" stroke="${INK}" stroke-width="2"/>
+        <rect x="168" y="116" width="48" height="8" fill="#4b5563" stroke="${INK}"/>
+        ${txt(192, 150, 'TRASH', 8, '#fff')}`,
+      zones: {
+        sharps: { x: 192, y: 60, r: 26, name: 'Sharps container', why: 'That is the sharps container.' },
+        trash: { x: 192, y: 146, r: 24, name: 'Trash can', why: 'A loose needle in the trash sticks whoever empties it next.' },
+        toilet: { x: 60, y: 50, r: 26, name: 'Toilet', why: 'Flushed needles clog pipes and stick plumbers. Sharps container only.' },
+      },
+    },
+
+    bathroom: {
+      label: 'Top-down view: a narrow pink bathroom on the left, a hallway on the right. The patient is on the toilet.',
+      tok: [40, 46],
+      art: `
+        <rect x="104" y="0" width="136" height="200" fill="#7a6146"/>
+        ${[16, 40, 64, 88, 112, 136, 160, 184].map((y) => `<line x1="104" y1="${y}" x2="240" y2="${y}" stroke="#5d4934"/>`).join('')}
+        ${pink}
+        <rect x="100" y="0" width="6" height="78" fill="#2a2a2a"/><rect x="100" y="132" width="6" height="68" fill="#2a2a2a"/>
+        <rect x="22" y="10" width="36" height="10" fill="#f2f2ee" stroke="${INK}"/>
+        <ellipse cx="40" cy="42" rx="18" ry="22" fill="#f2f2ee" stroke="${INK}" stroke-width="2"/>
+        <ellipse cx="40" cy="46" rx="10" ry="13" fill="#9fc3d9"/>
+        <rect x="8" y="130" width="84" height="62" rx="16" fill="#f2f2ee" stroke="${INK}" stroke-width="2"/>
+        <rect x="16" y="138" width="68" height="46" rx="12" fill="#bfe0ef"/>
+        <rect x="66" y="96" width="16" height="12" fill="#f2b632" stroke="${INK}" transform="rotate(-18 74 102)"/>
+        <rect x="176" y="8" width="58" height="80" rx="4" fill="#8fa6d8" stroke="${INK}" stroke-width="2"/>
+        <rect x="184" y="14" width="42" height="16" rx="4" fill="#f2f2ee"/>
+        ${txt(170, 190, 'HALLWAY', 8, '#e8d8c0')}`,
+      zones: {
+        hallway: { x: 164, y: 140, r: 30, name: 'Hallway floor', why: 'That is the hallway floor.' },
+        toilet: { x: 40, y: 44, r: 22, name: 'Toilet', why: 'A toilet is not a firm, flat surface. CPR there is useless.' },
+        bathFloor: { x: 52, y: 100, r: 14, name: 'Bathroom floor', why: 'Four feet wide. Nobody can kneel on both sides of him in there. Get him out.' },
+        tub: { x: 50, y: 160, r: 26, name: 'Bathtub', why: 'A curved, slippery tub is no place for CPR, and you cannot reach him.' },
+        bed: { x: 205, y: 48, r: 30, name: 'Bed', why: 'A mattress absorbs your compressions. The floor, every time.' },
+      },
+    },
+
+    lz: {
+      label: 'Map of the crash on Route 124: road across the middle, trees top left, power lines top right, a hillside bottom left, an open field bottom right.',
+      tok: [116, 140],
+      art: `
+        <rect width="240" height="200" fill="#2f5d34"/>
+        <rect x="130" y="130" width="106" height="64" fill="#3f7c46"/>
+        <rect x="0" y="86" width="240" height="26" fill="#3a3a3a"/>
+        ${[8, 40, 72, 104, 136, 168, 200, 232].map((x) => `<rect x="${x}" y="98" width="16" height="2" fill="#f2b632"/>`).join('')}
+        <rect x="38" y="116" width="30" height="16" fill="#8a8f98" stroke="${INK}" transform="rotate(22 53 124)"/>
+        ${[[24, 26], [46, 16], [16, 52], [52, 46], [34, 40]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="13" fill="#1d3f22" stroke="#12301a"/>`).join('')}
+        <line x1="120" y1="30" x2="240" y2="26" stroke="#111" stroke-width="1.5"/><line x1="120" y1="36" x2="240" y2="32" stroke="#111" stroke-width="1.5"/>
+        ${[120, 180, 236].map((x) => `<rect x="${x - 2}" y="24" width="5" height="16" fill="#6b4a2a"/>`).join('')}
+        ${[160, 172, 184].map((r) => `<path d="M0 ${r} Q40 ${r - 22} 80 ${r}" stroke="#244a2a" fill="none"/>`).join('')}
+        ${txt(186, 192, 'OPEN FIELD', 7, '#d8f0d8')}
+        ${txt(40, 196, 'HILLSIDE', 7, '#d8f0d8')}`,
+      zones: {
+        field: { x: 182, y: 162, r: 28, name: 'Open, flat field', why: 'That is the open field.' },
+        wires: { x: 180, y: 52, r: 22, name: 'Field under the power lines', why: 'Wires are nearly invisible from the air and a known killer of helicopter crews. Pick open ground and report every wire.' },
+        trees: { x: 36, y: 36, r: 24, name: 'Tree line', why: 'Rotor wash and a tree line do not mix. The pilot needs clear approach and departure paths.' },
+        slope: { x: 42, y: 168, r: 22, name: 'Hillside', why: 'Too steep. The aircraft needs flat, level ground.' },
+      },
+    },
+
+    heli: {
+      label: 'Top-down view of the helicopter on the ground, nose pointing up, rotors turning.',
+      tok: [214, 188],
+      art: `
+        <rect width="240" height="200" fill="#3f7c46"/>
+        <circle cx="120" cy="92" r="68" fill="#fff" fill-opacity=".06" stroke="#cfd6e0" stroke-dasharray="4 6"/>
+        <rect x="116" y="124" width="8" height="58" fill="#e8e8e8" stroke="${INK}"/>
+        <circle cx="120" cy="182" r="12" fill="none" stroke="#cfd6e0" stroke-dasharray="2 3"/>
+        <ellipse cx="120" cy="90" rx="22" ry="38" fill="#e8e8e8" stroke="${INK}" stroke-width="2"/>
+        <path d="M104 66 Q120 50 136 66 L132 76 Q120 70 108 76 Z" fill="#6aa8d8" stroke="${INK}"/>
+        <g class="spin"><line x1="52" y1="92" x2="188" y2="92" stroke="#1b1d22" stroke-width="3"/><line x1="120" y1="24" x2="120" y2="160" stroke="#1b1d22" stroke-width="3"/></g>
+        ${txt(120, 12, 'NOSE', 7)}
+        ${txt(146, 196, 'TAIL ROTOR', 7)}`,
+      zones: {
+        front: { x: 120, y: 30, r: 16, name: 'In front of the nose, in the pilot\'s view', why: 'That is the front.' },
+        tail: { x: 120, y: 178, r: 16, name: 'Behind the aircraft, by the tail', why: 'The tail rotor spins so fast it is nearly invisible. It does not forgive. Front only.' },
+        rearL: { x: 60, y: 146, r: 16, name: 'Rear left side', why: 'Behind the doors you are out of the pilot\'s view and closer to the tail rotor. Approach from the front.' },
+        rearR: { x: 180, y: 146, r: 16, name: 'Rear right side', why: 'Behind the doors you are out of the pilot\'s view and closer to the tail rotor. Approach from the front.' },
+      },
+    },
+
+    staging: {
+      label: 'Street map: Pine Hollow Apartments at the top, its parking lot to the right, a street in front, a side street around a corner at the bottom left, a dead-end street at the bottom right.',
+      tok: [150, 160],
+      art: `
+        <rect width="240" height="200" fill="#2f5d34"/>
+        <rect x="0" y="96" width="240" height="24" fill="#3a3a3a"/>
+        <rect x="20" y="120" width="24" height="80" fill="#3a3a3a"/>
+        <rect x="190" y="120" width="24" height="60" fill="#3a3a3a"/><circle cx="202" cy="180" r="16" fill="#3a3a3a"/>
+        <rect x="92" y="22" width="72" height="58" fill="#8a6a4a" stroke="${INK}" stroke-width="2"/>
+        ${[100, 118, 136, 152].map((x) => `<rect x="${x}" y="32" width="8" height="8" fill="#f2d98a"/><rect x="${x}" y="52" width="8" height="8" fill="#f2d98a"/>`).join('')}
+        ${txt(128, 76, 'PINE HOLLOW', 6, '#fff')}
+        <rect x="172" y="30" width="62" height="54" fill="#4b4b4b"/>
+        ${txt(203, 60, 'LOT', 7, '#ddd')}
+        <rect x="54" y="128" width="58" height="60" fill="#6a5a6a" stroke="${INK}" stroke-width="2"/>
+        ${txt(83, 162, 'STORE', 7, '#fff')}
+        ${txt(202, 196, 'DEAD END', 6, '#ddd')}`,
+      zones: {
+        corner: { x: 32, y: 168, r: 16, name: 'Side street, around the corner behind the store', why: 'That is around the corner.' },
+        front: { x: 128, y: 108, r: 16, name: 'Street right in front of the building', why: 'In full view of the building. A lit-up ambulance can escalate a crisis and puts you in the line of danger.' },
+        lot: { x: 203, y: 57, r: 20, name: 'The building\'s parking lot', why: 'Too close: in view of the windows, and you can get boxed in.' },
+        deadEnd: { x: 202, y: 178, r: 16, name: 'Dead-end street', why: 'Out of sight, but it is a dead end. If things go bad you cannot drive out. Pick a spot with an exit route.' },
+      },
+    },
+
+    room: {
+      label: 'Top-down view of the apartment: the only door is at the bottom left, the patient sits on a couch at the top right, a kitchen counter is on the right.',
+      tok: [32, 188],
+      art: `
+        <rect width="240" height="200" fill="#5a4a3a"/>
+        <rect x="4" y="4" width="232" height="192" fill="none" stroke="#2a2a2a" stroke-width="8"/>
+        <rect x="8" y="190" width="48" height="10" fill="#5a4a3a"/>
+        <path d="M8 192 Q52 190 56 150" stroke="#cfd6e0" stroke-dasharray="3 3" fill="none"/>
+        ${txt(32, 184, 'DOOR', 7, '#e8d8c0')}
+        <rect x="140" y="18" width="80" height="36" rx="6" fill="#6a4a8a" stroke="${INK}" stroke-width="2"/>
+        <circle cx="178" cy="40" r="9" fill="${SKIN}" stroke="${INK}" stroke-width="2"/>
+        <rect x="196" y="110" width="36" height="76" fill="#9a8a7a" stroke="${INK}" stroke-width="2"/>
+        <rect x="208" y="126" width="12" height="10" fill="#3a2a1a"/>
+        ${txt(214, 104, 'KITCHEN', 6, '#e8d8c0')}`,
+      zones: {
+        nearDoor: { x: 44, y: 150, r: 18, name: 'Near the door, with the door behind you', why: 'That keeps the exit behind you.' },
+        farCorner: { x: 32, y: 36, r: 18, name: 'Far corner of the room', why: 'Now he is between you and the only door.' },
+        kitchen: { x: 214, y: 156, r: 18, name: 'By the kitchen counter', why: 'Kitchens hold knives. Keep him and yourself away from them.' },
+        closeToHim: { x: 156, y: 76, r: 16, name: 'Right next to him', why: 'Too close. Stay beyond arm\'s reach, with room to move.' },
+      },
+    },
+
+    neb: {
+      label: 'A hand-held nebulizer: mouthpiece on the left, medicine cup below, oxygen tubing at the bottom.',
+      tok: [200, 150],
+      art: `
+        <rect x="40" y="48" width="58" height="12" rx="5" fill="#dfe8f0" stroke="${INK}"/>
+        <rect x="96" y="46" width="48" height="16" rx="6" fill="#dfe8f0" stroke="${INK}"/>
+        <rect x="142" y="48" width="70" height="12" rx="5" fill="#dfe8f0" stroke="${INK}"/>
+        <path d="M100 64 H140 L136 120 Q120 132 104 120 Z" fill="#dfe8f0" fill-opacity=".85" stroke="${INK}" stroke-width="2"/>
+        <path d="M120 128 Q120 170 60 192" stroke="#8fd0ff" stroke-width="5" fill="none"/>
+        ${txt(62, 44, 'MOUTHPIECE', 6)}
+        ${txt(120, 146, 'CUP', 7)}`,
+      zones: {
+        cup: { x: 120, y: 96, r: 18, name: 'Medicine cup', why: 'That is the cup.' },
+        mouthpiece: { x: 64, y: 54, r: 14, name: 'Mouthpiece', why: 'The medicine goes in the cup below. Unscrew the cup and squeeze the vial in.' },
+        tubing: { x: 82, y: 180, r: 12, name: 'Oxygen tubing', why: 'That is the oxygen line. The medicine goes in the cup.' },
+      },
+    },
+
+    injector: {
+      label: 'An epinephrine auto-injector: blue safety release on the left end, orange needle end on the right.',
+      tok: [206, 184],
+      art: `
+        <rect x="60" y="86" width="120" height="28" rx="10" fill="#f2f2ee" stroke="${INK}" stroke-width="2"/>
+        <rect x="92" y="90" width="56" height="20" fill="#f2b632"/>
+        ${txt(120, 104, 'EPI 0.3', 8, '#000')}
+        <rect x="36" y="90" width="28" height="20" rx="5" fill="#2f6fb0" stroke="${INK}" stroke-width="2"/>
+        <rect x="176" y="90" width="26" height="20" rx="8" fill="#f28c28" stroke="${INK}" stroke-width="2"/>`,
+      zones: {
+        blueCap: { x: 50, y: 100, r: 14, name: 'Blue safety release', why: 'That is the safety release.' },
+        orangeTip: { x: 190, y: 100, r: 14, name: 'Orange needle end', why: 'A thumb over the orange end is how people inject their own thumb. Grip it in your fist, orange end toward the thigh.' },
+      },
+    },
+  };
+})();
+</script>
+<script>
 /* inlined from content/calls.js */
 /* Legend of JRMA: call content.
  *
@@ -300,6 +692,49 @@ window.JRMA.LEVELS = [
 ];
 window.JRMA.ORDER = window.JRMA.LEVELS.flatMap((l) => [...l.monsters, l.boss, l.trial]);
 
+/* Reusable hands-on simulations. Stage types and fields: docs/how-to/add-a-call.md.
+   Scenes and hotspots: content/scenes.js. */
+const simKit = {
+  pulse: (done) => ({ title: 'Pulse and breathing check', stages: [
+    { type: 'place', chip: 'Find pulse', scene: 'face', prompt: 'Carotid pulse. Where do your two fingers go?', item: 'Two fingers',
+      targets: ['carotidR', 'carotidL'], need: 1, decoys: ['trachea', 'underChin'],
+      why: { underChin: 'That is under the chin. The carotid is lower, in the groove beside the windpipe.' } },
+    { type: 'hold', chip: 'Check', scene: 'face', prompt: 'Feel for a pulse and watch the chest at the same time. At least 5 seconds, no more than 10.',
+      button: 'Feel and watch', min: 5, max: 10,
+      short: 'Under 5 seconds can miss a slow or weak pulse.',
+      long: 'Over 10 seconds. Every extra second is a second without oxygen or compressions.', done },
+  ] }),
+  glucose: (reading) => ({ title: 'Check the sugar', stages: [
+    { type: 'place', chip: 'Lance', scene: 'hand', prompt: 'Fingertip cleaned and dry. Where do you lance?', item: 'Lancet',
+      targets: ['sideR', 'sideL'], need: 1, decoys: ['pad', 'tip'], mark: 'drop', done: 'A good drop of blood.' },
+    { type: 'place', chip: 'Strip', scene: 'hand', prompt: 'Touch the test strip to the drop.', item: 'Test strip',
+      targets: ['@prev'], mark: 'none', done: `Glucometer reads ${reading} mg/dL.` },
+  ] }),
+  iv: (o = {}) => [
+    { type: 'place', chip: 'Band', scene: 'arm', prompt: 'Venous tourniquet first. Where does it go?', item: 'Venous tourniquet',
+      targets: ['upperArm'], decoys: ['forearmBand'], mark: 'band', done: 'Band on the upper arm. The veins at the elbow fill.' },
+    { type: 'place', chip: 'Site', scene: 'arm', prompt: 'Pick your site.', item: 'IV catheter',
+      targets: ['acVein'], decoys: ['brachial', 'wrist'], why: o.why, done: 'A straight, bouncy vein. Clean it and anchor the skin.' },
+    { type: 'dial', chip: 'Angle', label: 'Insertion angle', unit: 'degrees', look: 'angle', min: 0, max: 60, step: 5, start: 45, ok: [10, 30],
+      prompt: 'Bevel up. What angle to the skin?',
+      low: 'Too flat: the needle slides under the skin and never enters the vein.',
+      high: 'Too steep: the needle goes through the back wall of the vein.',
+      done: 'Flash of blood in the chamber.' },
+    { type: 'order', chip: 'Finish', prompt: 'Flash seen. Now, in order:',
+      items: ['Advance the catheter off the needle', 'Release the tourniquet', 'Flush with saline and watch the site'],
+      done: o.done || 'It flushes freely with no swelling. Secure it.' },
+  ],
+  bolus: (o) => ({ type: 'dial', chip: 'Bolus', label: 'Bolus volume', unit: 'mL', min: 0, max: 1000, step: 50, start: 0, ok: [250, 250],
+    prompt: o.prompt, low: o.low, high: o.high, done: o.done }),
+  pads: (prompt, done) => ({ type: 'place', chip: 'Pads', scene: 'chest', prompt, item: 'Pad',
+    targets: ['padR', 'padLat'], decoys: ['padLUp', 'heartL'], mark: 'pad', done,
+    why: { heartL: 'Close, but go lower and farther out: left side, below the armpit, so the current crosses the heart.' } }),
+  outerThigh: (item, prompt, done) => ({ type: 'place', chip: 'Thigh', scene: 'legs', prompt, item,
+    targets: ['outerThighR', 'outerThighL'], need: 1, decoys: ['innerThighR', 'innerThighL', 'kneeR', 'kneeL'], done }),
+  draw: (o) => ({ type: 'dial', chip: o.chip || 'Draw up', label: 'Volume', unit: 'mL', look: 'syringe', min: 0, max: o.max, step: o.step, start: 0,
+    ok: [o.ml, o.ml], prompt: o.prompt, low: o.low, high: o.high || o.low, done: o.done }),
+};
+
 window.JRMA.CALLS = [
   /* ---------------- EMT level (boss: arrest) ---------------- */
   {
@@ -316,7 +751,11 @@ window.JRMA.CALLS = [
       { g: 0, label: 'Shut off the chainsaw, gloves on', hint: 'Before you touch Gary, what here can hurt YOU?',
         why: 'Scene safety first. A running chainsaw is a hazard with teeth, and his blood is a hazard without them. A rescuer who gets hurt becomes patient number two.' },
       { g: 1, label: 'Tourniquet on bare skin, 2-3 in above the wound', hint: 'What is leaving his body fastest, and what stops it?',
-        mini: { type: 'windlass', halfTurns: 3, secs: 25 },
+        sim: { title: 'Apply the tourniquet', stages: [
+          { type: 'place', chip: 'Place it', scene: 'legs', show: ['wound'], prompt: 'Scene is safe, pants cut away. Where does the tourniquet go?', item: 'Tourniquet',
+            targets: ['tqAbove'], decoys: ['tqHigh', 'tqOver', 'tqBelow', 'kneeR'], mark: 'strap', done: 'Bare skin, 2-3 inches above the wound, not over a joint.' },
+          { type: 'windlass', chip: 'Twist and lock', halfTurns: 3, secs: 25, done: 'Strap snug, rod twisted until the bleeding stopped, rod locked in the clip. Now write the time.' },
+        ] },
         why: 'Spurting bright red blood from a limb is life-threatening, and pressure on a chainsaw wound is impractical. NH: on bare skin, 2-3 inches above the bleeding site, never over a joint. Pull the strap snug, twist the rod until the bleeding stops, and lock it in the clip. With a snug strap that usually takes 3 half turns or fewer (CAT training). Still bleeding? Add a second one right next to it. It will hurt. That is how you know it works.',
         early: 'Right tool, but the chainsaw is still running next to your face. Make the scene safe first.',
         vitals: { HR: '122/min', Skin: 'Pale, cool. Bleeding controlled' } },
@@ -361,18 +800,47 @@ window.JRMA.CALLS = [
     vitals: { Mental: 'Unresponsive to pain', HR: '54/min', BP: '100/64', RR: '4/min, shallow', SpO2: '78%', Skin: 'Blue lips, cool' },
     steps: [
       { g: 0, label: 'PPE on, move the syringe into a sharps container', hint: 'Look at the floor near your knee.',
+        sim: { title: 'Clear the sharps', stages: [
+          { type: 'place', scene: 'floor', prompt: 'Gloves on. Where does the syringe go?', item: 'Syringe',
+            targets: ['sharps'], decoys: ['trash', 'toilet'], mark: 'none', done: 'Into the sharps container. Never recap it.' },
+        ] },
         why: 'Needlesticks spread hepatitis and HIV. Clear the sharps before you kneel. Then your full attention goes to him.' },
       { g: 1, label: 'Check responsiveness, breathing, and pulse (10 sec max)', hint: 'Before choosing a treatment: pulse? breathing?',
+        sim: simKit.pulse('Pulse present, 54/min. Only 4 shallow breaths a minute: respiratory arrest with a pulse.'),
         why: 'Carotid pulse present, but only 4 shallow breaths a minute. This is respiratory arrest with a pulse. He needs you to breathe for him.',
         early: 'You cannot choose a treatment until you know if he has a pulse and is breathing.' },
       { g: 2, label: 'Open the airway: head-tilt chin-lift + OPA or NPA', hint: 'Snoring is a sound the tongue makes.',
+        sim: { title: 'Open the airway', stages: [
+          { type: 'place', chip: 'Head tilt', scene: 'face', prompt: 'Head-tilt chin-lift. Palm first, then fingertips.', items: ['Palm', 'Fingertips'],
+            targets: ['forehead', 'chin'], decoys: ['underChin', 'trachea'], why: { trachea: 'That is his windpipe. Never press on it.' },
+            done: 'Palm tilts the forehead back, fingertips lift the bony chin. The snoring stops.' },
+          { type: 'place', chip: 'Size OPA', scene: 'face', prompt: 'Size the OPA: flange at the corner of the mouth. Where should the tip reach?', item: 'OPA tip',
+            targets: ['earlobeR', 'earlobeL', 'jawR', 'jawL'], need: 1, decoys: ['noseTip', 'chin'],
+            why: { chin: 'The chin measures nothing. Corner of the mouth to the earlobe or the angle of the jaw.' },
+            done: 'Right size. In upside down, then rotate it 180 degrees. No gag reflex, so he tolerates it.' },
+        ] },
         why: 'Snoring means the tongue is blocking the airway. Open it, then hold it open with an adjunct. NH lets you use an NPA with an OPA. No gag reflex, so an OPA is tolerated.',
         early: 'Airway is right, but check pulse and breathing first so you know which path you are on.' },
       { g: 3, label: 'BVM with oxygen: 10-12 breaths a minute', hint: 'At 4 breaths a minute, who is doing the breathing?',
+        sim: { title: 'Ventilate with the BVM', stages: [
+          { type: 'hold', scene: 'face', show: ['mask'], prompt: 'Mask sealed, oxygen on. Squeeze about 1 second per breath, one breath every 5 to 6 seconds. Give 3.',
+            button: 'Squeeze bag', min: 0.5, max: 1.5, scale: 2, reps: 3, every: [4.5, 7],
+            short: 'Too short: the chest barely rises. Squeeze for about 1 second.',
+            long: 'Too long and too much. Squeeze just until the chest rises. Extra air goes to the stomach.',
+            fast: 'Too fast: that is over 12 a minute. Wait 5 to 6 seconds between breaths.',
+            slow: 'Too slow: under 10 a minute. One breath every 5 to 6 seconds.',
+            done: 'Chest rises with each breath. SpO2 climbing.' },
+        ] },
         why: 'NH: if breathing is ineffective, ventilate with 100% oxygen by BVM, 10-12 breaths a minute. Each breath just enough to see the chest rise. Over-bagging fills the stomach and invites vomit.',
         early: 'Bagging through a closed airway just inflates his stomach. Open the airway first.',
         vitals: { HR: '72/min', SpO2: '94%', Skin: 'Pinking up' } },
       { g: 4, label: 'Naloxone IN: 2 mg (1 mg each nostril) or 4 mg spray', hint: 'Oxygen is going in. Now reverse the cause.',
+        sim: { title: 'Naloxone, intranasal', stages: [
+          { type: 'place', scene: 'face', prompt: 'Atomizer on. 1 mg into each nostril.', item: 'Atomizer, 1 mg',
+            targets: ['nareR', 'nareL'], decoys: ['mouth'],
+            why: { mouth: 'Intranasal means the nose. Naloxone in the mouth mostly gets swallowed and does little.' },
+            done: '1 mg in each nostril, 2 mg total. Keep bagging while it works.' },
+        ] },
         why: 'NH: naloxone 1 mg per nostril (2 mg total) or a 4 mg nasal spray, titrated until breathing recovers, not until he is fully awake. Bag first: naloxone takes minutes and his brain needs oxygen now.',
         early: 'Naloxone is right, but it is not first. It takes minutes to work and his brain needs oxygen now. Ventilate first.',
         vitals: { Mental: 'Groggy, opens eyes', HR: '88/min', RR: '14/min', SpO2: '97%' } },
@@ -411,6 +879,7 @@ window.JRMA.CALLS = [
         why: 'She is talking (loudly), so the airway is open. Breathing and pulse are adequate. No immediate killers, so you have time to find the cause.',
         early: 'Primary assessment comes right after scene safety. Get there.' },
       { g: 2, label: 'Check blood glucose', hint: 'Altered + diabetic. What number do you need?',
+        sim: simKit.glucose(38),
         why: 'Altered mental status plus diabetes means check the sugar. Honestly, altered mental status plus anything means check the sugar. Result: 38 mg/dL. NH defines a hypoglycemic emergency as under 60 with altered mental status.',
         early: 'Checking sugar is right, but do the primary first. Airway problems kill faster than low sugar.',
         vitals: { BGL: '38 mg/dL' } },
@@ -418,6 +887,10 @@ window.JRMA.CALLS = [
         why: 'NH: oral glucose only if she is alert enough to swallow and protect her airway. If she cannot, EMTs give intranasal glucagon or a glucagon auto-injector, if carried.',
         early: 'Good question, but confirm her sugar is low before planning the fix.' },
       { g: 4, label: 'Oral glucose gel, 15-30 g', hint: 'Low sugar, can swallow. Treat it.',
+        sim: { title: 'Oral glucose', stages: [
+          { type: 'place', scene: 'face', show: ['awake'], prompt: 'She can swallow. Where does the gel go?', item: 'Glucose gel',
+            targets: ['cheek'], decoys: ['mouth'], done: 'A little at a time between the cheek and gum, letting her swallow each bit.' },
+        ] },
         why: 'NH: 15 to 30 grams of glucose gel or equivalent, a little at a time. Juice or regular soda counts as an equivalent.',
         early: 'Probably the right fix, but you have not proven the sugar is low or that she can swallow. Thirty seconds of checking prevents a wrong answer.',
         vitals: { Mental: 'Improving' } },
@@ -456,10 +929,27 @@ window.JRMA.CALLS = [
         why: 'NH: a likely allergen exposure plus two or more body systems involved. Hives, airway swelling, wheezing, and a BP of 78/44: anaphylaxis with shock. Time-critical.',
         early: 'Name the problem after the scene is safe. Bees first.' },
       { g: 2, label: 'Epinephrine auto-injector 0.3 mg IM, outer thigh', hint: 'One drug is first-line for anaphylaxis.',
+        sim: { title: 'Epinephrine auto-injector', stages: [
+          { type: 'place', chip: 'Safety off', scene: 'injector', prompt: 'Fist around the middle. Pull off the safety release.',
+            targets: ['blueCap'], decoys: ['orangeTip'], mark: 'none', done: 'Safety release off. Orange end toward the thigh.' },
+          simKit.outerThigh('Orange end', 'Where does it go? Through clothing is fine.'),
+          { type: 'hold', chip: 'Hold', prompt: 'Push hard until it clicks, then hold it in place.', button: 'Push and hold', min: 3, max: 10, scale: 12,
+            short: 'Pulled too soon. Part of the dose can miss. Hold it in place 3 seconds (EpiPen instructions).',
+            long: 'That long is not needed. Hold 3 seconds, then remove it.',
+            done: '0.3 mg IM in the outer thigh. Note the time: if he is no better in 5 minutes, NH allows one repeat.' },
+        ] },
         why: 'Epinephrine first, and do not delay it for second-line drugs like diphenhydramine. NH: adult auto-injector 0.3 mg IM, outer thigh, through clothing if needed.',
         early: 'Epi is the right call, but you skipped a step. Make the scene safe and confirm it is anaphylaxis first.',
         vitals: { HR: '118/min', BP: '96/60', RR: '26/min, less wheezing', SpO2: '92%' } },
       { g: 3, label: 'High-flow O2: non-rebreather, at least 8 L/min up to flush', hint: 'SpO2 89% and wheezing.',
+        sim: { title: 'Non-rebreather mask', stages: [
+          { type: 'dial', chip: 'Flow', label: 'Oxygen flow', unit: 'L/min', look: 'flow', min: 0, max: 25, step: 1, start: 0, maxLabel: 'Flush', ok: [8, 25],
+            prompt: 'Set the regulator for a non-rebreather.',
+            low: 'Too low for a non-rebreather: the bag collapses and he rebreathes his own air. NH: at least 8 L/min.', high: 'Flush is the top.', done: 'Flow set.' },
+          { type: 'order', chip: 'Mask on', prompt: 'Then, in order:',
+            items: ['Cover the valve and fill the reservoir bag', 'Mask over nose and mouth, pinch the nose clip, snug the strap'],
+            done: 'Reservoir full, mask snug. The bag should not fully collapse when he breathes in.' },
+        ] },
         why: 'SpO2 89% and wheezing. NH runs a non-rebreather at 8 L/min or more, up to flush rate.',
         early: 'Oxygen helps, but it will not open a swelling airway or raise his pressure. Epi first.',
         vitals: { SpO2: '96%' } },
@@ -497,11 +987,28 @@ window.JRMA.CALLS = [
     vitals: { Mental: 'Tearful, agitated, oriented', HR: '118/min', BP: '142/90', RR: '22/min', SpO2: '98%', Skin: 'Warm, flushed', BGL: 'Not checked' },
     steps: [
       { g: 0, label: 'Stage out of sight, a block away, with an exit route', hint: 'Where does an ambulance wait for a weapon call?',
+        sim: { title: 'Pick the staging spot', stages: [
+          { type: 'place', scene: 'staging', prompt: 'Weapon call, PD not on scene yet. Where do you park Medic 1?', item: 'Medic 1',
+            targets: ['corner'], decoys: ['front', 'lot', 'deadEnd'], sev: { front: 1 },
+            done: 'Out of sight behind the store, a block away, with a clear way out. Lights off.' },
+        ] },
         why: 'NH 2.4: request law enforcement and consider staging away until they clear the scene. Out of sight, clear way out, lights off near the scene.' },
       { g: 1, label: 'Wait for PD to radio "scene secure"', hint: 'The hardest skill in EMS is waiting.',
+        sim: { title: 'Wait for the call', stages: [
+          { type: 'signal', prompt: 'Listen to the radio. Go in only when PD says the scene is secure.', wait: [5, 8],
+            waiting: 'Radio quiet...',
+            chatter: ['Sgt. Reyes: "Units at the door."', 'Sgt. Reyes: "Making contact."', 'Sgt. Reyes: "Knife is on the table. Stand by."', 'Sgt. Reyes: "Still talking with him. Hold."'],
+            signal: 'Sgt. Reyes: "Scene is secure. Knife is secured. Medic 1, come on in."', go: 'Roll in',
+            early: 'PD had not called it secure. "Stand by" means stand by, and the knife was not accounted for.', sev: 1,
+            done: 'Scene secure, knife secured. Now you go in.' },
+        ] },
         why: 'Nobody is a hero on an unsecured weapon scene. Wait for the radio call. Staging is part of patient care, not a delay of it.',
         early: 'Waiting is right, but pick a safe staging spot first. Out of sight, with an exit.' },
       { g: 2, label: 'Approach with PD; keep the exit behind you', hint: 'Where is the door relative to you and to him?',
+        sim: { title: 'Set up inside', stages: [
+          { type: 'place', scene: 'room', prompt: 'Inside with PD. Where do you stand to talk with Jordan?', item: 'You',
+            targets: ['nearDoor'], decoys: ['farCorner', 'kitchen', 'closeToHim'], done: 'Door behind you, beyond arm\'s reach, PD beside you.' },
+        ] },
         why: 'NH says focus on crew safety. Go in with police, keep the door behind you, and never let the patient get between you and the exit.',
         early: 'Not yet. PD has not called the scene secure. The knife has not been accounted for.' },
       { g: 3, label: 'Verbal de-escalation: name, low voice, choices', hint: 'Talk first. What does respect sound like?',
@@ -544,26 +1051,49 @@ window.JRMA.CALLS = [
       { g: 0, label: 'Gloves on, scene safe; partner brings the AED and BVM', hint: 'Who goes in first, and with what?',
         why: 'NH Team Focused CPR: one crew member goes in fast with just gloves to start compressions while the other brings the AED and BVM. The AED never waits in the truck.' },
       { g: 1, label: 'Check breathing and carotid pulse together (10 sec max)', hint: 'Gasping. Is that breathing?',
+        sim: simKit.pulse('No pulse. The gasps are agonal breathing, and agonal breathing is not breathing. Cardiac arrest.'),
         why: 'No pulse. Those gasps are agonal breathing, and agonal breathing is not breathing. This is cardiac arrest.',
         early: 'Confirm he is pulseless before you act on it.' },
       { g: 2, label: 'Drag him to the hallway floor', hint: 'Where can you do good CPR in a 4-foot bathroom?',
+        sim: { title: 'Move him', stages: [
+          { type: 'place', scene: 'bathroom', prompt: 'Drag Harold to where you can do real CPR.', item: 'Harold',
+            targets: ['hallway'], decoys: ['toilet', 'bathFloor', 'tub', 'bed'], done: 'Flat on the hallway floor, room on both sides.' },
+        ] },
         why: 'NH 3.6: get the patient where a rescuer can kneel on both sides. A tiny bathroom is not a workspace. Move him fast.',
         early: 'Moving him is right, but confirm he is pulseless first. You do not drag a guy off the toilet because he is reading.' },
       { g: 3, label: 'Start compressions: 100-120/min, 2-2.4 in deep', hint: 'Hard, fast, center of the chest.',
-        mini: { type: 'rhythm' },
+        sim: { title: 'Compressions', stages: [
+          { type: 'place', chip: 'Hands', scene: 'chest', prompt: 'Where does the heel of your hand go?', item: 'Heel of hand',
+            targets: ['sternumLower'], decoys: ['sternumUpper', 'xiphoid', 'heartL', 'belly'], mark: 'hands',
+            done: 'Center of the chest, lower half of the breastbone. Arms straight, shoulders over your hands.' },
+          { type: 'rhythm', chip: 'Compress', done: 'Push 2 to 2.4 inches deep and let the chest fully recoil.' },
+        ] },
         why: 'NH 3.6: at least 100 and under 120 compressions a minute, 2 to 2.4 inches deep, full recoil. Minimize every pause.',
         early: 'Compressions are right, but you cannot do quality CPR on a toilet. Get him on the floor first.' },
       { g: 4, label: 'AED pads on while your partner keeps compressing', hint: 'Every minute without a shock costs him.',
+        sim: { title: 'AED pads', stages: [
+          simKit.pads('{partner} keeps compressing. Place both pads.', 'Right upper chest and left side. AED: "Analyzing. Shock advised."'),
+        ] },
         why: 'NH: interrupt compressions only for the rhythm and pulse check and the shock. Pads go on while CPR continues.',
         early: 'The AED is key, but start compressions the moment he is on the floor. Pads go on while CPR runs.',
         vitals: { HR: 'AED: shock advised' } },
       { g: 5, label: '"Everybody clear!" Then shock', hint: 'The AED advised a shock. Who is touching him?',
+        sim: { title: 'Clear and shock', stages: [
+          { type: 'shock', prompt: 'AED: "Shock advised." Clear everyone, look, then press.', done: 'Shock delivered.' },
+        ] },
         why: 'The AED advises a shock. Look, say it loud, make sure nobody is touching him. Then press. Keep the pause short.',
         early: 'Pads are not on yet. The AED cannot shock what it cannot see.' },
       { g: 6, label: 'Resume compressions immediately (no pulse check)', hint: 'Right after a shock, hands go where?',
+        sim: { title: 'Back on the chest', stages: [
+          { type: 'rhythm', prompt: 'Straight back to compressions. No pulse check.', done: 'Two full minutes before the next rhythm and pulse check.' },
+        ] },
         why: 'NH: resume compressions immediately after the shock. Two full minutes before the next rhythm and pulse check.',
         early: 'Resuming compressions after a shock is right. There has not been a shock yet.' },
       { g: 7, label: 'BVM: 1 breath every 10 compressions, no pause', hint: 'No advanced airway. How do breaths fit in?',
+        sim: { title: 'Ventilate during CPR', stages: [
+          { type: 'bagcpr', prompt: 'Mask sealed, oxygen on. {partner} compresses and counts. Squeeze once on every 10th compression.', breaths: 3,
+            done: 'Breaths slipped in without a pause. At the 2-minute check: a pulse!' },
+        ] },
         why: 'NH runs compressions without stopping. Slip in 1 breath every 10 compressions, just enough for visible chest rise. Passive oxygen by non-rebreather is also allowed. More air is not better air.',
         early: 'Breaths matter, but compressions and the AED come first in adult arrest.',
         vitals: { HR: 'Pulse returns: 64/min', BP: '88/50', RR: 'Assisted', SpO2: '91%', Skin: 'Pinker' } },
@@ -598,17 +1128,32 @@ window.JRMA.CALLS = [
       { g: 0, label: 'PPE on; turn off the fishing show', hint: 'You need to hear his breathing.',
         why: 'Scene safe. Kill the TV so you can hear breath sounds and each other.' },
       { g: 1, label: 'Airway: reposition, NPA, suction ready', hint: 'Snoring plus a gag reflex. Which adjunct?',
+        sim: { title: 'Nasal airway', stages: [
+          { type: 'place', chip: 'Size NPA', scene: 'face', prompt: 'He has a gag reflex, so NPA. Measure from the tip of the nose to where?', item: 'NPA tip',
+            targets: ['earlobeR', 'earlobeL'], need: 1, decoys: ['mouthCorner', 'chin'],
+            why: { mouthCorner: 'Too short. Tip of the nose to the earlobe.', chin: 'Tip of the nose to the earlobe, not the chin.' } },
+          { type: 'order', chip: 'Insert', prompt: 'Insert it, in order:',
+            items: ['Lube it with water-based gel', 'Bevel toward the septum, into the larger nostril', 'Slide it straight back along the floor of the nose, not up'],
+            done: 'NPA in. The snoring quiets. Suction stays within reach.' },
+        ] },
         why: 'Snoring means a partly blocked airway. Reposition and place an NPA (he still has a gag reflex, so no OPA). Keep suction close.',
         early: 'Airway is right. Kill the noise first so you can actually hear it.',
         vitals: { RR: '14/min, quiet', SpO2: '97%' } },
       { g: 2, label: 'Check blood glucose', hint: 'Diabetic, double insulin, unresponsive.',
+        sim: simKit.glucose(24),
         why: 'Result: 24 mg/dL. That explains everything.',
         early: 'Sugar is the likely cause, but airway first. A snoring patient can obstruct while you poke his finger.',
         vitals: { BGL: '24 mg/dL' } },
       { g: 3, label: 'Establish an IV; confirm it flushes freely', hint: 'He cannot swallow. What route is left?',
+        sim: { title: 'Start an IV', stages: simKit.iv() },
         why: 'He cannot protect his airway, so nothing goes by mouth. Get a secure IV and flush it before you run anything through it.',
         early: 'IV access is coming. Confirm the sugar is low first.' },
       { g: 4, label: 'IV D10 (premixed bag preferred) until awake and BGL over 60', hint: 'IV in, sugar 24.',
+        sim: { title: 'Hang the D10', stages: [
+          { type: 'order', prompt: 'Premixed D10 bag. In order:',
+            items: ['Check the bag: D10, clear, not expired', 'Spike the bag and prime the line', 'Connect to the IV and open the clamp', 'Watch the site for swelling as it runs'],
+            done: 'D10 running. If the site swells, stop and pull the line.' },
+        ] },
         why: 'NH uses D10 only. Run it IV from a premixed bag or prefilled syringe until he is back to baseline and his sugar is over 60. No pump needed.',
         early: 'D10 is the fix, but you need a working IV first.',
         vitals: { Mental: 'Waking up, confused' } },
@@ -651,6 +1196,15 @@ window.JRMA.CALLS = [
         why: 'NH: patients in respiratory distress should generally sit upright. Never lay her flat.',
         early: 'Positioning matters, but first get her out of the dust that caused this.' },
       { g: 2, label: 'Nebulized albuterol 2.5 mg, driven by oxygen', hint: 'Open the airways and add oxygen at the same time.',
+        sim: { title: 'Set up the nebulizer', stages: [
+          { type: 'place', chip: 'Load', scene: 'neb', prompt: 'Where does the albuterol go?', item: 'Albuterol 2.5 mg',
+            targets: ['cup'], decoys: ['mouthpiece', 'tubing'], mark: 'none', done: 'Vial squeezed into the cup, cup closed.' },
+          { type: 'dial', chip: 'Flow', label: 'Oxygen flow to the nebulizer', unit: 'L/min', look: 'flow', min: 0, max: 15, step: 1, start: 0, ok: [6, 8],
+            prompt: 'Oxygen drives the mist. Set the flow.',
+            low: 'Too low: the medicine will not mist well. Most nebulizers run at 6-8 L/min.',
+            high: 'Too high for most nebulizers: the mist blows out and part of the dose is wasted. Most run at 6-8 L/min.',
+            done: 'A steady mist. Coach her: slow, deep breaths through the mouthpiece.' },
+        ] },
         why: 'Albuterol relaxes the airway muscles. Drive the neb with oxygen so she gets both. In NH this is an EMT standing order, so it is already yours.',
         early: 'The neb is the treatment, but sit her up and get her out of the dust first.',
         vitals: { SpO2: '92%', RR: '28/min', Mental: '3-4 word sentences' } },
@@ -658,10 +1212,21 @@ window.JRMA.CALLS = [
         why: 'Only a little better. She is still using her neck muscles and cannot finish a sentence. A quieter chest can mean less air moving, not improvement.',
         early: 'Reassess after you treat something.' },
       { g: 4, label: 'Repeat albuterol (every 5 min for continued symptoms)', hint: 'Still wheezing after one neb.',
+        sim: { title: 'Second nebulizer', stages: [
+          { type: 'place', scene: 'neb', prompt: 'Refill the nebulizer.', item: 'Albuterol 2.5 mg',
+            targets: ['cup'], decoys: ['mouthpiece', 'tubing'], mark: 'none', done: 'Second dose misting.' },
+        ] },
         why: 'NH: albuterol 2.5 mg by nebulizer, may repeat every 5 minutes for continued symptoms. DuoNeb is also an option, max 3 doses.',
         early: 'Reassess the first neb before you stack another.',
         vitals: { SpO2: '92%', RR: '28/min', Skin: 'Pale, tiring' } },
       { g: 5, label: 'Not responding: epinephrine 0.3 mg IM (1 mg/mL)', hint: 'Two nebs and she is tiring. What does the AEMT level add?',
+        sim: { title: 'Epinephrine IM', stages: [
+          simKit.draw({ max: 1, step: 0.05, ml: 0.3, prompt: 'Epinephrine 1 mg/mL. The dose is 0.3 mg. How many mL?',
+            low: 'Too little. 0.3 mg at 1 mg per mL is 0.3 mL.',
+            high: 'Too much. 0.3 mg at 1 mg per mL is 0.3 mL. Extra epinephrine can cause dangerous heart rhythms.',
+            done: '0.3 mL of 1 mg/mL is 0.3 mg.' }),
+          simKit.outerThigh('Needle', 'Where does the IM injection go?', 'Into the outer thigh muscle. Needle straight into sharps.'),
+        ] },
         why: 'NH lets AEMTs give epinephrine 0.3 mg IM (auto-injector preferred, or 1 mg/mL drawn up) for severe asthma not responding to treatment. Call Medical Control for more doses.',
         early: 'Epinephrine is for severe asthma that is not responding. Give the nebs a fair shot first.',
         vitals: { SpO2: '96%', RR: '20/min', HR: '118/min', Mental: 'Full sentences', Skin: 'Pink, less sweaty' } },
@@ -707,16 +1272,42 @@ window.JRMA.CALLS = [
         early: 'Packaging is coming. Get the helicopter moving first so it flies while you work.',
         vitals: { Skin: 'Pale, warming', BP: '88/54' } },
       { g: 3, label: 'Set up the LZ: flat, clear, at least 100 x 100 ft, wires reported', hint: 'The field next to the road. What does the pilot need?',
+        sim: { title: 'Pick the landing zone', stages: [
+          { type: 'place', scene: 'lz', prompt: 'Where do you set up the LZ?', item: 'LZ',
+            targets: ['field'], decoys: ['wires', 'trees', 'slope'], sev: { wires: 1 },
+            done: 'Flat, open field, at least 100 x 100 feet, clear of wires. Mark it and radio the hazards: power lines to the north.' },
+        ] },
         why: 'Pick a flat, open area (100 x 100 feet is a common minimum; check your air service), clear of wires, poles, and loose debris. Mark it and radio every hazard. NH 8.0 also allows an airport, and Jaffrey\'s airport is right up Route 124. The pilot has the final say on the site.',
         early: 'You will need an LZ, but request the aircraft first. No request, no helicopter.' },
       { g: 3, label: 'IV access; 250 mL boluses to a radial pulse and clear mentation', hint: 'He is in shock with no head injury. How much fluid?',
+        sim: { title: 'IV and fluid', stages: [
+          ...simKit.iv({ done: 'It flushes freely. Secure it.' }),
+          simKit.bolus({ prompt: 'Hemorrhagic shock, no head injury. How big a bolus?',
+            low: 'Too small to matter. NH: about 250 mL at a time.',
+            high: 'Too much at once. Big volumes dilute clotting factors and pop clots. NH: 250 mL, then reassess.',
+            done: '250 mL in. Radial pulse back, and he is answering questions.' }),
+        ] },
         why: 'NH 4.6: small boluses (about 250 mL) until he has a palpable radial pulse or a clearer head, not a normal BP. Max 2 L without Medical Control. Never delay transport for an IV.',
         early: 'Fluids help, but the helicopter request comes first. The aircraft flies while you start the line.',
         vitals: { HR: '124/min', BP: '92/58', Mental: 'Confused, answering' } },
       { g: 4, label: 'Approach the aircraft only when the crew signals, from the front', hint: 'Which part of a helicopter is nearly invisible?',
+        sim: { title: 'Approach the aircraft', stages: [
+          { type: 'signal', chip: 'Wait', prompt: 'The helicopter is down, rotors turning. Wait for the crew to signal you in.', wait: [4, 7],
+            waiting: 'Rotors turning. The flight crew is busy inside.',
+            chatter: ['A flight medic hops out and looks around.', 'The pilot is checking gauges.', 'The flight medic gives the pilot a thumbs up.'],
+            signal: 'The flight medic faces you and waves you in.', go: 'Approach',
+            early: 'Nobody waved you in. Walking up to a turning aircraft uninvited is how people meet the tail rotor.', done: 'Waved in.' },
+          { type: 'place', chip: 'Path', scene: 'heli', prompt: 'Which way do you walk up? Crouch, and hang on to anything loose.', item: 'You',
+            targets: ['front'], decoys: ['tail', 'rearL', 'rearR'], sev: { tail: 2 }, done: 'From the front, in the pilot\'s view.' },
+        ] },
         why: 'Wait for the crew to wave you in, and approach from the front, in the pilot\'s view. The tail rotor is nearly invisible and it does not forgive.',
         early: 'The helicopter is not on the ground yet. Finish packaging and the LZ.' },
       { g: 5, label: 'Hand off with a MIST report', hint: 'Mechanism, Injuries, Signs, ...?',
+        sim: { title: 'MIST handoff', stages: [
+          { type: 'order', prompt: 'Give the flight crew your report, in MIST order.',
+            items: ['Mechanism: rollover, partially ejected', 'Injuries: deformed left thigh, bruised belly', 'Signs: HR 124, BP 92/58, confused but answering', 'Treatment: SMR, splint, warmed, IV with 250 mL'],
+            done: 'Thirty seconds, clear and in order. They load him and lift off.' },
+        ] },
         why: 'MIST: Mechanism, Injuries, Signs, Treatment. Thirty seconds, clear and in order. Then let them fly.',
         early: 'Handoff happens at the aircraft, once the crew is ready for you.' },
     ],
@@ -747,18 +1338,43 @@ window.JRMA.CALLS = [
       { g: 0, label: 'PPE, scene safe, sit him down', hint: 'Start simple.',
         why: 'Scene safe. Sit him down and stop him from walking. Exertion raises the heart\'s oxygen demand.' },
       { g: 1, label: '12-lead ECG within 10 minutes; transmit it', hint: 'Chest pain plus sweating. What test comes first?',
+        sim: { title: '12-lead ECG', stages: [
+          { type: 'place', scene: 'chest', show: ['ics'], prompt: 'Limb leads are on. Place the chest leads, V1 to V6. Numbers beside the breastbone mark the intercostal spaces.', items: ['V1', 'V2', 'V3', 'V4', 'V5', 'V6'],
+            targets: ['V1', 'V2', 'V3', 'V4', 'V5', 'V6'], decoys: ['V4R'], mark: 'lead',
+            why: { V4R: 'That is V4R, a right-sided lead. The standard chest leads go across to the left.' },
+            done: 'Clean tracing: ST elevation in II, III, and aVF with reciprocal changes. Inferior STEMI. Transmitted.' },
+        ] },
         why: 'NH: 12-lead within 10 minutes, transmitted per local guidelines. ST elevation in II, III, and aVF with reciprocal changes: inferior STEMI.',
         early: 'Scene first, then the 12-lead immediately.' },
       { g: 1, label: 'Aspirin 324 mg, chewed, unless allergy or GI bleeding', hint: 'A cheap drug that saves heart muscle.',
+        sim: { title: 'Aspirin', stages: [
+          { type: 'dial', label: 'Number of 81 mg tablets', unit: 'tablets, 81 mg each', look: 'tablets', min: 0, max: 8, step: 1, start: 0, ok: [4, 4],
+            prompt: 'No allergy, no GI bleeding, none taken today. How many 81 mg chewable tablets?',
+            low: 'That is under the NH dose of 324 mg.', high: 'That is over 324 mg. More is not better.',
+            done: '4 x 81 mg = 324 mg, chewed, not swallowed whole.' },
+        ] },
         why: 'Chewed aspirin slows clot growth. NH dose is 324 mg. Skip it for aspirin or NSAID anaphylaxis, active GI bleeding, or if he already took 324 mg in the last 30 minutes.',
         early: 'Aspirin is right, but get the scene settled first.' },
       { g: 2, label: 'Right-sided ECG: check V4R', hint: 'Inferior STEMI. Which ventricle might also be involved?',
+        sim: { title: 'Right-sided lead', stages: [
+          { type: 'place', scene: 'chest', show: ['ics'], prompt: 'Move one lead to the right side to check V4R.', item: 'V4R',
+            targets: ['V4R'], decoys: ['V4', 'V1', 'padR'], mark: 'lead',
+            why: { V4: 'That is V4 on the left. V4R is its mirror image on the right.', V1: 'That is V1. V4R goes lower and farther out: 5th intercostal space, right midclavicular line.', padR: 'Too high. 5th intercostal space, right midclavicular line.' },
+            done: 'ST elevation in V4R: the right ventricle is involved, and it depends on preload.' },
+        ] },
         why: 'NH 6.0: for a suspected inferior MI, consider a right-sided ECG. ST elevation in V4R means the right ventricle is involved, and a right-sided MI depends on preload.',
         early: 'Get the standard 12-lead first. V4R is the follow-up question.' },
       { g: 3, label: 'STEMI Alert: notify the receiving facility early', hint: 'Who needs to know before you arrive?',
         why: 'NH: notify the receiving facility of a "STEMI Alert" and transmit the 12-lead. Early activation shortens the time to open the artery.',
         early: 'Finish the ECG workup first so the alert is complete.' },
       { g: 3, label: 'IV (avoid the right wrist); 250 mL bolus for low BP', hint: 'Right-sided MI plus a soft pressure. What does the RV need?',
+        sim: { title: 'IV and fluid', stages: [
+          ...simKit.iv({ why: { wrist: 'NH: avoid the right wrist for IVs in ACS. The cath lab may need that artery.' } }),
+          simKit.bolus({ prompt: 'Right-sided MI, BP 96/62. How big a bolus?',
+            low: 'Too small to matter. 250 mL, then recheck.',
+            high: 'Too much at once. 250 mL, then listen to the lungs and recheck the BP.',
+            done: '250 mL in. Lungs clear, BP up to 108/68.' }),
+        ] },
         why: 'NH asks you to avoid the right wrist for IVs in ACS; the cath lab often goes in there. A right-sided MI with a soft BP needs volume: 250 mL at a time, recheck lungs and BP after each.',
         early: 'You will need access, but confirm what kind of MI this is first.',
         vitals: { BP: '108/68' } },
@@ -795,13 +1411,28 @@ window.JRMA.CALLS = [
         early: 'Scene and position first.',
         vitals: { SpO2: '95%' } },
       { g: 2, label: 'IV access', hint: 'Meds need a route.',
+        sim: { title: 'Start an IV', stages: simKit.iv() },
         why: 'Get IV access quickly, but do not let it delay pacing if he gets worse.',
         early: 'Identify the rhythm first.' },
       { g: 3, label: 'Atropine 1 mg IV (every 3-5 min, max 3 mg)', hint: 'First drug NH lists for unstable bradycardia.',
+        sim: { title: 'Atropine', stages: [
+          simKit.draw({ chip: 'Dose', max: 10, step: 0.5, ml: 10, prompt: 'Atropine prefilled syringe, 0.1 mg/mL. The dose is 1 mg. How many mL?',
+            low: 'Too little. 1 mg at 0.1 mg per mL is 10 mL, the whole syringe.', done: '10 mL is 1 mg. Push it, then flush.' }),
+        ] },
         why: 'NH 3.1A: consider atropine 1 mg IV every 3-5 minutes, max 3 mg. It often fails in third-degree block below the AV node, so do not let it delay pacing.',
         early: 'Atropine needs an IV.',
         vitals: { HR: '36/min' } },
       { g: 4, label: 'Transcutaneous pacing: raise mA to capture, confirm femoral pulse', hint: 'Atropine barely moved the rate. Next?',
+        sim: { title: 'Transcutaneous pacing', stages: [
+          { type: 'dial', chip: 'Rate', label: 'Pacing rate', unit: '/min', min: 30, max: 120, step: 5, start: 40, ok: [60, 80], key: 'rate',
+            prompt: 'Pads are on. Set the pacing rate.',
+            low: 'Too slow to fix his pressure. 60-80 is common.', high: 'Faster than he needs. Start at 60-80.', done: 'Rate set.' },
+          { type: 'pace', chip: 'Capture', prompt: 'Raise the output until the pacer captures.', done: 'Now check for a pulse to match.' },
+          { type: 'place', chip: 'Pulse', scene: 'chest', prompt: 'Confirm a pulse that matches the paced rate. Where?', item: 'Two fingers',
+            targets: ['femoralR', 'femoralL'], need: 1, decoys: ['carotidR', 'carotidL'],
+            why: { carotidR: 'Pacing makes the neck muscles jump, which can feel like a pulse. Use the femoral pulse.', carotidL: 'Pacing makes the neck muscles jump, which can feel like a pulse. Use the femoral pulse.' },
+            done: 'Femoral pulse matches the paced rate: mechanical capture.' },
+        ] },
         why: 'Pads on, set a rate (60-80 is common), raise the milliamps until every spike has a wide QRS after it, then confirm a pulse at the femoral artery (ACLS practice).',
         early: 'Pacing is the likely next step, but atropine is quick. Try it first unless he is crashing.',
         vitals: { HR: '70/min, paced', BP: '104/62', Mental: 'Clearer', Skin: 'Pinker' } },
@@ -835,28 +1466,64 @@ window.JRMA.CALLS = [
     vitals: { Mental: 'Unresponsive', HR: 'No pulse', BP: 'None', RR: 'Agonal gasps', SpO2: 'No reading', Skin: 'Gray, cool', Rhythm: 'Unknown' },
     steps: [
       { g: 0, label: 'Take over CPR from Doris without a pause; pads on', hint: 'Doris is doing CPR. What do you do first?',
-        mini: { type: 'rhythm' },
+        sim: { title: 'Take over from Doris', stages: [
+          { type: 'rhythm', chip: 'Compress', prompt: 'Swap in for Doris without a gap.' },
+          simKit.pads('{partner} takes over compressions. Pads on.', 'Pads on. Compressions never stopped.'),
+        ] },
         why: 'NH Team Focused CPR: one crew member goes straight to the chest. Swap in for Doris without a gap and get pads on while compressions continue.' },
       { g: 1, label: 'Rhythm check: VF. Charge, clear, shock at max energy', hint: 'Pads are on. What does the monitor show?',
+        sim: { title: 'Defibrillate', stages: [
+          { type: 'shock', charge: true, prompt: 'Monitor: VF. Energy at the device maximum.', status: '{partner} keeps compressing while you charge.', done: 'Shock delivered at max energy.' },
+        ] },
         why: 'VF is shockable. NH: defibrillate at the device\'s maximum energy. Check the pulse at the same time as the rhythm, and keep the pause short.',
         early: 'Pads first, then rhythm.',
         vitals: { Rhythm: 'Ventricular fibrillation' } },
       { g: 2, label: 'Resume CPR immediately for 2 minutes', hint: 'Right after the shock.',
+        sim: { title: 'Back on the chest', stages: [
+          { type: 'rhythm', prompt: 'Straight back to compressions. No pulse check.', done: 'Two full minutes.' },
+        ] },
         why: 'NH: resume compressions immediately after the shock. Two full minutes. No pulse check.',
         early: 'Not yet. Check the rhythm and shock first.' },
       { g: 3, label: 'IV or IO access without stopping compressions', hint: 'You will need a route for drugs.',
+        sim: { title: 'IO access', stages: [
+          { type: 'place', chip: 'Site', scene: 'legs', prompt: 'CPR is running. Where does the IO go?', item: 'IO needle',
+            targets: ['tibiaR', 'tibiaL'], need: 1, decoys: ['kneeR', 'kneeL', 'innerThighR'],
+            why: { innerThighR: 'That is soft tissue. An IO goes into bone: the flat inner face of the shin, just below the knee.' },
+            done: 'Proximal tibia: flat bone, just below the knee, inner side.' },
+          { type: 'order', chip: 'Insert', prompt: 'In order:',
+            items: ['Push through the skin to the bone', 'Drill until you feel the pop, then stop', 'Remove the stylet', 'Flush the line'],
+            done: 'Stable in the bone and flushes freely. Compressions never stopped.' },
+        ] },
         why: 'NH: place the IV or IO without interrupting chest compressions.',
         early: 'Access matters, but shock first and get compressions going.' },
       { g: 4, label: 'Still VF: shock, then epinephrine 1 mg IV/IO', hint: 'Second rhythm check, still VF.',
+        sim: { title: 'Shock, then epinephrine', stages: [
+          { type: 'shock', charge: true, prompt: 'Rhythm check: still VF.', status: '{partner} keeps compressing while you charge.', done: 'Shocked. CPR back on.' },
+          simKit.draw({ chip: 'Epi', max: 10, step: 0.5, ml: 10, prompt: 'Epinephrine prefilled syringe, 0.1 mg/mL. The dose is 1 mg. How many mL?',
+            low: 'Too little. 1 mg at 0.1 mg per mL is 10 mL.', done: '1 mg (10 mL) IV/IO, then a flush. Repeat every other cycle.' }),
+        ] },
         why: 'NH: after the first 2-minute cycle, epinephrine 1 mg IV/IO (0.1 mg/mL), then repeat every other cycle.',
         early: 'Epinephrine needs IV or IO access first.' },
       { g: 5, label: 'Still VF: shock, then amiodarone 300 mg IV/IO', hint: 'Third check. Refractory VF.',
+        sim: { title: 'Shock, then amiodarone', stages: [
+          { type: 'shock', charge: true, prompt: 'Rhythm check: still VF.', status: '{partner} keeps compressing while you charge.', done: 'Shocked. CPR back on.' },
+          simKit.draw({ chip: 'Amio', max: 10, step: 0.5, ml: 6, prompt: 'Amiodarone 50 mg/mL. The dose is 300 mg. How many mL?',
+            low: 'Too little. 300 mg divided by 50 mg per mL is 6 mL.', high: 'Too much. 300 mg divided by 50 mg per mL is 6 mL.',
+            done: '300 mg (6 mL) IV/IO. A second dose, if needed, is 150 mg (3 mL).' }),
+        ] },
         why: 'NH: anti-dysrhythmic per ACLS, which means amiodarone 300 mg first and 150 mg second, or lidocaine. Still VF after 3 shocks? NH also allows double sequential defibrillation, or moving the pads to anterior-posterior.',
         early: 'Anti-dysrhythmics come after the shocks and epinephrine.' },
       { g: 6, label: 'After 8 minutes: advanced airway with waveform capnography', hint: 'NH timing for the advanced airway? And how do you confirm it?',
+        sim: { title: 'Advanced airway', stages: [
+          { type: 'order', chip: 'Airway', prompt: 'Eight minutes in. In order:',
+            items: ['Place the supraglottic airway while compressions continue', 'Attach waveform capnography', 'Confirm a waveform and an ETCO2 of at least 20'],
+            done: 'Waveform present, ETCO2 22.' },
+          { type: 'bagcpr', chip: 'Ventilate', prompt: 'Keep 1 breath every 10 compressions, no pause.', breaths: 3, done: 'Steady breaths. Watch the ETCO2.' },
+        ] },
         why: 'NH: BVM for the first 4 cycles (8 minutes), then place an ETT or supraglottic airway without stopping compressions. Waveform ETCO2 confirms the tube and tracks CPR: NH wants at least 20 mmHg. Ventilate 1 breath every 10 compressions.',
         early: 'BVM for the first 4 cycles (8 minutes). Shocks and drugs come first.' },
       { g: 7, label: 'ETCO2 jumps from 22 to 45: pulse check', hint: 'A sudden rise in ETCO2 means?',
+        sim: simKit.pulse('Strong carotid pulse, 98/min. ROSC!'),
         why: 'NH 6.1: an abrupt ETCO2 rise is a reasonable sign of return of spontaneous circulation. Pulse present!',
         early: 'Watch the capnography. You need an airway and ETCO2 first.',
         vitals: { HR: 'Pulse: 98/min', BP: '86/50', RR: 'Assisted, 10/min', SpO2: '90%', Rhythm: 'Sinus rhythm', Skin: 'Pinker' } },
@@ -2108,7 +2775,7 @@ function freshBattle(o, replay, extra) {
   return Object.assign({
     kind: o.type, call: o, replay, used: new Set(), gone: new Set(), time: 0, mistakes: 0, early: 0, ceu: 0,
     vitals: {}, changed: new Set(), log: [], phase: 'intro', hitT: 0, hurtT: 0, laughT: 0, deadT: 0, pressT: 0,
-    mini: null, won: false, newly: false, fleeArm: 0,
+    mini: null, won: false, newly: false, fleeArm: 0, slips: 0,
   }, extra);
 }
 function showBattlePanel() {
@@ -2182,7 +2849,7 @@ function choose(o) {
   if (!B || B.phase !== 'act') return;
   B.changed.clear();
   if (o.kind === 'step') {
-    if (o.g === currentGroup()) { if (o.mini) return startMini(o); return doCorrect(o, ''); }
+    if (o.g === currentGroup()) { if (o.sim) return startSim(o); return doCorrect(o, ''); }
     B.early++; B.time += 1;
     B.log.push({ type: 'early', label: o.label, why: o.early || 'Right move, wrong time.' });
     Sound.warn();
@@ -2216,7 +2883,7 @@ function doCorrect(o, extra) {
   if (stepsLeft() === 0) return winCall();
   renderActions();
 }
-function starsFor() { if (B.mistakes === 0 && B.early === 0) return 3; if (B.mistakes <= 1 && B.early <= 2) return 2; return 1; }
+function starsFor() { if (B.mistakes === 0 && B.early === 0 && B.slips <= 1) return 3; if (B.mistakes <= 1 && B.early + B.slips <= 3) return 2; return 1; }
 function missesHTML(types) {
   const misses = B.log.filter((l) => types.includes(l.type));
   return misses.length ? `<h3>What cost you</h3><ul>${misses.map((m) => `<li><b>${esc(m.label)}:</b> ${esc(m.why)}</li>`).join('')}</ul>` : '';
@@ -2243,10 +2910,10 @@ function winCall() {
   $('#b-msg').innerHTML = `
     <div class="tag good">${c.boss ? 'Boss defeated' : 'Call complete'} ${starStr(stars)}</div>
     <p>${esc(c.monster.name)} ${esc(c.monster.win)}. ${esc(c.outro)}</p>
-    <p class="fine">On scene ${B.time} min · Harmful moves ${B.mistakes} · Out of order ${B.early} · CEUs +${B.ceu}</p>
+    <p class="fine">On scene ${B.time} min · Harmful moves ${B.mistakes} · Out of order ${B.early} · Hands-on fumbles ${B.slips} · CEUs +${B.ceu}</p>
     <h3>Priority sequence</h3><ol>${seq}</ol>
     <h3>Numbers to know</h3><ul>${c.numbers.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
-    ${missesHTML(['bad', 'early'])}
+    ${missesHTML(['bad', 'early', 'slip'])}
     <p class="fine">NH PCP v9.3: ${c.nh.map(esc).join('; ')}. Your medical director and agency policy still apply.</p>`;
   $('#b-actions').innerHTML = '';
   const trialId = c.boss ? LEVELS[c.levelIdx].trial : null;
@@ -2392,191 +3059,760 @@ function failExam() {
   addButton('Back to the map', '', endCall);
 }
 
-/* Mini-games: tourniquet windlass (drag gestures) and CPR rhythm (tap tempo) */
-function startMini(o) {
+/* ============================================================
+   Hands-on simulations
+   A step with `sim` runs its stages in order before it counts. Stage types:
+   place, hold, dial, order, signal, shock, bagcpr, pace, rhythm, windlass.
+   Content format: docs/how-to/add-a-call.md. Scene art: content/scenes.js.
+   ============================================================ */
+const SCENES = window.JRMA.SCENES;
+let clockSkew = 0; // test hook: lets tests/smoke.mjs skip ahead without waiting
+const now = () => performance.now() + clockSkew;
+const SIM_MAX_SLIPS = 3;
+const STAGE_CHIP = { place: 'Place', hold: 'Hold', dial: 'Set', order: 'Sequence', signal: 'Wait', shock: 'Shock', bagcpr: 'Ventilate', pace: 'Capture', rhythm: 'Compress', windlass: 'Tourniquet' };
+const STAGES = {};
+const simType = () => (B && B.mini && B.mini.st ? B.mini.st.s.type : null);
+const svgTxt = (x, y, s, size = 7, fill = '#fff') => `<text x="${x}" y="${y}" text-anchor="middle" font-size="${size}" font-family="Silkscreen, monospace" fill="${fill}">${esc(s)}</text>`;
+
+function startSim(o) {
   B.phase = 'mini';
-  B.mini = { o, type: o.mini.type, count: 0, taps: [], start: 0, done: false };
+  B.mini = { o, sim: o.sim, si: 0, slips: 0, done: false, marks: [], vals: {}, lastZone: null, st: null };
   if (document.activeElement) document.activeElement.blur();
   $('#b-actions').hidden = true; $('#b-foot').hidden = true;
-  const box = $('#b-mini'); box.hidden = false;
-  if (o.mini.type === 'windlass') { startWindlass(o, box); return; }
-  {
-    box.innerHTML = `
-      <h3>Compressions!</h3>
-      <p>Tap 12 compressions at 100-120 per minute. Space works too. Pausing more than 2 seconds restarts the count.</p>
-      <div class="rate"><span id="mini-rate">--</span> <small>/min</small></div>
+  const stages = o.sim.stages, box = $('#b-mini');
+  box.hidden = false;
+  box.innerHTML = `
+    <h3>${esc(o.sim.title || o.label)}</h3>
+    ${stages.length > 1 ? `<ol class="sim-steps" aria-hidden="true">${stages.map((s, i) => `<li id="sim-s${i}">${i + 1}. ${esc(s.chip || STAGE_CHIP[s.type])}</li>`).join('')}</ol>` : ''}
+    <p class="sim-prompt" id="sim-prompt"></p>
+    <div class="sim-body" id="sim-body"></div>
+    <p class="sim-status" id="sim-status" aria-live="polite"></p>
+    <div class="sim-ctl" id="sim-ctl"></div>
+    <p class="fine" id="sim-help"></p>
+    <button type="button" class="sim-back" id="sim-back">Step back to the choices</button>`;
+  $('#sim-back').onclick = () => finishSim(false, 'You stepped back.');
+  enterStage();
+  box.scrollIntoView({ block: 'nearest', behavior: REDUCED ? 'auto' : 'smooth' });
+}
+function enterStage() {
+  const m = B.mini, s = m.sim.stages[m.si];
+  m.st = { s, slips: 0 };
+  m.sim.stages.forEach((_, i) => { const li = $(`#sim-s${i}`); if (li) li.className = i < m.si ? 'ok' : i === m.si ? 'now' : ''; });
+  $('#sim-prompt').textContent = s.prompt || '';
+  $('#sim-body').innerHTML = ''; $('#sim-ctl').innerHTML = ''; $('#sim-help').textContent = '';
+  simStatus(s.status || '');
+  STAGES[s.type].start(m, s, $('#sim-body'));
+}
+function simStatus(text, kind = '') {
+  const el = $('#sim-status'); if (!el) return;
+  el.textContent = text; el.className = `sim-status ${kind}`;
+}
+function stageDone(text) {
+  const m = B && B.mini; if (!m || m.done) return;
+  Sound.good();
+  m.si++;
+  if (m.si >= m.sim.stages.length) { finishSim(true, text); return; }
+  enterStage();
+  if (text && m.st.s.type !== 'windlass') simStatus(m.st.s.status ? `${text} ${m.st.s.status}` : text, 'good');
+}
+function closeSimPanel() {
+  const box = $('#b-mini'); box.hidden = true; box.innerHTML = '';
+  $('#b-actions').hidden = false;
+}
+function finishSim(ok, text) {
+  const m = B && B.mini; if (!m || m.done) return;
+  m.done = true;
+  closeSimPanel(); $('#b-foot').hidden = false;
+  B.phase = 'act'; B.mini = null;
+  if (ok) { doCorrect(m.o, text ? ` ${esc(text)}` : ''); return; }
+  B.time += 1; renderBars();
+  Sound.warn();
+  showMsg('warn', 'Not quite', `${esc(text)} Pick "${esc(m.o.label)}" again to retry.`);
+  renderActions();
+}
+/* A fumble during a simulation. sev > 0 also costs patient hearts. Returns true if the sim ended. */
+function slip(text, sev = 0) {
+  const m = B && B.mini; if (!m || m.done) return true;
+  m.slips++; m.st.slips++; B.slips++;
+  if (!B.log.some((l) => l.type === 'slip' && l.why === text)) B.log.push({ type: 'slip', label: m.o.label, why: text });
+  if (sev > 0) { B.hearts = Math.max(0, B.hearts - sev); B.mistakes++; B.hurtT = 24; B.laughT = 50; Sound.bad(); shakeHearts(); renderBars(); }
+  else Sound.warn();
+  if (B.hearts <= 0) { m.done = true; B.mini = null; closeSimPanel(); failCall(); return true; }
+  if (m.slips >= SIM_MAX_SLIPS) { finishSim(false, `${text} That is three fumbles on this skill.`); return true; }
+  simStatus(text, 'bad');
+  const T = STAGES[m.st.s.type];
+  if (m.st.slips >= 2 && T.coach) T.coach(m, m.st.s);
+  return false;
+}
+function simKey(e, down) {
+  const m = B.mini; if (!m || m.done || !m.st) return false;
+  const s = m.st.s, k = e.code, a = document.activeElement;
+  if (A_KEYS.has(k) && a && a.tagName === 'BUTTON' && $('#b-mini').contains(a)) return false; // the focused button handles it
+  const T = STAGES[s.type];
+  if (T.key && T.key(m, s, k, down, e)) return true;
+  if (down && /^Digit[0-9]$/.test(k)) {
+    const b = document.querySelector(`#b-mini [data-key="${k.slice(5)}"]`);
+    if (b) { b.click(); return true; }
+  }
+  return false;
+}
+function pressButton(el, down, up) {
+  el.addEventListener('pointerdown', (e) => { e.preventDefault(); el.setPointerCapture(e.pointerId); el.classList.add('pressed'); down(); });
+  for (const ev of ['pointerup', 'pointercancel']) el.addEventListener(ev, () => { el.classList.remove('pressed'); up(); });
+  el.addEventListener('click', (e) => { if (e.detail === 0) e.preventDefault(); });
+}
+
+/* ---------- Scenes (content/scenes.js) ---------- */
+function sceneSVG(id) {
+  const sc = SCENES[id];
+  return `<svg class="sim-svg" id="sim-svg" viewBox="0 0 240 200" role="group" aria-label="${esc(sc.label)}"><rect width="240" height="200" fill="#0c111d"/>${sc.art}<g id="sim-marks"></g><g id="sim-coach"></g><g id="sim-zones"></g><g id="sim-tok"></g></svg>`;
+}
+function svgPt(svg, e) { const r = svg.getBoundingClientRect(); return { x: ((e.clientX - r.left) * 240) / r.width, y: ((e.clientY - r.top) * 200) / r.height }; }
+function showParts(svg, show = []) {
+  svg.querySelectorAll('[data-show]').forEach((el) => { el.style.display = show.includes(el.dataset.show) ? '' : 'none'; });
+  svg.querySelectorAll('[data-hide]').forEach((el) => { el.style.display = show.includes(el.dataset.hide) ? 'none' : ''; });
+}
+function markSVG(k) {
+  const { x, y } = k;
+  switch (k.kind) {
+    case 'none': return '';
+    case 'drop': return `<circle cx="${x}" cy="${y}" r="4" fill="#c8232a" stroke="#000"/>`;
+    case 'pad': return `<rect x="${x - 13}" y="${y - 9}" width="26" height="18" rx="4" fill="#f2f2ee" stroke="#555" stroke-width="2"/>`;
+    case 'lead': return `<circle cx="${x}" cy="${y}" r="4" fill="#f2f2ee" stroke="#000"/>${svgTxt(x, y - 7, k.label)}`;
+    case 'band': return `<rect x="${x - 5}" y="76" width="10" height="60" rx="2" fill="#2f6fb0" stroke="#000"/>`;
+    case 'strap': return `<rect x="48" y="${y - 4}" width="66" height="8" fill="#1b1d22" stroke="#000"/>`;
+    case 'hands': return `<ellipse cx="${x}" cy="${y}" rx="12" ry="8" fill="#e8b48a" stroke="#000" stroke-width="2"/>`;
+    default: return `<circle cx="${x}" cy="${y}" r="5" fill="#f2b632" stroke="#000"/>${k.label ? svgTxt(x, y - 8, k.label) : ''}`;
+  }
+}
+function drawMarks(m, scene) {
+  const g = $('#sim-marks'); if (!g) return;
+  g.innerHTML = m.marks.filter((k) => k.scene === scene).map(markSVG).join('');
+}
+
+/* ---------- place: drag the item onto the right spot (or tap the spot) ---------- */
+STAGES.place = {
+  start(m, s, body) {
+    const st = m.st, sc = SCENES[s.scene];
+    st.targets = s.targets.map((t) => (t === '@prev' ? m.lastZone : t));
+    st.need = s.need || st.targets.length; st.got = 0; st.hit = [];
+    st.active = [...new Set([...st.targets, ...(s.decoys || [])])];
+    body.innerHTML = sceneSVG(s.scene);
+    const svg = $('#sim-svg');
+    showParts(svg, s.show); drawMarks(m, s.scene);
+    $('#sim-zones').innerHTML = st.active.map((id) => { const z = sc.zones[id]; return `<circle class="zone" data-zone="${id}" cx="${z.x}" cy="${z.y}" r="${z.r}" tabindex="0" role="button" aria-label="${esc(z.name)}"/>`; }).join('');
+    const home = s.from || sc.tok;
+    st.tok = s.item || s.items ? { x: home[0], y: home[1], hx: home[0], hy: home[1], w: 30 } : null;
+    placeTok();
+    let drag = null;
+    svg.addEventListener('pointerdown', (e) => {
+      e.preventDefault(); if (m.done) return;
+      const p = svgPt(svg, e), t = st.tok;
+      if (t && Math.abs(p.x - t.x) <= t.w / 2 + 6 && Math.abs(p.y - t.y) <= 14) { drag = { dx: p.x - t.x, dy: p.y - t.y, moved: false }; svg.setPointerCapture(e.pointerId); }
+      else drag = { tap: p };
+    });
+    svg.addEventListener('pointermove', (e) => {
+      if (!drag || drag.tap || m.done || !st.tok) return;
+      const p = svgPt(svg, e);
+      st.tok.x = p.x - drag.dx; st.tok.y = p.y - drag.dy; drag.moved = true;
+      placeTok();
+    });
+    svg.addEventListener('pointerup', () => {
+      const d = drag; drag = null;
+      if (!d || m.done) return;
+      if (d.tap) placeAt(d.tap);
+      else if (d.moved) placeAt({ x: st.tok.x, y: st.tok.y });
+    });
+    svg.addEventListener('pointercancel', () => { drag = null; tokHome(); });
+    $('#sim-help').textContent = st.tok ? 'Drag it onto the right spot, or tap the spot. Keys: Tab to a spot, then Space.' : 'Tap the right spot. Keys: Tab to a spot, then Space.';
+  },
+  key(m, s, k, down) {
+    if (!down || !A_KEYS.has(k)) return false;
+    const a = document.activeElement, z = a && a.getAttribute && a.getAttribute('data-zone');
+    if (z) { placeZone(z); return true; }
+    return false;
+  },
+  coach(m) {
+    const sc = SCENES[m.st.s.scene];
+    $('#sim-coach').innerHTML = placeWant(m.st).map((id) => { const z = sc.zones[id]; return `<circle class="coach" cx="${z.x}" cy="${z.y}" r="${z.r + 3}"/>`; }).join('');
+    simStatus(`${$('#sim-status').textContent} ${CREW.partner.name} points at the spot.`, 'bad');
+  },
+};
+const placeWant = (st) => (st.s.items ? [st.targets[st.got]] : st.targets.filter((t) => !st.hit.includes(t)));
+const tokLabel = (st) => (st.s.items ? st.s.items[Math.min(st.got, st.s.items.length - 1)] : st.s.item);
+function placeTok() {
+  const st = B.mini.st, t = st.tok, g = $('#sim-tok'); if (!g) return;
+  if (!t) { g.innerHTML = ''; return; }
+  const label = tokLabel(st); t.w = Math.max(30, label.length * 6.4 + 12);
+  const hx = Math.min(238 - t.w / 2, Math.max(2 + t.w / 2, t.hx0 == null ? (t.hx0 = t.hx) : t.hx0));
+  if (t.x === t.hx) t.x = hx;
+  t.hx = hx;
+  g.innerHTML = `<g class="tok" transform="translate(${t.x.toFixed(1)} ${t.y.toFixed(1)})"><rect x="${(-t.w / 2).toFixed(1)}" y="-9" width="${t.w.toFixed(1)}" height="18" rx="4" fill="#f2b632" stroke="#000" stroke-width="2"/>${svgTxt(0, 4, label, 9, '#000')}</g>`;
+}
+function tokHome() { const t = B && B.mini && B.mini.st && B.mini.st.tok; if (t) { t.x = t.hx; t.y = t.hy; placeTok(); } }
+function placeAt(p) {
+  const st = B.mini.st, sc = SCENES[st.s.scene];
+  let best = null, bd = Infinity;
+  for (const id of st.active) { const z = sc.zones[id], d = Math.hypot(p.x - z.x, p.y - z.y) - z.r; if (d <= 4 && d < bd) { bd = d; best = id; } }
+  if (!best) { tokHome(); simStatus(st.s.miss || 'Nothing useful there. Look again.'); return; }
+  placeZone(best);
+}
+function placeZone(id) {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'place') return;
+  const st = m.st, s = st.s, z = SCENES[s.scene].zones[id];
+  if (!z || !st.active.includes(id)) return;
+  if (st.hit.includes(id)) { tokHome(); simStatus('Already done there.'); return; }
+  if (placeWant(st).includes(id)) {
+    m.marks.push({ scene: s.scene, x: z.x, y: z.y, kind: s.mark || 'dot', label: tokLabel(st) });
+    st.hit.push(id); st.got++; m.lastZone = id;
+    $('#sim-coach').innerHTML = '';
+    drawMarks(m, s.scene); Sound.select();
+    if (st.got >= st.need) { st.tok = null; placeTok(); stageDone(s.done); return; }
+    tokHome();
+    simStatus(s.items ? `Good. Next: ${tokLabel(st)}.` : `Good. ${st.need - st.got} more.`, 'good');
+    return;
+  }
+  tokHome();
+  slip((s.why && s.why[id]) || z.why, (s.sev && s.sev[id]) || 0);
+}
+
+/* ---------- hold: press and hold, let go inside a time window (optionally repeated on a rhythm) ---------- */
+STAGES.hold = {
+  start(m, s, body) {
+    const st = m.st;
+    st.reps = 0; st.down = 0; st.last = 0; st.scale = s.scale || s.max * 1.25;
+    body.innerHTML = `${s.scene ? sceneSVG(s.scene) : ''}
+      <div class="sim-read"><b id="hold-t">0.0</b> <small>seconds</small>${(s.reps || 1) > 1 ? ` · <b id="hold-n">0</b> <small>of ${s.reps}</small>` : ''}</div>
+      <div class="gauge" aria-hidden="true"><div class="zone" style="left:${(s.min / st.scale) * 100}%;width:${((s.max - s.min) / st.scale) * 100}%"></div><div class="needle" id="hold-needle"></div></div>
+      ${s.every ? '<p class="fine" id="hold-gap">Since the last one: --</p>' : ''}`;
+    if (s.scene) { showParts($('#sim-svg'), s.show); drawMarks(m, s.scene); }
+    $('#sim-ctl').innerHTML = `<button type="button" class="mini-btn" id="hold-btn" tabindex="-1">${esc(s.button || 'Hold')}</button>`;
+    pressButton($('#hold-btn'), holdDown, holdUp);
+    $('#sim-help').textContent = 'Press and hold the button (or Space). Let go at the right moment.';
+  },
+  key(m, s, k, down, e) {
+    if (!A_KEYS.has(k)) return false;
+    if (!e.repeat) { if (down) holdDown(); else holdUp(); }
+    return true;
+  },
+  update(m, s) {
+    const st = m.st, t = now(), held = st.down ? (t - st.down) / 1000 : 0;
+    const ht = $('#hold-t'); if (ht) ht.textContent = held.toFixed(1);
+    const nd = $('#hold-needle'); if (nd) nd.style.left = `calc(${Math.min(100, (held / st.scale) * 100)}% - 2px)`;
+    const bag = $('#bvm-bag'); if (bag) bag.setAttribute('rx', st.down ? 24 : 36);
+    if (st.down && held > s.max) { st.last = st.down; st.down = 0; slip(s.long); return; }
+    if (s.every && st.last && !st.down) {
+      const gap = (t - st.last) / 1000, hg = $('#hold-gap');
+      if (hg) hg.textContent = `Since the last one: ${gap.toFixed(1)} s`;
+      if (gap > s.every[1]) { st.last = t; slip(s.slow); }
+    }
+  },
+};
+function holdDown() {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'hold' || m.st.down) return;
+  const st = m.st, s = st.s, t = now();
+  if (s.every && st.last && (t - st.last) / 1000 < s.every[0]) { st.last = t; slip(s.fast); return; }
+  st.down = t; Sound.select();
+}
+function holdUp() {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'hold' || !m.st.down) return;
+  const st = m.st, s = st.s, held = (now() - st.down) / 1000;
+  st.last = st.down; st.down = 0;
+  if (held < s.min) { slip(s.short); return; }
+  if (held > s.max) { slip(s.long); return; }
+  st.reps++;
+  const hn = $('#hold-n'); if (hn) hn.textContent = st.reps;
+  if (st.reps >= (s.reps || 1)) { stageDone(s.done); return; }
+  Sound.twist();
+  simStatus(s.each || `Good. ${(s.reps || 1) - st.reps} more.`, 'good');
+}
+
+/* ---------- dial: set a number (flow, volume, dose, angle), then confirm ---------- */
+STAGES.dial = {
+  start(m, s, body) {
+    const st = m.st;
+    st.v = s.start != null ? s.start : s.min;
+    body.innerHTML = `${dialArt(s)}<div class="sim-read"><b id="dial-v"></b> <small>${esc(s.unit)}</small></div>
+      <div class="dial-row"><button type="button" class="act dial-btn" id="dial-dn" aria-label="Less">&minus;</button>
+      <input type="range" id="dial-r" min="${s.min}" max="${s.max}" step="${s.step}" value="${st.v}" aria-label="${esc(s.label || s.unit)}">
+      <button type="button" class="act dial-btn" id="dial-up" aria-label="More">+</button></div>`;
+    $('#sim-ctl').innerHTML = `<button type="button" class="act wide primary" id="dial-ok">${esc(s.confirm || 'Confirm')}</button>`;
+    $('#dial-dn').onclick = () => dialSet(m.st.v - s.step);
+    $('#dial-up').onclick = () => dialSet(m.st.v + s.step);
+    $('#dial-r').addEventListener('input', (e) => dialSet(Number(e.target.value)));
+    $('#dial-ok').onclick = dialConfirm;
+    $('#sim-help').textContent = 'Slide it, or use − and + (Left and Right keys). Confirm with Enter or Space.';
+    dialSet(st.v);
+  },
+  key(m, s, k, down) {
+    if (!down) return false;
+    if (/^Arrow/.test(k) && document.activeElement && document.activeElement.id === 'dial-r') return false;
+    if (k === 'ArrowLeft' || k === 'ArrowDown') { dialSet(m.st.v - s.step); return true; }
+    if (k === 'ArrowRight' || k === 'ArrowUp') { dialSet(m.st.v + s.step); return true; }
+    if (A_KEYS.has(k)) { dialConfirm(); return true; }
+    return false;
+  },
+};
+const decimals = (n) => (String(n).split('.')[1] || '').length;
+function dialSet(v) {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'dial') return;
+  const s = m.st.s;
+  v = Number(Math.min(s.max, Math.max(s.min, Math.round(v / s.step) * s.step)).toFixed(decimals(s.step)));
+  m.st.v = v;
+  $('#dial-v').textContent = v === s.max && s.maxLabel ? s.maxLabel : String(v);
+  const r = $('#dial-r'); if (r && Number(r.value) !== v) r.value = v;
+  dialDraw(s, v);
+}
+function dialConfirm() {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'dial') return;
+  const s = m.st.s, v = m.st.v;
+  if (v < s.ok[0]) { slip(s.low); return; }
+  if (v > s.ok[1]) { slip(s.high); return; }
+  if (s.key) m.vals[s.key] = v;
+  stageDone(s.done);
+}
+function dialArt(s) {
+  if (s.look === 'syringe') {
+    let ticks = '';
+    for (let i = 0; i <= 10; i++) { const x = 30 + 17 * i; ticks += `<line x1="${x}" y1="20" x2="${x}" y2="${i % 5 ? 26 : 32}" stroke="#cfd6e0"/>`; }
+    return `<svg class="sim-art" viewBox="0 0 240 64" aria-hidden="true"><line x1="2" y1="32" x2="30" y2="32" stroke="#cfd6e0" stroke-width="2"/>
+      <rect id="da-fluid" x="30" y="20" height="24" width="0" fill="#9fd3ff" fill-opacity=".5"/>
+      <rect x="30" y="20" width="170" height="24" fill="none" stroke="#cfd6e0" stroke-width="2"/>${ticks}
+      <line id="da-rod" x1="35" y1="32" x2="236" y2="32" stroke="#cfd6e0" stroke-width="3"/>
+      <rect id="da-plunger" x="30" y="18" width="5" height="28" fill="#1b1d22" stroke="#cfd6e0"/>
+      ${svgTxt(30, 58, '0', 8, '#cfd6e0')}${svgTxt(115, 58, String(s.max / 2), 8, '#cfd6e0')}${svgTxt(200, 58, `${s.max} mL`, 8, '#cfd6e0')}</svg>`;
+  }
+  if (s.look === 'flow') {
+    let ticks = '';
+    for (let v = 0; v <= s.max; v += 5) { const y = 100 - 90 * (v / s.max); ticks += `<line x1="136" y1="${y}" x2="146" y2="${y}" stroke="#cfd6e0"/>${svgTxt(160, y + 3, String(v), 8, '#cfd6e0')}`; }
+    return `<svg class="sim-art flow" viewBox="0 0 240 110" aria-hidden="true"><rect x="106" y="6" width="28" height="100" rx="6" fill="#9fd3ff" fill-opacity=".12" stroke="#cfd6e0" stroke-width="2"/>${ticks}<circle id="da-ball" cx="120" cy="100" r="7" fill="#e8e8e8" stroke="#000"/></svg>`;
+  }
+  if (s.look === 'angle') return '<svg class="sim-art" viewBox="0 0 240 90" aria-hidden="true"><rect x="0" y="50" width="240" height="40" fill="#e2a77a"/><ellipse cx="170" cy="66" rx="90" ry="5" fill="#5a78b8"/><path id="da-arc" fill="none" stroke="#f2b632" stroke-width="2"/><line id="da-needle" x1="0" y1="0" x2="0" y2="0" stroke="#d9dde3" stroke-width="3" stroke-linecap="round"/></svg>';
+  if (s.look === 'tablets') return '<svg class="sim-art" viewBox="0 0 240 40" aria-hidden="true"><g id="da-tabs"></g></svg>';
+  return '';
+}
+function dialDraw(s, v) {
+  if (s.look === 'syringe') {
+    const x = 30 + 170 * (v / s.max);
+    $('#da-fluid').setAttribute('width', (x - 30).toFixed(1)); $('#da-plunger').setAttribute('x', x.toFixed(1)); $('#da-rod').setAttribute('x1', (x + 5).toFixed(1));
+  } else if (s.look === 'flow') $('#da-ball').setAttribute('cy', (100 - 90 * (v / s.max)).toFixed(1));
+  else if (s.look === 'angle') {
+    const a = (v * Math.PI) / 180, x0 = 70, y0 = 50, c = Math.cos(a), sn = Math.sin(a), n = $('#da-needle');
+    n.setAttribute('x1', (x0 - 80 * c).toFixed(1)); n.setAttribute('y1', (y0 - 80 * sn).toFixed(1));
+    n.setAttribute('x2', (x0 + 26 * c).toFixed(1)); n.setAttribute('y2', (y0 + 26 * sn).toFixed(1));
+    $('#da-arc').setAttribute('d', `M${x0 - 34} ${y0} A34 34 0 0 1 ${(x0 - 34 * c).toFixed(1)} ${(y0 - 34 * sn).toFixed(1)}`);
+  } else if (s.look === 'tablets') {
+    $('#da-tabs').innerHTML = Array.from({ length: v }, (_, i) => `<circle cx="${18 + i * 26}" cy="20" r="10" fill="#f28c28" stroke="#000"/>${svgTxt(18 + i * 26, 23, '81', 7, '#000')}`).join('');
+  }
+}
+
+/* ---------- order: tap actions in the order you do them ---------- */
+STAGES.order = {
+  start(m, s, body) {
+    m.st.k = 0;
+    const opts = shuffle(s.items.map((t, i) => ({ t, i })));
+    body.innerHTML = '<ol class="sim-order" id="order-done"></ol>';
+    $('#sim-ctl').innerHTML = `<div class="actions">${opts.map((o, j) => `<button type="button" class="act" data-key="${j + 1}" data-i="${o.i}"><span class="k">${j + 1}</span><span>${esc(o.t)}</span></button>`).join('')}</div>`;
+    $('#sim-ctl').querySelectorAll('[data-i]').forEach((b) => { b.onclick = () => orderPick(Number(b.dataset.i)); });
+    $('#sim-help').textContent = 'Tap each action in the order you do it, or press its number.';
+  },
+};
+function orderPick(i) {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'order') return;
+  const st = m.st, s = st.s;
+  if (i !== st.k) { slip((s.why && s.why[i]) || `Not yet: "${s.items[i]}" comes later.`); return; }
+  $('#order-done').insertAdjacentHTML('beforeend', `<li>${esc(s.items[i])}</li>`);
+  const b = document.querySelector(`#sim-ctl [data-i="${i}"]`); if (b) b.remove();
+  st.k++; Sound.select();
+  if (st.k >= s.items.length) { stageDone(s.done); return; }
+  simStatus('Good. Next?', 'good');
+}
+
+/* ---------- signal: wait for a cue (radio, hand signal), then act ---------- */
+STAGES.signal = {
+  start(m, s, body) {
+    const st = m.st, t = now();
+    st.t0 = t; st.at = t + (s.wait[0] + Math.random() * (s.wait[1] - s.wait[0])) * 1000; st.ready = false; st.ci = -1;
+    body.innerHTML = `<div class="radio" id="sig-box"><span class="led"></span><span id="sig-text">${esc(s.waiting)}</span></div>`;
+    $('#sim-ctl').innerHTML = `<button type="button" class="act wide primary" data-key="1" id="sig-go">${esc(s.go)}</button>`;
+    $('#sig-go').onclick = signalGo;
+    $('#sim-help').textContent = 'Watch and listen. Press the button (or Space) only when the time is right.';
+  },
+  key(m, s, k, down) { if (down && A_KEYS.has(k)) { signalGo(); return true; } return false; },
+  update(m, s) {
+    const st = m.st, t = now();
+    if (st.ready) return;
+    if (t >= st.at) { st.ready = true; $('#sig-text').textContent = s.signal; $('#sig-box').classList.add('live'); Sound.radio(); return; }
+    if (s.chatter) {
+      const ci = Math.floor((t - st.t0) / 1700) % s.chatter.length;
+      if (ci !== st.ci) { st.ci = ci; $('#sig-text').textContent = s.chatter[ci]; }
+    }
+  },
+};
+function signalGo() {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'signal') return;
+  const s = m.st.s;
+  if (now() < m.st.at) { slip(s.early, s.sev || 0); return; }
+  stageDone(s.done);
+}
+
+/* ---------- shock: charge (manual), call clear, look, shock ---------- */
+STAGES.shock = {
+  start(m, s, body) {
+    const st = m.st, z = SCENES.chest.zones;
+    st.charged = !s.charge; st.clear = 0; st.off = false;
+    body.innerHTML = sceneSVG('chest');
+    $('#sim-marks').innerHTML = markSVG({ kind: 'pad', x: z.padR.x, y: z.padR.y }) + markSVG({ kind: 'pad', x: z.padLat.x, y: z.padLat.y })
+      + `<g id="shock-hands" class="bob"><ellipse cx="120" cy="92" rx="15" ry="10" fill="#e8b48a" stroke="#000" stroke-width="2"/><ellipse cx="120" cy="86" rx="13" ry="9" fill="#f0c29a" stroke="#000" stroke-width="2"/>${svgTxt(120, 116, `${CREW.partner.name}'s hands`, 7, '#000')}</g>`;
+    const btns = [];
+    if (s.charge) btns.push(['sh-charge', 'Charge', 'charge']);
+    btns.push(['sh-clear', '"Everybody clear!"', 'clear'], ['sh-shock', 'Shock', 'shock']);
+    $('#sim-ctl').innerHTML = `<div class="actions">${btns.map(([id, t], j) => `<button type="button" class="act${id === 'sh-shock' ? ' primary' : ''}" id="${id}" data-key="${j + 1}"><span class="k">${j + 1}</span><span>${esc(t)}</span></button>`).join('')}</div>`;
+    btns.forEach(([id, , a]) => { $(`#${id}`).onclick = () => shockAct(a); });
+    $('#sim-help').textContent = s.charge ? 'Charge while compressions continue, then call clear, look, and shock. Number keys work.' : 'Call clear, look at the patient, then shock. Number keys work.';
+  },
+  update(m) {
+    const st = m.st;
+    if (st.clear && !st.off && now() - st.clear >= 800) {
+      st.off = true;
+      const h = $('#shock-hands'); if (h) { h.classList.remove('bob'); h.classList.add('off'); }
+      simStatus('Hands off. Oxygen away. Nobody is touching him.');
+    }
+  },
+};
+function shockAct(a) {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'shock') return;
+  const st = m.st, s = st.s;
+  if (a === 'charge') {
+    if (st.charged) { simStatus('Already charged.'); return; }
+    st.charged = true; Sound.twist(); simStatus('Charged, and compressions never stopped.', 'good'); return;
+  }
+  if (a === 'clear') {
+    if (!st.charged) { slip('Charge first while compressions continue, then call clear. It keeps the hands-off pause short.'); return; }
+    if (st.clear) { simStatus('Already called. Look at the patient.'); return; }
+    st.clear = now(); Sound.select();
+    simStatus(`"I'm clear, you're clear, everybody clear!" ${CREW.partner.name} lifts off. Look before you press.`);
+    return;
+  }
+  if (!st.charged) { slip('Nothing happens. It is not charged.'); return; }
+  if (!st.clear) { slip(`You shocked with ${CREW.partner.name}'s hands on the chest. Always call clear and look first.`, 1); return; }
+  if (now() - st.clear < 800) { slip('Hands were still on the chest. Call clear, look, then press.', 1); return; }
+  Sound.hit();
+  stageDone(s.done);
+}
+
+/* ---------- bagcpr: partner compresses; you squeeze 1 breath every 10 compressions ---------- */
+const BAG_MS = 545; // 110 compressions a minute
+const bagCount = (st) => Math.floor((now() - st.t0) / BAG_MS);
+STAGES.bagcpr = {
+  start(m, s, body) {
+    const st = m.st;
+    st.t0 = now(); st.good = 0; st.down = 0; st.shown = -1; st.need = s.breaths || 3;
+    body.innerHTML = `<div class="rate"><span id="bc-n">0</span> <small>compressions since your last breath</small></div>
+      <div class="gauge" aria-hidden="true"><div class="zone" style="left:${(9 / 13) * 100}%;width:${(4 / 13) * 100}%"></div><div class="needle" id="bc-needle"></div></div>
+      <p id="bc-good">Good breaths: 0 of ${st.need}</p>`;
+    $('#sim-ctl').innerHTML = '<button type="button" class="mini-btn" id="hold-btn" tabindex="-1">Squeeze bag</button>';
+    pressButton($('#hold-btn'), bagDown, bagUp);
+    $('#sim-help').textContent = `${CREW.partner.name} compresses at 110 a minute and never stops. Squeeze for about 1 second on the 10th compression. Holding Space works too.`;
+  },
+  key(m, s, k, down, e) {
+    if (!A_KEYS.has(k)) return false;
+    if (!e.repeat) { if (down) bagDown(); else bagUp(); }
+    return true;
+  },
+  update(m) {
+    const st = m.st, n = bagCount(st);
+    if (n !== st.shown) {
+      st.shown = n; B.pressT = 6;
+      const el = $('#bc-n'); if (el) el.textContent = n;
+      const nd = $('#bc-needle'); if (nd) nd.style.left = `calc(${Math.min(100, (n / 13) * 100)}% - 2px)`;
+    }
+    if (st.down && (now() - st.down) / 1000 > 2) { st.down = 0; st.t0 = now(); slip('Too long a squeeze: too much air. Squeeze just until the chest rises, about 1 second.'); return; }
+    if (!st.down && n >= 13) { st.t0 = now(); slip('Missed a breath. One breath every 10 compressions.'); }
+  },
+};
+function bagDown() {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'bagcpr' || m.st.down) return;
+  m.st.down = now(); m.st.at = bagCount(m.st); Sound.select();
+}
+function bagUp() {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'bagcpr' || !m.st.down) return;
+  const st = m.st, held = (now() - st.down) / 1000, start = st.down;
+  st.down = 0;
+  if (st.at < 9) { st.t0 = start; slip('Too soon. One breath every 10 compressions. Extra breaths raise chest pressure and cut blood flow back to the heart.'); return; }
+  if (held > 1.5) { st.t0 = start; slip('Too long: squeeze just until the chest rises, about 1 second.'); return; }
+  if (held < 0.3) { slip('Too quick for the chest to rise. Squeeze for about 1 second.'); return; }
+  st.good++; st.t0 = start;
+  $('#bc-good').textContent = `Good breaths: ${st.good} of ${st.need}`;
+  if (st.good >= st.need) { stageDone(st.s.done); return; }
+  simStatus('Chest rises. Compressions never stopped.', 'good');
+}
+
+/* ---------- pace: raise the pacer output until every spike captures ---------- */
+let stripGrid = '';
+for (let x = 0; x <= 240; x += 8) stripGrid += `<line x1="${x}" y1="0" x2="${x}" y2="80" stroke="#1d4a2a" stroke-width="${x % 40 ? 0.4 : 0.9}"/>`;
+for (let y = 0; y <= 80; y += 8) stripGrid += `<line x1="0" y1="${y}" x2="240" y2="${y}" stroke="#1d4a2a" stroke-width="${y % 40 ? 0.4 : 0.9}"/>`;
+STAGES.pace = {
+  start(m, s, body) {
+    const st = m.st;
+    st.ma = 0; st.th = 60 + 5 * Math.floor(Math.random() * 7); st.rate = m.vals.rate || 70;
+    body.innerHTML = `<svg class="sim-strip" viewBox="0 0 240 80" role="img" aria-label="Monitor strip"><rect width="240" height="80" fill="#06120a"/>${stripGrid}<path id="pace-path" fill="none" stroke="#6fe08a" stroke-width="1.6"/></svg>
+      <div class="sim-read">Output <b id="pace-ma">0</b> <small>mA</small> · Rate <b>${st.rate}</b> <small>/min</small></div>
+      <div class="dial-row"><button type="button" class="act dial-btn" id="pace-dn" aria-label="Less output">&minus;</button>
+      <input type="range" id="pace-r" min="0" max="140" step="5" value="0" aria-label="Pacer output in milliamps">
+      <button type="button" class="act dial-btn" id="pace-up" aria-label="More output">+</button></div>`;
+    $('#sim-ctl').innerHTML = '<button type="button" class="act wide primary" id="pace-ok">Capture confirmed</button>';
+    $('#pace-dn').onclick = () => paceSet(m.st.ma - 5);
+    $('#pace-up').onclick = () => paceSet(m.st.ma + 5);
+    $('#pace-r').addEventListener('input', (e) => paceSet(Number(e.target.value)));
+    $('#pace-ok').onclick = paceConfirm;
+    $('#sim-help').textContent = 'Raise the output until every pacer spike has a wide QRS right after it. Left and Right keys work. Enter or Space confirms.';
+    paceSet(0);
+  },
+  key(m, s, k, down) {
+    if (!down) return false;
+    if (/^Arrow/.test(k) && document.activeElement && document.activeElement.id === 'pace-r') return false;
+    if (k === 'ArrowLeft' || k === 'ArrowDown') { paceSet(m.st.ma - 5); return true; }
+    if (k === 'ArrowRight' || k === 'ArrowUp') { paceSet(m.st.ma + 5); return true; }
+    if (A_KEYS.has(k)) { paceConfirm(); return true; }
+    return false;
+  },
+};
+function paceSet(v) {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'pace') return;
+  const st = m.st;
+  st.ma = Math.max(0, Math.min(140, Math.round(v / 5) * 5));
+  $('#pace-ma').textContent = st.ma;
+  const r = $('#pace-r'); if (r && Number(r.value) !== st.ma) r.value = st.ma;
+  $('#pace-path').setAttribute('d', paceStrip(st.ma, st.th, st.rate));
+}
+function paceStrip(ma, th, rate) {
+  const secs = 6, pps = 240 / secs, base = 50, ev = [];
+  if (ma > 0) for (let t = 0.2; t < secs; t += 60 / rate) ev.push({ t, k: ma >= th ? 'cap' : 'spike' });
+  if (ma < th) {
+    for (let t = 0.1; t < secs; t += 60 / 80) ev.push({ t, k: 'p' });
+    for (let t = 0.9; t < secs; t += 60 / 34) ev.push({ t, k: 'esc' });
+  }
+  ev.sort((a, b) => a.t - b.t);
+  let d = `M0 ${base}`, x = 0;
+  for (const e of ev) {
+    const ex = e.t * pps; if (ex < x) continue;
+    d += ` L${ex.toFixed(1)} ${base}`; x = ex;
+    if (e.k === 'p') { d += ' q3 -5 6 0'; x += 6; }
+    else if (e.k === 'spike') { const h = Math.min(30, 8 + ma / 4); d += ` l0 ${-h} l0 ${h}`; }
+    else if (e.k === 'cap') { d += ' l0 -40 l0 40 l4 16 l6 -40 l6 30 l4 -6 q8 -14 16 0'; x += 36; }
+    else { d += ' l4 14 l6 -36 l6 28 l4 -6 q8 -12 16 0'; x += 36; }
+  }
+  return `${d} L240 ${base}`;
+}
+function paceConfirm() {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'pace') return;
+  const st = m.st;
+  if (st.ma === 0) { slip('The pacer output is at 0 mA. Raise it.'); return; }
+  if (st.ma < st.th) { slip('No capture yet: spikes with no wide QRS after them. Keep raising the output.'); return; }
+  stageDone(`Electrical capture at ${st.ma} mA: a wide QRS after every spike.${st.s.done ? ` ${st.s.done}` : ''}`);
+}
+
+/* ---------- rhythm: tap compressions at 100-120 a minute ---------- */
+STAGES.rhythm = {
+  start(m, s, body) {
+    const st = m.st; st.taps = []; st.n = s.taps || 12;
+    body.innerHTML = `<div class="rate"><span id="mini-rate">--</span> <small>/min</small></div>
       <div class="gauge" aria-hidden="true"><div class="zone"></div><div class="needle" id="mini-needle"></div></div>
       <div class="gauge-lbls" aria-hidden="true"><span>60</span><span>100</span><span>120</span><span>160</span></div>
-      <p id="mini-count">0 / 12</p>
-      <button type="button" class="mini-btn" id="mini-btn" tabindex="-1">Compress</button>`;
-  }
-  const btn = $('#mini-btn');
-  btn.addEventListener('pointerdown', (e) => { e.preventDefault(); miniTap(); });
-  btn.addEventListener('click', (e) => { if (e.detail === 0) e.preventDefault(); });
-}
+      <p id="mini-count">0 / ${st.n}</p>`;
+    $('#sim-ctl').innerHTML = '<button type="button" class="mini-btn" id="mini-btn" tabindex="-1">Compress</button>';
+    pressButton($('#mini-btn'), miniTap, () => {});
+    $('#sim-help').textContent = `Tap ${st.n} compressions at 100-120 per minute. Space works too. A pause over 2 seconds restarts the count.`;
+  },
+  key(m, s, k, down, e) { if (!A_KEYS.has(k)) return false; if (down && !e.repeat) miniTap(); return true; },
+};
 function miniTap() {
-  const m = B && B.mini; if (!m || m.done) return;
-  const now = performance.now();
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'rhythm') return;
+  const st = m.st, t = now();
   const btn = $('#mini-btn'); if (btn) { btn.classList.add('pressed'); setTimeout(() => btn.classList.remove('pressed'), 80); }
-  if (m.type !== 'rhythm') return;
-  if (m.taps.length && now - m.taps[m.taps.length - 1] > 2000) {
-    m.taps = [];
-    $('#mini-rate').textContent = '--';
-    showMsg('warn', 'Too long a pause', 'Every pause drops blood flow to the brain. Count restarted. Minimize interruptions.');
+  if (st.taps.length && t - st.taps[st.taps.length - 1] > 2000) {
+    st.taps = []; $('#mini-rate').textContent = '--';
+    simStatus('Too long a pause. Every pause drops blood flow to the brain. Count restarted.', 'bad');
   }
-  m.taps.push(now); Sound.thump(); B.pressT = 8;
-  const n = m.taps.length;
+  st.taps.push(t); Sound.thump(); B.pressT = 8;
+  const n = st.taps.length;
   if (n >= 2) {
-    const inst = Math.round(60000 / (now - m.taps[n - 2]));
+    const inst = Math.round(60000 / (t - st.taps[n - 2]));
     $('#mini-rate').textContent = inst;
-    const pos = Math.max(0, Math.min(100, ((inst - 60) / 100) * 100));
-    $('#mini-needle').style.left = `calc(${pos}% - 2px)`;
+    $('#mini-needle').style.left = `calc(${Math.max(0, Math.min(100, inst - 60))}% - 2px)`;
   }
-  $('#mini-count').textContent = `${n} / 12`;
-  if (n >= 12) {
-    const iv = []; for (let i = 1; i < n; i++) iv.push(m.taps[i] - m.taps[i - 1]);
-    iv.sort((a, b) => a - b);
-    const rate = Math.round(60000 / iv[Math.floor(iv.length / 2)]);
-    if (rate >= 100 && rate <= 120) finishMini(true, ` Your rate: ${rate}/min. Right in the zone.`);
-    else if (rate < 100) finishMini(false, `Your rate: ${rate}/min. Too slow: blood flow drops. Think "Stayin' Alive" (about 104 beats a minute). Try again.`);
-    else finishMini(false, `Your rate: ${rate}/min. Too fast: above 120 the heart cannot refill and depth suffers. Try again.`);
-  }
+  $('#mini-count').textContent = `${n} / ${st.n}`;
+  if (n < st.n) return;
+  const iv = []; for (let i = 1; i < n; i++) iv.push(st.taps[i] - st.taps[i - 1]);
+  iv.sort((a, b) => a - b);
+  const rate = Math.round(60000 / iv[Math.floor(iv.length / 2)]);
+  if (rate >= 100 && rate <= 120) { stageDone(`Rate ${rate}/min, right in the zone.${st.s.done ? ` ${st.s.done}` : ''}`); return; }
+  st.taps = []; $('#mini-count').textContent = `0 / ${st.n}`;
+  slip(rate < 100 ? `Rate ${rate}/min: too slow, and blood flow drops. Think "Stayin' Alive" (about 104 a minute).` : `Rate ${rate}/min: too fast. Above 120 the heart cannot refill and depth suffers.`);
 }
-/* CAT-style tourniquet: pull the strap snug, twist the windlass rod (drag in
-   circles around it), then lock the rod in the clip. Arrow keys work too. */
+
+/* ---------- windlass: CAT-style tourniquet. Pull the strap snug, twist the
+   rod (drag in circles around it), then lock the rod in the clip. ---------- */
 const TQ = { cx: 84, cy: 100, rod: 30, clipAngle: 180 };
-function startWindlass(o, box) {
-  const m = B.mini;
-  Object.assign(m, { stage: 0, slack: 0, turn: 0, lastA: null, dragging: false, start: 0, drops: [], secs: o.mini.secs, need: o.mini.halfTurns * 180 });
-  box.innerHTML = `
-    <h3>Apply the tourniquet</h3>
-    <ol class="tq-steps" aria-hidden="true"><li id="tq-s0">1. Pull strap</li><li id="tq-s1">2. Twist rod</li><li id="tq-s2">3. Lock in clip</li></ol>
-    <svg class="tq-svg" id="tq-svg" viewBox="0 0 240 200" role="img" aria-label="Tourniquet on the thigh. Drag the strap tab down, drag in circles to twist the rod, then tap the clip.">
-      <rect x="0" y="0" width="240" height="200" fill="#0c111d"/>
-      <rect x="6" y="72" width="228" height="56" rx="26" fill="#e2a77a"/>
-      <rect x="6" y="72" width="228" height="10" rx="5" fill="#f0c29a"/>
-      <ellipse cx="176" cy="100" rx="13" ry="7" fill="#7a0f14"/>
-      <ellipse cx="176" cy="99" rx="9" ry="4" fill="#c8232a"/>
-      <g id="tq-drops"></g>
-      <rect x="70" y="66" width="28" height="68" rx="4" fill="#1b1d22" stroke="#000"/>
-      <rect id="tq-tail" x="74" y="134" width="20" height="48" fill="#1b1d22" stroke="#000"/>
-      <rect id="tq-tab" x="68" y="176" width="32" height="16" rx="3" fill="#f2b632" stroke="#000"/>
-      <text id="tq-tab-lbl" x="84" y="188" text-anchor="middle" font-size="9" font-family="Silkscreen, monospace" fill="#000">PULL</text>
-      <circle id="tq-ring" cx="${TQ.cx}" cy="${TQ.cy}" r="44" fill="none" stroke="#f2b632" stroke-width="2" stroke-dasharray="4 5" opacity="0"/>
-      <g id="tq-clip"><path d="M ${TQ.cx - TQ.rod - 10} ${TQ.cy - 9} h 10 v 18 h -10" fill="none" stroke="#9aa3ad" stroke-width="4"/></g>
-      <line id="tq-rod" x1="${TQ.cx - TQ.rod}" y1="${TQ.cy}" x2="${TQ.cx + TQ.rod}" y2="${TQ.cy}" stroke="#000" stroke-width="9" stroke-linecap="round"/>
-      <line id="tq-rod2" x1="${TQ.cx - TQ.rod}" y1="${TQ.cy}" x2="${TQ.cx + TQ.rod}" y2="${TQ.cy}" stroke="#d9dde3" stroke-width="5" stroke-linecap="round"/>
-      <circle cx="${TQ.cx}" cy="${TQ.cy}" r="7" fill="#333" stroke="#000"/>
-    </svg>
-    <p class="tq-status" id="tq-status" aria-live="polite"></p>
-    <div class="meter" aria-hidden="true"><div id="mini-fill"></div></div>
-    <div class="meter timer" aria-hidden="true"><div id="mini-timer" style="width:100%"></div></div>
-    <p class="fine">Finger or mouse: drag the tab down, then drag in circles around the rod. Keys: Down to pull, Left/Right to twist, Space to lock. The ${m.secs}-second clock starts when you touch it.</p>`;
-  const svg = $('#tq-svg');
-  const toSvg = (e) => { const r = svg.getBoundingClientRect(); return { x: (e.clientX - r.left) * 240 / r.width, y: (e.clientY - r.top) * 200 / r.height }; };
-  svg.addEventListener('pointerdown', (e) => {
-    e.preventDefault(); svg.setPointerCapture(e.pointerId);
-    const p = toSvg(e);
-    if (m.stage === 2) { windlassLock(p); return; }
-    m.dragging = true; m.lastY = p.y; m.lastA = Math.atan2(p.y - TQ.cy, p.x - TQ.cx);
-    if (!m.start) m.start = performance.now();
-  });
-  svg.addEventListener('pointermove', (e) => {
-    if (!m.dragging || m.done) return;
-    const p = toSvg(e);
-    if (m.stage === 0) { const dy = p.y - m.lastY; m.lastY = p.y; if (dy > 0) windlassPull(dy / 90); }
-    else if (m.stage === 1) {
-      const a = Math.atan2(p.y - TQ.cy, p.x - TQ.cx);
-      let d = a - m.lastA; m.lastA = a;
-      if (d > Math.PI) d -= 2 * Math.PI; else if (d < -Math.PI) d += 2 * Math.PI;
-      if (Math.hypot(p.x - TQ.cx, p.y - TQ.cy) > 8) windlassTwist(d * 180 / Math.PI);
-    }
-  });
-  const stop = () => { m.dragging = false; };
-  svg.addEventListener('pointerup', stop); svg.addEventListener('pointercancel', stop);
-  renderWindlass(m);
-}
+STAGES.windlass = {
+  start(m, s, body) {
+    const w = m.st;
+    Object.assign(w, { stage: 0, slack: 0, turn: 0, lastA: null, dragging: false, start: 0, drops: [], secs: s.secs, need: s.halfTurns * 180 });
+    body.innerHTML = `
+      <ol class="sim-steps" aria-hidden="true"><li id="tq-s0">Pull strap</li><li id="tq-s1">Twist rod</li><li id="tq-s2">Lock in clip</li></ol>
+      <svg class="sim-svg" id="tq-svg" viewBox="0 0 240 200" role="img" aria-label="Tourniquet on the thigh. Drag the strap tab down, drag in circles to twist the rod, then tap the clip.">
+        <rect x="0" y="0" width="240" height="200" fill="#0c111d"/>
+        <rect x="6" y="72" width="228" height="56" rx="26" fill="#e2a77a"/>
+        <rect x="6" y="72" width="228" height="10" rx="5" fill="#f0c29a"/>
+        <ellipse cx="176" cy="100" rx="13" ry="7" fill="#7a0f14"/>
+        <ellipse cx="176" cy="99" rx="9" ry="4" fill="#c8232a"/>
+        <g id="tq-drops"></g>
+        <rect x="70" y="66" width="28" height="68" rx="4" fill="#1b1d22" stroke="#000"/>
+        <rect id="tq-tail" x="74" y="134" width="20" height="48" fill="#1b1d22" stroke="#000"/>
+        <rect id="tq-tab" x="68" y="176" width="32" height="16" rx="3" fill="#f2b632" stroke="#000"/>
+        <text id="tq-tab-lbl" x="84" y="188" text-anchor="middle" font-size="9" font-family="Silkscreen, monospace" fill="#000">PULL</text>
+        <circle id="tq-ring" cx="${TQ.cx}" cy="${TQ.cy}" r="44" fill="none" stroke="#f2b632" stroke-width="2" stroke-dasharray="4 5" opacity="0"/>
+        <g id="tq-clip"><path d="M ${TQ.cx - TQ.rod - 10} ${TQ.cy - 9} h 10 v 18 h -10" fill="none" stroke="#9aa3ad" stroke-width="4"/></g>
+        <line id="tq-rod" x1="${TQ.cx - TQ.rod}" y1="${TQ.cy}" x2="${TQ.cx + TQ.rod}" y2="${TQ.cy}" stroke="#000" stroke-width="9" stroke-linecap="round"/>
+        <line id="tq-rod2" x1="${TQ.cx - TQ.rod}" y1="${TQ.cy}" x2="${TQ.cx + TQ.rod}" y2="${TQ.cy}" stroke="#d9dde3" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="${TQ.cx}" cy="${TQ.cy}" r="7" fill="#333" stroke="#000"/>
+      </svg>
+      <div class="meter" aria-hidden="true"><div id="mini-fill"></div></div>
+      <div class="meter timer" aria-hidden="true"><div id="mini-timer" style="width:100%"></div></div>`;
+    $('#sim-help').textContent = `Finger or mouse: drag the tab down, then drag in circles around the rod. Keys: Down to pull, Left and Right to twist, Space to lock. The ${w.secs}-second clock starts when you touch it.`;
+    const svg = $('#tq-svg');
+    svg.addEventListener('pointerdown', (e) => {
+      e.preventDefault(); svg.setPointerCapture(e.pointerId);
+      const p = svgPt(svg, e);
+      if (w.stage === 2) { windlassLock(p); return; }
+      w.dragging = true; w.lastY = p.y; w.lastA = Math.atan2(p.y - TQ.cy, p.x - TQ.cx);
+      if (!w.start) w.start = now();
+    });
+    svg.addEventListener('pointermove', (e) => {
+      if (!w.dragging || m.done) return;
+      const p = svgPt(svg, e);
+      if (w.stage === 0) { const dy = p.y - w.lastY; w.lastY = p.y; if (dy > 0) windlassPull(dy / 90); }
+      else if (w.stage === 1) {
+        const a = Math.atan2(p.y - TQ.cy, p.x - TQ.cx);
+        let d = a - w.lastA; w.lastA = a;
+        if (d > Math.PI) d -= 2 * Math.PI; else if (d < -Math.PI) d += 2 * Math.PI;
+        if (Math.hypot(p.x - TQ.cx, p.y - TQ.cy) > 8) windlassTwist((d * 180) / Math.PI);
+      }
+    });
+    const stop = () => { w.dragging = false; };
+    svg.addEventListener('pointerup', stop); svg.addEventListener('pointercancel', stop);
+    renderWindlass(w);
+  },
+  key(m, s, k, down) {
+    if (!down) return false;
+    const act = { ArrowDown: 'pull', KeyS: 'pull', ArrowRight: 'cw', KeyD: 'cw', ArrowLeft: 'ccw', KeyA: 'ccw' }[k] || (A_KEYS.has(k) ? 'lock' : null);
+    if (!act) return false;
+    windlassKey(act); return true;
+  },
+  update(m) {
+    const w = m.st;
+    const bleed = w.stage === 0 ? 1 : w.stage === 1 ? Math.max(0, 1 - Math.abs(w.turn) / w.need) : 0;
+    if (Math.random() < bleed * 0.5) w.drops.push({ x: 170 + Math.random() * 12, y: 104, v: 0.6 + Math.random() * 0.6 });
+    w.drops = w.drops.filter((d) => (d.y += d.v * 2) < 200);
+    const g = $('#tq-drops');
+    if (g) g.innerHTML = w.drops.map((d) => `<circle cx="${d.x.toFixed(1)}" cy="${d.y.toFixed(1)}" r="2" fill="#d8262c"/>`).join('');
+    if (!w.start) return;
+    const left = 1 - (now() - w.start) / (w.secs * 1000);
+    $('#mini-timer').style.width = `${Math.max(0, left) * 100}%`;
+    if (left <= 0) finishSim(false, w.stage === 0 ? 'Too slow, and the strap was never snug. Pull out the slack first so the rod only needs a few turns.' : 'Too slow. Bright red blood is still coming. Twist until the bleeding stops, then lock the rod.');
+  },
+};
+const windlassState = () => { const m = B && B.mini; return m && !m.done && m.st && m.st.s.type === 'windlass' ? m.st : null; };
 function windlassPull(frac) {
-  const m = B.mini; if (m.stage !== 0) return;
-  if (!m.start) m.start = performance.now();
-  m.slack = Math.min(1, m.slack + frac);
-  if (Math.floor(m.slack * 5) !== Math.floor((m.slack - frac) * 5)) Sound.twist();
-  if (m.slack >= 1) { m.stage = 1; Sound.select(); }
-  renderWindlass(m);
+  const w = windlassState(); if (!w || w.stage !== 0) return;
+  if (!w.start) w.start = now();
+  w.slack = Math.min(1, w.slack + frac);
+  if (Math.floor(w.slack * 5) !== Math.floor((w.slack - frac) * 5)) Sound.twist();
+  if (w.slack >= 1) { w.stage = 1; Sound.select(); }
+  renderWindlass(w);
 }
 function windlassTwist(deg) {
-  const m = B.mini; if (m.stage !== 1) return;
-  const before = Math.floor(Math.abs(m.turn) / 30);
-  m.turn += deg;
-  if (Math.floor(Math.abs(m.turn) / 30) !== before) Sound.twist();
-  if (Math.abs(m.turn) >= m.need) { m.stage = 2; Sound.select(); }
-  renderWindlass(m);
+  const w = windlassState(); if (!w || w.stage !== 1) return;
+  const before = Math.floor(Math.abs(w.turn) / 30);
+  w.turn += deg;
+  if (Math.floor(Math.abs(w.turn) / 30) !== before) Sound.twist();
+  if (Math.abs(w.turn) >= w.need) { w.stage = 2; Sound.select(); }
+  renderWindlass(w);
 }
-function rodAligned(m) {
-  const a = ((Math.abs(m.turn) % 180) + 180) % 180;
+function rodAligned(w) {
+  const a = ((Math.abs(w.turn) % 180) + 180) % 180;
   return a < 22 || a > 158;
 }
 function windlassLock(p) {
-  const m = B.mini; if (m.stage !== 2 || m.done) return;
-  if (p && Math.hypot(p.x - (TQ.cx - TQ.rod - 5), p.y - TQ.cy) > 40) { $('#tq-status').textContent = 'Tap the clip to lock the rod.'; return; }
-  if (!rodAligned(m)) { $('#tq-status').textContent = 'Line the rod up with the clip first.'; m.stage = 1; renderWindlass(m); return; }
+  const w = windlassState(); if (!w || w.stage !== 2) return;
+  if (p && Math.hypot(p.x - (TQ.cx - TQ.rod - 5), p.y - TQ.cy) > 40) { simStatus('Tap the clip to lock the rod.'); return; }
+  if (!rodAligned(w)) { simStatus('Line the rod up with the clip first.'); w.stage = 1; renderWindlass(w); return; }
   Sound.chest();
-  finishMini(true, ' Strap snug, rod twisted until the bleeding stopped, rod locked in the clip. Now write the time.');
+  stageDone(w.s.done);
 }
 function windlassKey(act) {
-  const m = B.mini; if (!m || m.done) return;
-  if (!m.start) m.start = performance.now();
-  if (act === 'pull' || (act === 'lock' && m.stage === 0)) windlassPull(0.25);
-  else if (act === 'cw') { if (m.stage === 2) m.stage = 1; windlassTwist(30); }
-  else if (act === 'ccw') { if (m.stage === 2) m.stage = 1; windlassTwist(-30); }
+  const w = windlassState(); if (!w) return;
+  if (!w.start) w.start = now();
+  if (act === 'pull' || (act === 'lock' && w.stage === 0)) windlassPull(0.25);
+  else if (act === 'cw') { if (w.stage === 2) w.stage = 1; windlassTwist(30); }
+  else if (act === 'ccw') { if (w.stage === 2) w.stage = 1; windlassTwist(-30); }
   else if (act === 'lock') windlassLock(null);
 }
-function renderWindlass(m) {
-  const ang = (m.turn * Math.PI) / 180, dx = Math.cos(ang) * TQ.rod, dy = Math.sin(ang) * TQ.rod;
+function renderWindlass(w) {
+  const ang = (w.turn * Math.PI) / 180, dx = Math.cos(ang) * TQ.rod, dy = Math.sin(ang) * TQ.rod;
   for (const id of ['#tq-rod', '#tq-rod2']) { const r = $(id); r.setAttribute('x1', TQ.cx - dx); r.setAttribute('y1', TQ.cy - dy); r.setAttribute('x2', TQ.cx + dx); r.setAttribute('y2', TQ.cy + dy); }
-  const tail = 48 * (1 - m.slack);
+  const tail = 48 * (1 - w.slack);
   $('#tq-tail').setAttribute('height', Math.max(2, tail));
   $('#tq-tab').setAttribute('y', 134 + tail - 6); $('#tq-tab-lbl').setAttribute('y', 134 + tail + 6);
-  $('#tq-ring').setAttribute('opacity', m.stage === 1 ? 0.9 : 0);
-  const aligned = m.stage === 2 && rodAligned(m);
-  $('#tq-clip').querySelector('path').setAttribute('stroke', aligned ? '#86d993' : '#9aa3ad');
-  ['#tq-s0', '#tq-s1', '#tq-s2'].forEach((id, i) => { $(id).className = i < m.stage ? 'ok' : i === m.stage ? 'now' : ''; });
-  const half = Math.min(m.need / 180, Math.floor(Math.abs(m.turn) / 180));
-  const status = m.stage === 0 ? `Pull the strap snug: ${Math.round(m.slack * 100)}%. Slack now means extra turns later.`
-    : m.stage === 1 ? `Twist! Half turns: ${half} of ${m.need / 180}. Keep going until the bleeding stops.`
+  $('#tq-ring').setAttribute('opacity', w.stage === 1 ? 0.9 : 0);
+  $('#tq-clip').querySelector('path').setAttribute('stroke', w.stage === 2 && rodAligned(w) ? '#86d993' : '#9aa3ad');
+  ['#tq-s0', '#tq-s1', '#tq-s2'].forEach((id, i) => { $(id).className = i < w.stage ? 'ok' : i === w.stage ? 'now' : ''; });
+  const half = Math.min(w.need / 180, Math.floor(Math.abs(w.turn) / 180));
+  const status = w.stage === 0 ? `Pull the strap snug: ${Math.round(w.slack * 100)}%. Slack now means extra turns later.`
+    : w.stage === 1 ? `Twist! Half turns: ${half} of ${w.need / 180}. Keep going until the bleeding stops.`
     : 'Bleeding stopped. Lock the rod in the clip (tap the clip or press Space).';
-  const st = $('#tq-status'); if (st.dataset.last !== status) { st.textContent = status; st.dataset.last = status; }
-  $('#mini-fill').style.width = `${Math.round((m.stage === 0 ? m.slack * 0.3 : m.stage === 1 ? 0.3 + 0.7 * Math.min(1, Math.abs(m.turn) / m.need) : 1) * 100)}%`;
+  const st = $('#sim-status'); if (st && st.dataset.last !== status) { simStatus(status); st.dataset.last = status; }
+  $('#mini-fill').style.width = `${Math.round((w.stage === 0 ? w.slack * 0.3 : w.stage === 1 ? 0.3 + 0.7 * Math.min(1, Math.abs(w.turn) / w.need) : 1) * 100)}%`;
 }
-function updateWindlass(m) {
-  const bleed = m.stage === 0 ? 1 : m.stage === 1 ? Math.max(0, 1 - Math.abs(m.turn) / m.need) : 0;
-  if (Math.random() < bleed * 0.5) m.drops.push({ x: 170 + Math.random() * 12, y: 104, v: 0.6 + Math.random() * 0.6 });
-  m.drops = m.drops.filter((d) => (d.y += d.v * 2) < 200);
-  const g = $('#tq-drops');
-  if (g) g.innerHTML = m.drops.map((d) => `<circle cx="${d.x.toFixed(1)}" cy="${d.y.toFixed(1)}" r="2" fill="#d8262c"/>`).join('');
-  if (m.start) {
-    const left = 1 - (performance.now() - m.start) / (m.secs * 1000);
-    $('#mini-timer').style.width = `${Math.max(0, left) * 100}%`;
-    if (left <= 0) finishMini(false, m.stage === 0 ? 'Too slow, and the strap was never snug. Pull out the slack first so the rod only needs a few turns.' : 'Too slow. Bright red blood is still coming. Twist until the bleeding stops, then lock the rod.');
+
+/* Test hook helpers (tests/smoke.mjs). */
+function simInfo() {
+  const m = B && B.mini; if (!m || m.done || !m.st) return null;
+  const st = m.st, s = st.s, out = { si: m.si, n: m.sim.stages.length, type: s.type, s: JSON.parse(JSON.stringify(s)), slips: m.slips };
+  if (s.type === 'place') {
+    const sc = SCENES[s.scene];
+    out.want = placeWant(st).map((id) => ({ id, x: sc.zones[id].x, y: sc.zones[id].y }));
+    out.tok = st.tok ? { x: st.tok.x, y: st.tok.y } : null;
+    out.decoys = (s.decoys || []).slice();
+  }
+  return out;
+}
+function simDo(action, arg) {
+  switch (action) {
+    case 'skip': clockSkew += arg; break;
+    case 'place': placeZone(arg); break;
+    case 'dial': dialSet(arg); break;
+    case 'confirm': if (simType() === 'pace') paceConfirm(); else dialConfirm(); break;
+    case 'pace': paceSet(arg); break;
+    case 'order': orderPick(arg); break;
+    case 'press': if (simType() === 'bagcpr') bagDown(); else holdDown(); break;
+    case 'release': if (simType() === 'bagcpr') bagUp(); else holdUp(); break;
+    case 'go': signalGo(); break;
+    case 'shock': shockAct(arg); break;
+    case 'tap': miniTap(); break;
+    case 'windlass': windlassKey(arg); break;
+    default: throw new Error(`unknown sim action ${action}`);
   }
 }
-function finishMini(ok, text) {
-  const m = B.mini; m.done = true;
-  $('#b-mini').hidden = true; $('#b-actions').hidden = false; $('#b-foot').hidden = false;
-  B.phase = 'act'; B.mini = null;
-  if (ok) return doCorrect(m.o, text);
-  B.time += 1; renderBars();
-  Sound.warn();
-  showMsg('warn', 'Not quite', m.type === 'windlass' ? `${text} Pick the tourniquet again to retry.` : `${text} Pick compressions again to retry.`);
-  renderActions();
-}
+
 function updateBattle() {
   if (!B) return;
   if (B.hitT > 0) B.hitT--; if (B.hurtT > 0) B.hurtT--; if (B.laughT > 0) B.laughT--; if (B.pressT > 0) B.pressT--;
   if (B.won && B.deadT < 1) B.deadT = Math.min(1, B.deadT + 0.02);
   if (B.fleeArm > 0) { B.fleeArm--; if (B.fleeArm === 0) $('#b-flee').textContent = B.kind === 'exam' ? 'Leave the trial' : 'Abandon call'; }
   const m = B.mini;
-  if (m && m.type === 'windlass' && !m.done) updateWindlass(m);
+  if (m && !m.done && m.st && STAGES[m.st.s.type].update) STAGES[m.st.s.type].update(m, m.st.s);
 }
 
 /* ============================================================
@@ -2819,7 +4055,7 @@ function renderArena() {
   px(g, 36, 84, 48, 4, 'rgba(0,0,0,.3)');
   if (!isExam && c.patient.pose === 'lie') {
     g.save(); g.translate(60 + sh, 76); g.rotate(-Math.PI / 2); g.drawImage(patCanvas, -24, -24); g.restore();
-    if (B.pressT > 0 || (B.mini && B.mini.type === 'rhythm')) { const d = B.pressT > 4 ? 3 : 0; px(g, 61, 64 + d, 10, 6, C.ink); px(g, 62, 65 + d, 8, 4, '#e8b48a'); }
+    if (B.pressT > 0 || simType() === 'rhythm' || simType() === 'bagcpr') { const d = B.pressT > 4 ? 3 : 0; px(g, 61, 64 + d, 10, 6, C.ink); px(g, 62, 65 + d, 8, 4, '#e8b48a'); }
   } else {
     g.drawImage(patCanvas, 30 + sh, 40);
   }
@@ -2943,12 +4179,7 @@ addEventListener('keydown', (e) => {
   const k = e.code;
   Sound.unlock();
   if (mode === 'battle') {
-    if (B && B.phase === 'mini' && B.mini && B.mini.type === 'windlass') {
-      const act = { ArrowDown: 'pull', KeyS: 'pull', ArrowRight: 'cw', KeyD: 'cw', ArrowLeft: 'ccw', KeyA: 'ccw' }[k] || (A_KEYS.has(k) ? 'lock' : null);
-      if (act) { e.preventDefault(); windlassKey(act); }
-      return;
-    }
-    if (B && B.phase === 'mini' && A_KEYS.has(k)) { e.preventDefault(); if (!e.repeat) miniTap(); return; }
+    if (B && B.phase === 'mini' && B.mini) { if (simKey(e, true)) e.preventDefault(); return; }
     if (B && (B.phase === 'act' || B.phase === 'q') && /^Digit[0-9]$/.test(k)) {
       const n = k === 'Digit0' ? '10' : k.slice(5);
       const btn = document.querySelector(`#b-actions [data-key="${n}"]`);
@@ -2964,7 +4195,10 @@ addEventListener('keydown', (e) => {
   if (A_KEYS.has(k)) { e.preventDefault(); if (!e.repeat) pressA = true; return; }
   if (B_KEYS.has(k)) { e.preventDefault(); if (!e.repeat) pressB = true; }
 });
-addEventListener('keyup', (e) => { if (KEYMAP[e.code]) releaseDir(KEYMAP[e.code]); });
+addEventListener('keyup', (e) => {
+  if (mode === 'battle' && B && B.phase === 'mini' && B.mini) { if (simKey(e, false)) e.preventDefault(); return; }
+  if (KEYMAP[e.code]) releaseDir(KEYMAP[e.code]);
+});
 addEventListener('blur', () => { keysHeld.clear(); dirOrder.length = 0; });
 document.querySelectorAll('#pad [data-dir]').forEach((b) => {
   const d = b.dataset.dir;
@@ -3027,6 +4261,8 @@ window.__jrma = {
   answer: (i) => answer(i),
   miniTap: () => miniTap(),
   windlassKey: (act) => windlassKey(act),
+  simInfo: () => simInfo(),
+  sim: (action, arg) => simDo(action, arg),
   warp: (sx, sy) => { player.x = sx * VW + 128; player.y = sy * VH + 6 * T + 12; scr.x = sx; scr.y = sy; cam.x = sx * VW; cam.y = sy * VH; mode = 'world'; updateHUD(); },
   get battle() { return B; }, get mode() { return mode; }, get save() { return save; },
 };

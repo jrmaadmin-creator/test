@@ -134,13 +134,45 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .gauge-lbls{display:flex;justify-content:space-between;width:100%;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .rate{font-family:var(--font-display);font-size:34px;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1}
 .rate small{font-size:13px;color:var(--muted)}
-.tq-svg{width:min(360px,100%);height:auto;display:block;touch-action:none;user-select:none;-webkit-user-select:none;background:#0c111d;border:2px solid #000;cursor:grab}
-.tq-svg:active{cursor:grabbing}
-.tq-steps{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:0;padding:0;list-style:none;font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
-.tq-steps li{border:2px solid var(--line);padding:3px 8px;color:var(--muted)}
-.tq-steps li.now{border-color:var(--gold);color:var(--gold)}
-.tq-steps li.ok{border-color:var(--ok);color:var(--ok)}
-.tq-status{min-height:1.4em;text-align:center;font-weight:600}
+.sim-svg{width:min(360px,100%);height:auto;display:block;touch-action:none;user-select:none;-webkit-user-select:none;background:#0c111d;border:2px solid #000}
+.sim-svg .zone{fill:transparent;outline:none}
+.sim-svg .zone:focus-visible{stroke:var(--gold);stroke-width:2;stroke-dasharray:3 3}
+.sim-svg .coach{fill:none;stroke:var(--ok);stroke-width:2;stroke-dasharray:4 3;animation:blink 1s steps(2) infinite}
+.sim-svg .tok{cursor:grab}
+#tq-svg{cursor:grab}
+.sim-steps{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:0;padding:0;list-style:none;font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.sim-steps li{border:2px solid var(--line);padding:3px 8px;color:var(--muted)}
+.sim-steps li.now{border-color:var(--gold);color:var(--gold)}
+.sim-steps li.ok{border-color:var(--ok);color:var(--ok)}
+.sim-prompt{font-weight:600}
+.sim-body,.sim-ctl{width:100%;display:flex;flex-direction:column;align-items:center;gap:8px}
+.sim-ctl:empty{display:none}
+.sim-ctl .actions{width:100%}
+.sim-status{min-height:1.4em;text-align:center;font-weight:600}
+.sim-status.bad{color:var(--siren)}.sim-status.good{color:var(--ok)}
+.sim-read{font-family:var(--font-display);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sim-read b{font-size:26px;color:var(--gold);font-weight:400}
+.sim-art{width:min(360px,100%);height:auto;display:block}
+.sim-art.flow{width:min(220px,100%)}
+.sim-strip{width:min(360px,100%);height:auto;display:block;border:2px solid #000}
+.dial-row{display:flex;gap:8px;align-items:center;width:min(360px,100%)}
+.dial-row input{flex:1;min-width:0;accent-color:var(--gold)}
+.dial-btn{justify-content:center;min-width:48px;font-size:20px;font-family:var(--font-display)}
+.sim-order{align-self:stretch;margin:0;padding-left:1.4em;color:var(--ok)}
+.sim-order:empty{display:none}
+.radio{display:flex;gap:10px;align-items:center;border:2px solid var(--line);padding:10px 12px;width:min(360px,100%);min-height:3.4em}
+.radio .led{width:12px;height:12px;border-radius:50%;background:#554;flex:none}
+.radio.live{border-color:var(--ok)}.radio.live .led{background:var(--ok)}
+.sim-back{background:transparent;border:2px solid var(--line);padding:4px 10px;font-family:var(--font-display);font-size:10px;letter-spacing:.06em;cursor:pointer;color:var(--muted)}
+.sim-back:hover{border-color:var(--gold)}
+#shock-hands{transition:transform .3s steps(3),opacity .3s steps(3)}
+#shock-hands.off{transform:translateY(-34px);opacity:.35}
+.bob{animation:bob .55s steps(2) infinite}
+.spin{transform-origin:120px 92px;animation:spin .5s linear infinite}
+.beat{animation:blink 1s steps(2) infinite}
+@keyframes bob{50%{transform:translateY(3px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes blink{50%{opacity:.25}}
 @media (max-width:700px){.b-grid{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:460px){.actions{grid-template-columns:minmax(0,1fr)}}
 @keyframes shake{33%{transform:translateX(-3px)}66%{transform:translateX(3px)}}
@@ -232,11 +264,12 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     </div>
   </div>
 
-  <p class="footnote">Move: <kbd>Arrows</kbd>/<kbd>WASD</kbd> · Talk, open: <kbd>Space</kbd>/<kbd>Z</kbd> · Calls: tap an action or press <kbd>1</kbd>-<kbd>9</kbd>. Training aid, not a protocol: the NH Patient Care Protocols and your medical director have the final word.</p>
+  <p class="footnote">Move: <kbd>Arrows</kbd>/<kbd>WASD</kbd> · Talk, open: <kbd>Space</kbd>/<kbd>Z</kbd> · Calls: tap an action or press <kbd>1</kbd>-<kbd>9</kbd>. Hands-on skills: drag, hold, or slide; keyboard uses <kbd>Tab</kbd>, <kbd>Space</kbd>, and arrows. Training aid, not a protocol: the NH Patient Care Protocols and your medical director have the final word.</p>
   <div class="sr-only" id="sr" aria-live="polite"></div>
 </main>
 
 <script src="content/crew.js"></script>
+<script src="content/scenes.js"></script>
 <script src="content/calls.js"></script>
 <script src="content/exams.js"></script>
 <script>
@@ -1192,7 +1225,7 @@ function freshBattle(o, replay, extra) {
   return Object.assign({
     kind: o.type, call: o, replay, used: new Set(), gone: new Set(), time: 0, mistakes: 0, early: 0, ceu: 0,
     vitals: {}, changed: new Set(), log: [], phase: 'intro', hitT: 0, hurtT: 0, laughT: 0, deadT: 0, pressT: 0,
-    mini: null, won: false, newly: false, fleeArm: 0,
+    mini: null, won: false, newly: false, fleeArm: 0, slips: 0,
   }, extra);
 }
 function showBattlePanel() {
@@ -1266,7 +1299,7 @@ function choose(o) {
   if (!B || B.phase !== 'act') return;
   B.changed.clear();
   if (o.kind === 'step') {
-    if (o.g === currentGroup()) { if (o.mini) return startMini(o); return doCorrect(o, ''); }
+    if (o.g === currentGroup()) { if (o.sim) return startSim(o); return doCorrect(o, ''); }
     B.early++; B.time += 1;
     B.log.push({ type: 'early', label: o.label, why: o.early || 'Right move, wrong time.' });
     Sound.warn();
@@ -1300,7 +1333,7 @@ function doCorrect(o, extra) {
   if (stepsLeft() === 0) return winCall();
   renderActions();
 }
-function starsFor() { if (B.mistakes === 0 && B.early === 0) return 3; if (B.mistakes <= 1 && B.early <= 2) return 2; return 1; }
+function starsFor() { if (B.mistakes === 0 && B.early === 0 && B.slips <= 1) return 3; if (B.mistakes <= 1 && B.early + B.slips <= 3) return 2; return 1; }
 function missesHTML(types) {
   const misses = B.log.filter((l) => types.includes(l.type));
   return misses.length ? `<h3>What cost you</h3><ul>${misses.map((m) => `<li><b>${esc(m.label)}:</b> ${esc(m.why)}</li>`).join('')}</ul>` : '';
@@ -1327,10 +1360,10 @@ function winCall() {
   $('#b-msg').innerHTML = `
     <div class="tag good">${c.boss ? 'Boss defeated' : 'Call complete'} ${starStr(stars)}</div>
     <p>${esc(c.monster.name)} ${esc(c.monster.win)}. ${esc(c.outro)}</p>
-    <p class="fine">On scene ${B.time} min · Harmful moves ${B.mistakes} · Out of order ${B.early} · CEUs +${B.ceu}</p>
+    <p class="fine">On scene ${B.time} min · Harmful moves ${B.mistakes} · Out of order ${B.early} · Hands-on fumbles ${B.slips} · CEUs +${B.ceu}</p>
     <h3>Priority sequence</h3><ol>${seq}</ol>
     <h3>Numbers to know</h3><ul>${c.numbers.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
-    ${missesHTML(['bad', 'early'])}
+    ${missesHTML(['bad', 'early', 'slip'])}
     <p class="fine">NH PCP v9.3: ${c.nh.map(esc).join('; ')}. Your medical director and agency policy still apply.</p>`;
   $('#b-actions').innerHTML = '';
   const trialId = c.boss ? LEVELS[c.levelIdx].trial : null;
@@ -1476,191 +1509,760 @@ function failExam() {
   addButton('Back to the map', '', endCall);
 }
 
-/* Mini-games: tourniquet windlass (drag gestures) and CPR rhythm (tap tempo) */
-function startMini(o) {
+/* ============================================================
+   Hands-on simulations
+   A step with `sim` runs its stages in order before it counts. Stage types:
+   place, hold, dial, order, signal, shock, bagcpr, pace, rhythm, windlass.
+   Content format: docs/how-to/add-a-call.md. Scene art: content/scenes.js.
+   ============================================================ */
+const SCENES = window.JRMA.SCENES;
+let clockSkew = 0; // test hook: lets tests/smoke.mjs skip ahead without waiting
+const now = () => performance.now() + clockSkew;
+const SIM_MAX_SLIPS = 3;
+const STAGE_CHIP = { place: 'Place', hold: 'Hold', dial: 'Set', order: 'Sequence', signal: 'Wait', shock: 'Shock', bagcpr: 'Ventilate', pace: 'Capture', rhythm: 'Compress', windlass: 'Tourniquet' };
+const STAGES = {};
+const simType = () => (B && B.mini && B.mini.st ? B.mini.st.s.type : null);
+const svgTxt = (x, y, s, size = 7, fill = '#fff') => `<text x="${x}" y="${y}" text-anchor="middle" font-size="${size}" font-family="Silkscreen, monospace" fill="${fill}">${esc(s)}</text>`;
+
+function startSim(o) {
   B.phase = 'mini';
-  B.mini = { o, type: o.mini.type, count: 0, taps: [], start: 0, done: false };
+  B.mini = { o, sim: o.sim, si: 0, slips: 0, done: false, marks: [], vals: {}, lastZone: null, st: null };
   if (document.activeElement) document.activeElement.blur();
   $('#b-actions').hidden = true; $('#b-foot').hidden = true;
-  const box = $('#b-mini'); box.hidden = false;
-  if (o.mini.type === 'windlass') { startWindlass(o, box); return; }
-  {
-    box.innerHTML = `
-      <h3>Compressions!</h3>
-      <p>Tap 12 compressions at 100-120 per minute. Space works too. Pausing more than 2 seconds restarts the count.</p>
-      <div class="rate"><span id="mini-rate">--</span> <small>/min</small></div>
+  const stages = o.sim.stages, box = $('#b-mini');
+  box.hidden = false;
+  box.innerHTML = `
+    <h3>${esc(o.sim.title || o.label)}</h3>
+    ${stages.length > 1 ? `<ol class="sim-steps" aria-hidden="true">${stages.map((s, i) => `<li id="sim-s${i}">${i + 1}. ${esc(s.chip || STAGE_CHIP[s.type])}</li>`).join('')}</ol>` : ''}
+    <p class="sim-prompt" id="sim-prompt"></p>
+    <div class="sim-body" id="sim-body"></div>
+    <p class="sim-status" id="sim-status" aria-live="polite"></p>
+    <div class="sim-ctl" id="sim-ctl"></div>
+    <p class="fine" id="sim-help"></p>
+    <button type="button" class="sim-back" id="sim-back">Step back to the choices</button>`;
+  $('#sim-back').onclick = () => finishSim(false, 'You stepped back.');
+  enterStage();
+  box.scrollIntoView({ block: 'nearest', behavior: REDUCED ? 'auto' : 'smooth' });
+}
+function enterStage() {
+  const m = B.mini, s = m.sim.stages[m.si];
+  m.st = { s, slips: 0 };
+  m.sim.stages.forEach((_, i) => { const li = $(`#sim-s${i}`); if (li) li.className = i < m.si ? 'ok' : i === m.si ? 'now' : ''; });
+  $('#sim-prompt').textContent = s.prompt || '';
+  $('#sim-body').innerHTML = ''; $('#sim-ctl').innerHTML = ''; $('#sim-help').textContent = '';
+  simStatus(s.status || '');
+  STAGES[s.type].start(m, s, $('#sim-body'));
+}
+function simStatus(text, kind = '') {
+  const el = $('#sim-status'); if (!el) return;
+  el.textContent = text; el.className = `sim-status ${kind}`;
+}
+function stageDone(text) {
+  const m = B && B.mini; if (!m || m.done) return;
+  Sound.good();
+  m.si++;
+  if (m.si >= m.sim.stages.length) { finishSim(true, text); return; }
+  enterStage();
+  if (text && m.st.s.type !== 'windlass') simStatus(m.st.s.status ? `${text} ${m.st.s.status}` : text, 'good');
+}
+function closeSimPanel() {
+  const box = $('#b-mini'); box.hidden = true; box.innerHTML = '';
+  $('#b-actions').hidden = false;
+}
+function finishSim(ok, text) {
+  const m = B && B.mini; if (!m || m.done) return;
+  m.done = true;
+  closeSimPanel(); $('#b-foot').hidden = false;
+  B.phase = 'act'; B.mini = null;
+  if (ok) { doCorrect(m.o, text ? ` ${esc(text)}` : ''); return; }
+  B.time += 1; renderBars();
+  Sound.warn();
+  showMsg('warn', 'Not quite', `${esc(text)} Pick "${esc(m.o.label)}" again to retry.`);
+  renderActions();
+}
+/* A fumble during a simulation. sev > 0 also costs patient hearts. Returns true if the sim ended. */
+function slip(text, sev = 0) {
+  const m = B && B.mini; if (!m || m.done) return true;
+  m.slips++; m.st.slips++; B.slips++;
+  if (!B.log.some((l) => l.type === 'slip' && l.why === text)) B.log.push({ type: 'slip', label: m.o.label, why: text });
+  if (sev > 0) { B.hearts = Math.max(0, B.hearts - sev); B.mistakes++; B.hurtT = 24; B.laughT = 50; Sound.bad(); shakeHearts(); renderBars(); }
+  else Sound.warn();
+  if (B.hearts <= 0) { m.done = true; B.mini = null; closeSimPanel(); failCall(); return true; }
+  if (m.slips >= SIM_MAX_SLIPS) { finishSim(false, `${text} That is three fumbles on this skill.`); return true; }
+  simStatus(text, 'bad');
+  const T = STAGES[m.st.s.type];
+  if (m.st.slips >= 2 && T.coach) T.coach(m, m.st.s);
+  return false;
+}
+function simKey(e, down) {
+  const m = B.mini; if (!m || m.done || !m.st) return false;
+  const s = m.st.s, k = e.code, a = document.activeElement;
+  if (A_KEYS.has(k) && a && a.tagName === 'BUTTON' && $('#b-mini').contains(a)) return false; // the focused button handles it
+  const T = STAGES[s.type];
+  if (T.key && T.key(m, s, k, down, e)) return true;
+  if (down && /^Digit[0-9]$/.test(k)) {
+    const b = document.querySelector(`#b-mini [data-key="${k.slice(5)}"]`);
+    if (b) { b.click(); return true; }
+  }
+  return false;
+}
+function pressButton(el, down, up) {
+  el.addEventListener('pointerdown', (e) => { e.preventDefault(); el.setPointerCapture(e.pointerId); el.classList.add('pressed'); down(); });
+  for (const ev of ['pointerup', 'pointercancel']) el.addEventListener(ev, () => { el.classList.remove('pressed'); up(); });
+  el.addEventListener('click', (e) => { if (e.detail === 0) e.preventDefault(); });
+}
+
+/* ---------- Scenes (content/scenes.js) ---------- */
+function sceneSVG(id) {
+  const sc = SCENES[id];
+  return `<svg class="sim-svg" id="sim-svg" viewBox="0 0 240 200" role="group" aria-label="${esc(sc.label)}"><rect width="240" height="200" fill="#0c111d"/>${sc.art}<g id="sim-marks"></g><g id="sim-coach"></g><g id="sim-zones"></g><g id="sim-tok"></g></svg>`;
+}
+function svgPt(svg, e) { const r = svg.getBoundingClientRect(); return { x: ((e.clientX - r.left) * 240) / r.width, y: ((e.clientY - r.top) * 200) / r.height }; }
+function showParts(svg, show = []) {
+  svg.querySelectorAll('[data-show]').forEach((el) => { el.style.display = show.includes(el.dataset.show) ? '' : 'none'; });
+  svg.querySelectorAll('[data-hide]').forEach((el) => { el.style.display = show.includes(el.dataset.hide) ? 'none' : ''; });
+}
+function markSVG(k) {
+  const { x, y } = k;
+  switch (k.kind) {
+    case 'none': return '';
+    case 'drop': return `<circle cx="${x}" cy="${y}" r="4" fill="#c8232a" stroke="#000"/>`;
+    case 'pad': return `<rect x="${x - 13}" y="${y - 9}" width="26" height="18" rx="4" fill="#f2f2ee" stroke="#555" stroke-width="2"/>`;
+    case 'lead': return `<circle cx="${x}" cy="${y}" r="4" fill="#f2f2ee" stroke="#000"/>${svgTxt(x, y - 7, k.label)}`;
+    case 'band': return `<rect x="${x - 5}" y="76" width="10" height="60" rx="2" fill="#2f6fb0" stroke="#000"/>`;
+    case 'strap': return `<rect x="48" y="${y - 4}" width="66" height="8" fill="#1b1d22" stroke="#000"/>`;
+    case 'hands': return `<ellipse cx="${x}" cy="${y}" rx="12" ry="8" fill="#e8b48a" stroke="#000" stroke-width="2"/>`;
+    default: return `<circle cx="${x}" cy="${y}" r="5" fill="#f2b632" stroke="#000"/>${k.label ? svgTxt(x, y - 8, k.label) : ''}`;
+  }
+}
+function drawMarks(m, scene) {
+  const g = $('#sim-marks'); if (!g) return;
+  g.innerHTML = m.marks.filter((k) => k.scene === scene).map(markSVG).join('');
+}
+
+/* ---------- place: drag the item onto the right spot (or tap the spot) ---------- */
+STAGES.place = {
+  start(m, s, body) {
+    const st = m.st, sc = SCENES[s.scene];
+    st.targets = s.targets.map((t) => (t === '@prev' ? m.lastZone : t));
+    st.need = s.need || st.targets.length; st.got = 0; st.hit = [];
+    st.active = [...new Set([...st.targets, ...(s.decoys || [])])];
+    body.innerHTML = sceneSVG(s.scene);
+    const svg = $('#sim-svg');
+    showParts(svg, s.show); drawMarks(m, s.scene);
+    $('#sim-zones').innerHTML = st.active.map((id) => { const z = sc.zones[id]; return `<circle class="zone" data-zone="${id}" cx="${z.x}" cy="${z.y}" r="${z.r}" tabindex="0" role="button" aria-label="${esc(z.name)}"/>`; }).join('');
+    const home = s.from || sc.tok;
+    st.tok = s.item || s.items ? { x: home[0], y: home[1], hx: home[0], hy: home[1], w: 30 } : null;
+    placeTok();
+    let drag = null;
+    svg.addEventListener('pointerdown', (e) => {
+      e.preventDefault(); if (m.done) return;
+      const p = svgPt(svg, e), t = st.tok;
+      if (t && Math.abs(p.x - t.x) <= t.w / 2 + 6 && Math.abs(p.y - t.y) <= 14) { drag = { dx: p.x - t.x, dy: p.y - t.y, moved: false }; svg.setPointerCapture(e.pointerId); }
+      else drag = { tap: p };
+    });
+    svg.addEventListener('pointermove', (e) => {
+      if (!drag || drag.tap || m.done || !st.tok) return;
+      const p = svgPt(svg, e);
+      st.tok.x = p.x - drag.dx; st.tok.y = p.y - drag.dy; drag.moved = true;
+      placeTok();
+    });
+    svg.addEventListener('pointerup', () => {
+      const d = drag; drag = null;
+      if (!d || m.done) return;
+      if (d.tap) placeAt(d.tap);
+      else if (d.moved) placeAt({ x: st.tok.x, y: st.tok.y });
+    });
+    svg.addEventListener('pointercancel', () => { drag = null; tokHome(); });
+    $('#sim-help').textContent = st.tok ? 'Drag it onto the right spot, or tap the spot. Keys: Tab to a spot, then Space.' : 'Tap the right spot. Keys: Tab to a spot, then Space.';
+  },
+  key(m, s, k, down) {
+    if (!down || !A_KEYS.has(k)) return false;
+    const a = document.activeElement, z = a && a.getAttribute && a.getAttribute('data-zone');
+    if (z) { placeZone(z); return true; }
+    return false;
+  },
+  coach(m) {
+    const sc = SCENES[m.st.s.scene];
+    $('#sim-coach').innerHTML = placeWant(m.st).map((id) => { const z = sc.zones[id]; return `<circle class="coach" cx="${z.x}" cy="${z.y}" r="${z.r + 3}"/>`; }).join('');
+    simStatus(`${$('#sim-status').textContent} ${CREW.partner.name} points at the spot.`, 'bad');
+  },
+};
+const placeWant = (st) => (st.s.items ? [st.targets[st.got]] : st.targets.filter((t) => !st.hit.includes(t)));
+const tokLabel = (st) => (st.s.items ? st.s.items[Math.min(st.got, st.s.items.length - 1)] : st.s.item);
+function placeTok() {
+  const st = B.mini.st, t = st.tok, g = $('#sim-tok'); if (!g) return;
+  if (!t) { g.innerHTML = ''; return; }
+  const label = tokLabel(st); t.w = Math.max(30, label.length * 6.4 + 12);
+  const hx = Math.min(238 - t.w / 2, Math.max(2 + t.w / 2, t.hx0 == null ? (t.hx0 = t.hx) : t.hx0));
+  if (t.x === t.hx) t.x = hx;
+  t.hx = hx;
+  g.innerHTML = `<g class="tok" transform="translate(${t.x.toFixed(1)} ${t.y.toFixed(1)})"><rect x="${(-t.w / 2).toFixed(1)}" y="-9" width="${t.w.toFixed(1)}" height="18" rx="4" fill="#f2b632" stroke="#000" stroke-width="2"/>${svgTxt(0, 4, label, 9, '#000')}</g>`;
+}
+function tokHome() { const t = B && B.mini && B.mini.st && B.mini.st.tok; if (t) { t.x = t.hx; t.y = t.hy; placeTok(); } }
+function placeAt(p) {
+  const st = B.mini.st, sc = SCENES[st.s.scene];
+  let best = null, bd = Infinity;
+  for (const id of st.active) { const z = sc.zones[id], d = Math.hypot(p.x - z.x, p.y - z.y) - z.r; if (d <= 4 && d < bd) { bd = d; best = id; } }
+  if (!best) { tokHome(); simStatus(st.s.miss || 'Nothing useful there. Look again.'); return; }
+  placeZone(best);
+}
+function placeZone(id) {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'place') return;
+  const st = m.st, s = st.s, z = SCENES[s.scene].zones[id];
+  if (!z || !st.active.includes(id)) return;
+  if (st.hit.includes(id)) { tokHome(); simStatus('Already done there.'); return; }
+  if (placeWant(st).includes(id)) {
+    m.marks.push({ scene: s.scene, x: z.x, y: z.y, kind: s.mark || 'dot', label: tokLabel(st) });
+    st.hit.push(id); st.got++; m.lastZone = id;
+    $('#sim-coach').innerHTML = '';
+    drawMarks(m, s.scene); Sound.select();
+    if (st.got >= st.need) { st.tok = null; placeTok(); stageDone(s.done); return; }
+    tokHome();
+    simStatus(s.items ? `Good. Next: ${tokLabel(st)}.` : `Good. ${st.need - st.got} more.`, 'good');
+    return;
+  }
+  tokHome();
+  slip((s.why && s.why[id]) || z.why, (s.sev && s.sev[id]) || 0);
+}
+
+/* ---------- hold: press and hold, let go inside a time window (optionally repeated on a rhythm) ---------- */
+STAGES.hold = {
+  start(m, s, body) {
+    const st = m.st;
+    st.reps = 0; st.down = 0; st.last = 0; st.scale = s.scale || s.max * 1.25;
+    body.innerHTML = `${s.scene ? sceneSVG(s.scene) : ''}
+      <div class="sim-read"><b id="hold-t">0.0</b> <small>seconds</small>${(s.reps || 1) > 1 ? ` · <b id="hold-n">0</b> <small>of ${s.reps}</small>` : ''}</div>
+      <div class="gauge" aria-hidden="true"><div class="zone" style="left:${(s.min / st.scale) * 100}%;width:${((s.max - s.min) / st.scale) * 100}%"></div><div class="needle" id="hold-needle"></div></div>
+      ${s.every ? '<p class="fine" id="hold-gap">Since the last one: --</p>' : ''}`;
+    if (s.scene) { showParts($('#sim-svg'), s.show); drawMarks(m, s.scene); }
+    $('#sim-ctl').innerHTML = `<button type="button" class="mini-btn" id="hold-btn" tabindex="-1">${esc(s.button || 'Hold')}</button>`;
+    pressButton($('#hold-btn'), holdDown, holdUp);
+    $('#sim-help').textContent = 'Press and hold the button (or Space). Let go at the right moment.';
+  },
+  key(m, s, k, down, e) {
+    if (!A_KEYS.has(k)) return false;
+    if (!e.repeat) { if (down) holdDown(); else holdUp(); }
+    return true;
+  },
+  update(m, s) {
+    const st = m.st, t = now(), held = st.down ? (t - st.down) / 1000 : 0;
+    const ht = $('#hold-t'); if (ht) ht.textContent = held.toFixed(1);
+    const nd = $('#hold-needle'); if (nd) nd.style.left = `calc(${Math.min(100, (held / st.scale) * 100)}% - 2px)`;
+    const bag = $('#bvm-bag'); if (bag) bag.setAttribute('rx', st.down ? 24 : 36);
+    if (st.down && held > s.max) { st.last = st.down; st.down = 0; slip(s.long); return; }
+    if (s.every && st.last && !st.down) {
+      const gap = (t - st.last) / 1000, hg = $('#hold-gap');
+      if (hg) hg.textContent = `Since the last one: ${gap.toFixed(1)} s`;
+      if (gap > s.every[1]) { st.last = t; slip(s.slow); }
+    }
+  },
+};
+function holdDown() {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'hold' || m.st.down) return;
+  const st = m.st, s = st.s, t = now();
+  if (s.every && st.last && (t - st.last) / 1000 < s.every[0]) { st.last = t; slip(s.fast); return; }
+  st.down = t; Sound.select();
+}
+function holdUp() {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'hold' || !m.st.down) return;
+  const st = m.st, s = st.s, held = (now() - st.down) / 1000;
+  st.last = st.down; st.down = 0;
+  if (held < s.min) { slip(s.short); return; }
+  if (held > s.max) { slip(s.long); return; }
+  st.reps++;
+  const hn = $('#hold-n'); if (hn) hn.textContent = st.reps;
+  if (st.reps >= (s.reps || 1)) { stageDone(s.done); return; }
+  Sound.twist();
+  simStatus(s.each || `Good. ${(s.reps || 1) - st.reps} more.`, 'good');
+}
+
+/* ---------- dial: set a number (flow, volume, dose, angle), then confirm ---------- */
+STAGES.dial = {
+  start(m, s, body) {
+    const st = m.st;
+    st.v = s.start != null ? s.start : s.min;
+    body.innerHTML = `${dialArt(s)}<div class="sim-read"><b id="dial-v"></b> <small>${esc(s.unit)}</small></div>
+      <div class="dial-row"><button type="button" class="act dial-btn" id="dial-dn" aria-label="Less">&minus;</button>
+      <input type="range" id="dial-r" min="${s.min}" max="${s.max}" step="${s.step}" value="${st.v}" aria-label="${esc(s.label || s.unit)}">
+      <button type="button" class="act dial-btn" id="dial-up" aria-label="More">+</button></div>`;
+    $('#sim-ctl').innerHTML = `<button type="button" class="act wide primary" id="dial-ok">${esc(s.confirm || 'Confirm')}</button>`;
+    $('#dial-dn').onclick = () => dialSet(m.st.v - s.step);
+    $('#dial-up').onclick = () => dialSet(m.st.v + s.step);
+    $('#dial-r').addEventListener('input', (e) => dialSet(Number(e.target.value)));
+    $('#dial-ok').onclick = dialConfirm;
+    $('#sim-help').textContent = 'Slide it, or use − and + (Left and Right keys). Confirm with Enter or Space.';
+    dialSet(st.v);
+  },
+  key(m, s, k, down) {
+    if (!down) return false;
+    if (/^Arrow/.test(k) && document.activeElement && document.activeElement.id === 'dial-r') return false;
+    if (k === 'ArrowLeft' || k === 'ArrowDown') { dialSet(m.st.v - s.step); return true; }
+    if (k === 'ArrowRight' || k === 'ArrowUp') { dialSet(m.st.v + s.step); return true; }
+    if (A_KEYS.has(k)) { dialConfirm(); return true; }
+    return false;
+  },
+};
+const decimals = (n) => (String(n).split('.')[1] || '').length;
+function dialSet(v) {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'dial') return;
+  const s = m.st.s;
+  v = Number(Math.min(s.max, Math.max(s.min, Math.round(v / s.step) * s.step)).toFixed(decimals(s.step)));
+  m.st.v = v;
+  $('#dial-v').textContent = v === s.max && s.maxLabel ? s.maxLabel : String(v);
+  const r = $('#dial-r'); if (r && Number(r.value) !== v) r.value = v;
+  dialDraw(s, v);
+}
+function dialConfirm() {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'dial') return;
+  const s = m.st.s, v = m.st.v;
+  if (v < s.ok[0]) { slip(s.low); return; }
+  if (v > s.ok[1]) { slip(s.high); return; }
+  if (s.key) m.vals[s.key] = v;
+  stageDone(s.done);
+}
+function dialArt(s) {
+  if (s.look === 'syringe') {
+    let ticks = '';
+    for (let i = 0; i <= 10; i++) { const x = 30 + 17 * i; ticks += `<line x1="${x}" y1="20" x2="${x}" y2="${i % 5 ? 26 : 32}" stroke="#cfd6e0"/>`; }
+    return `<svg class="sim-art" viewBox="0 0 240 64" aria-hidden="true"><line x1="2" y1="32" x2="30" y2="32" stroke="#cfd6e0" stroke-width="2"/>
+      <rect id="da-fluid" x="30" y="20" height="24" width="0" fill="#9fd3ff" fill-opacity=".5"/>
+      <rect x="30" y="20" width="170" height="24" fill="none" stroke="#cfd6e0" stroke-width="2"/>${ticks}
+      <line id="da-rod" x1="35" y1="32" x2="236" y2="32" stroke="#cfd6e0" stroke-width="3"/>
+      <rect id="da-plunger" x="30" y="18" width="5" height="28" fill="#1b1d22" stroke="#cfd6e0"/>
+      ${svgTxt(30, 58, '0', 8, '#cfd6e0')}${svgTxt(115, 58, String(s.max / 2), 8, '#cfd6e0')}${svgTxt(200, 58, `${s.max} mL`, 8, '#cfd6e0')}</svg>`;
+  }
+  if (s.look === 'flow') {
+    let ticks = '';
+    for (let v = 0; v <= s.max; v += 5) { const y = 100 - 90 * (v / s.max); ticks += `<line x1="136" y1="${y}" x2="146" y2="${y}" stroke="#cfd6e0"/>${svgTxt(160, y + 3, String(v), 8, '#cfd6e0')}`; }
+    return `<svg class="sim-art flow" viewBox="0 0 240 110" aria-hidden="true"><rect x="106" y="6" width="28" height="100" rx="6" fill="#9fd3ff" fill-opacity=".12" stroke="#cfd6e0" stroke-width="2"/>${ticks}<circle id="da-ball" cx="120" cy="100" r="7" fill="#e8e8e8" stroke="#000"/></svg>`;
+  }
+  if (s.look === 'angle') return '<svg class="sim-art" viewBox="0 0 240 90" aria-hidden="true"><rect x="0" y="50" width="240" height="40" fill="#e2a77a"/><ellipse cx="170" cy="66" rx="90" ry="5" fill="#5a78b8"/><path id="da-arc" fill="none" stroke="#f2b632" stroke-width="2"/><line id="da-needle" x1="0" y1="0" x2="0" y2="0" stroke="#d9dde3" stroke-width="3" stroke-linecap="round"/></svg>';
+  if (s.look === 'tablets') return '<svg class="sim-art" viewBox="0 0 240 40" aria-hidden="true"><g id="da-tabs"></g></svg>';
+  return '';
+}
+function dialDraw(s, v) {
+  if (s.look === 'syringe') {
+    const x = 30 + 170 * (v / s.max);
+    $('#da-fluid').setAttribute('width', (x - 30).toFixed(1)); $('#da-plunger').setAttribute('x', x.toFixed(1)); $('#da-rod').setAttribute('x1', (x + 5).toFixed(1));
+  } else if (s.look === 'flow') $('#da-ball').setAttribute('cy', (100 - 90 * (v / s.max)).toFixed(1));
+  else if (s.look === 'angle') {
+    const a = (v * Math.PI) / 180, x0 = 70, y0 = 50, c = Math.cos(a), sn = Math.sin(a), n = $('#da-needle');
+    n.setAttribute('x1', (x0 - 80 * c).toFixed(1)); n.setAttribute('y1', (y0 - 80 * sn).toFixed(1));
+    n.setAttribute('x2', (x0 + 26 * c).toFixed(1)); n.setAttribute('y2', (y0 + 26 * sn).toFixed(1));
+    $('#da-arc').setAttribute('d', `M${x0 - 34} ${y0} A34 34 0 0 1 ${(x0 - 34 * c).toFixed(1)} ${(y0 - 34 * sn).toFixed(1)}`);
+  } else if (s.look === 'tablets') {
+    $('#da-tabs').innerHTML = Array.from({ length: v }, (_, i) => `<circle cx="${18 + i * 26}" cy="20" r="10" fill="#f28c28" stroke="#000"/>${svgTxt(18 + i * 26, 23, '81', 7, '#000')}`).join('');
+  }
+}
+
+/* ---------- order: tap actions in the order you do them ---------- */
+STAGES.order = {
+  start(m, s, body) {
+    m.st.k = 0;
+    const opts = shuffle(s.items.map((t, i) => ({ t, i })));
+    body.innerHTML = '<ol class="sim-order" id="order-done"></ol>';
+    $('#sim-ctl').innerHTML = `<div class="actions">${opts.map((o, j) => `<button type="button" class="act" data-key="${j + 1}" data-i="${o.i}"><span class="k">${j + 1}</span><span>${esc(o.t)}</span></button>`).join('')}</div>`;
+    $('#sim-ctl').querySelectorAll('[data-i]').forEach((b) => { b.onclick = () => orderPick(Number(b.dataset.i)); });
+    $('#sim-help').textContent = 'Tap each action in the order you do it, or press its number.';
+  },
+};
+function orderPick(i) {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'order') return;
+  const st = m.st, s = st.s;
+  if (i !== st.k) { slip((s.why && s.why[i]) || `Not yet: "${s.items[i]}" comes later.`); return; }
+  $('#order-done').insertAdjacentHTML('beforeend', `<li>${esc(s.items[i])}</li>`);
+  const b = document.querySelector(`#sim-ctl [data-i="${i}"]`); if (b) b.remove();
+  st.k++; Sound.select();
+  if (st.k >= s.items.length) { stageDone(s.done); return; }
+  simStatus('Good. Next?', 'good');
+}
+
+/* ---------- signal: wait for a cue (radio, hand signal), then act ---------- */
+STAGES.signal = {
+  start(m, s, body) {
+    const st = m.st, t = now();
+    st.t0 = t; st.at = t + (s.wait[0] + Math.random() * (s.wait[1] - s.wait[0])) * 1000; st.ready = false; st.ci = -1;
+    body.innerHTML = `<div class="radio" id="sig-box"><span class="led"></span><span id="sig-text">${esc(s.waiting)}</span></div>`;
+    $('#sim-ctl').innerHTML = `<button type="button" class="act wide primary" data-key="1" id="sig-go">${esc(s.go)}</button>`;
+    $('#sig-go').onclick = signalGo;
+    $('#sim-help').textContent = 'Watch and listen. Press the button (or Space) only when the time is right.';
+  },
+  key(m, s, k, down) { if (down && A_KEYS.has(k)) { signalGo(); return true; } return false; },
+  update(m, s) {
+    const st = m.st, t = now();
+    if (st.ready) return;
+    if (t >= st.at) { st.ready = true; $('#sig-text').textContent = s.signal; $('#sig-box').classList.add('live'); Sound.radio(); return; }
+    if (s.chatter) {
+      const ci = Math.floor((t - st.t0) / 1700) % s.chatter.length;
+      if (ci !== st.ci) { st.ci = ci; $('#sig-text').textContent = s.chatter[ci]; }
+    }
+  },
+};
+function signalGo() {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'signal') return;
+  const s = m.st.s;
+  if (now() < m.st.at) { slip(s.early, s.sev || 0); return; }
+  stageDone(s.done);
+}
+
+/* ---------- shock: charge (manual), call clear, look, shock ---------- */
+STAGES.shock = {
+  start(m, s, body) {
+    const st = m.st, z = SCENES.chest.zones;
+    st.charged = !s.charge; st.clear = 0; st.off = false;
+    body.innerHTML = sceneSVG('chest');
+    $('#sim-marks').innerHTML = markSVG({ kind: 'pad', x: z.padR.x, y: z.padR.y }) + markSVG({ kind: 'pad', x: z.padLat.x, y: z.padLat.y })
+      + `<g id="shock-hands" class="bob"><ellipse cx="120" cy="92" rx="15" ry="10" fill="#e8b48a" stroke="#000" stroke-width="2"/><ellipse cx="120" cy="86" rx="13" ry="9" fill="#f0c29a" stroke="#000" stroke-width="2"/>${svgTxt(120, 116, `${CREW.partner.name}'s hands`, 7, '#000')}</g>`;
+    const btns = [];
+    if (s.charge) btns.push(['sh-charge', 'Charge', 'charge']);
+    btns.push(['sh-clear', '"Everybody clear!"', 'clear'], ['sh-shock', 'Shock', 'shock']);
+    $('#sim-ctl').innerHTML = `<div class="actions">${btns.map(([id, t], j) => `<button type="button" class="act${id === 'sh-shock' ? ' primary' : ''}" id="${id}" data-key="${j + 1}"><span class="k">${j + 1}</span><span>${esc(t)}</span></button>`).join('')}</div>`;
+    btns.forEach(([id, , a]) => { $(`#${id}`).onclick = () => shockAct(a); });
+    $('#sim-help').textContent = s.charge ? 'Charge while compressions continue, then call clear, look, and shock. Number keys work.' : 'Call clear, look at the patient, then shock. Number keys work.';
+  },
+  update(m) {
+    const st = m.st;
+    if (st.clear && !st.off && now() - st.clear >= 800) {
+      st.off = true;
+      const h = $('#shock-hands'); if (h) { h.classList.remove('bob'); h.classList.add('off'); }
+      simStatus('Hands off. Oxygen away. Nobody is touching him.');
+    }
+  },
+};
+function shockAct(a) {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'shock') return;
+  const st = m.st, s = st.s;
+  if (a === 'charge') {
+    if (st.charged) { simStatus('Already charged.'); return; }
+    st.charged = true; Sound.twist(); simStatus('Charged, and compressions never stopped.', 'good'); return;
+  }
+  if (a === 'clear') {
+    if (!st.charged) { slip('Charge first while compressions continue, then call clear. It keeps the hands-off pause short.'); return; }
+    if (st.clear) { simStatus('Already called. Look at the patient.'); return; }
+    st.clear = now(); Sound.select();
+    simStatus(`"I'm clear, you're clear, everybody clear!" ${CREW.partner.name} lifts off. Look before you press.`);
+    return;
+  }
+  if (!st.charged) { slip('Nothing happens. It is not charged.'); return; }
+  if (!st.clear) { slip(`You shocked with ${CREW.partner.name}'s hands on the chest. Always call clear and look first.`, 1); return; }
+  if (now() - st.clear < 800) { slip('Hands were still on the chest. Call clear, look, then press.', 1); return; }
+  Sound.hit();
+  stageDone(s.done);
+}
+
+/* ---------- bagcpr: partner compresses; you squeeze 1 breath every 10 compressions ---------- */
+const BAG_MS = 545; // 110 compressions a minute
+const bagCount = (st) => Math.floor((now() - st.t0) / BAG_MS);
+STAGES.bagcpr = {
+  start(m, s, body) {
+    const st = m.st;
+    st.t0 = now(); st.good = 0; st.down = 0; st.shown = -1; st.need = s.breaths || 3;
+    body.innerHTML = `<div class="rate"><span id="bc-n">0</span> <small>compressions since your last breath</small></div>
+      <div class="gauge" aria-hidden="true"><div class="zone" style="left:${(9 / 13) * 100}%;width:${(4 / 13) * 100}%"></div><div class="needle" id="bc-needle"></div></div>
+      <p id="bc-good">Good breaths: 0 of ${st.need}</p>`;
+    $('#sim-ctl').innerHTML = '<button type="button" class="mini-btn" id="hold-btn" tabindex="-1">Squeeze bag</button>';
+    pressButton($('#hold-btn'), bagDown, bagUp);
+    $('#sim-help').textContent = `${CREW.partner.name} compresses at 110 a minute and never stops. Squeeze for about 1 second on the 10th compression. Holding Space works too.`;
+  },
+  key(m, s, k, down, e) {
+    if (!A_KEYS.has(k)) return false;
+    if (!e.repeat) { if (down) bagDown(); else bagUp(); }
+    return true;
+  },
+  update(m) {
+    const st = m.st, n = bagCount(st);
+    if (n !== st.shown) {
+      st.shown = n; B.pressT = 6;
+      const el = $('#bc-n'); if (el) el.textContent = n;
+      const nd = $('#bc-needle'); if (nd) nd.style.left = `calc(${Math.min(100, (n / 13) * 100)}% - 2px)`;
+    }
+    if (st.down && (now() - st.down) / 1000 > 2) { st.down = 0; st.t0 = now(); slip('Too long a squeeze: too much air. Squeeze just until the chest rises, about 1 second.'); return; }
+    if (!st.down && n >= 13) { st.t0 = now(); slip('Missed a breath. One breath every 10 compressions.'); }
+  },
+};
+function bagDown() {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'bagcpr' || m.st.down) return;
+  m.st.down = now(); m.st.at = bagCount(m.st); Sound.select();
+}
+function bagUp() {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'bagcpr' || !m.st.down) return;
+  const st = m.st, held = (now() - st.down) / 1000, start = st.down;
+  st.down = 0;
+  if (st.at < 9) { st.t0 = start; slip('Too soon. One breath every 10 compressions. Extra breaths raise chest pressure and cut blood flow back to the heart.'); return; }
+  if (held > 1.5) { st.t0 = start; slip('Too long: squeeze just until the chest rises, about 1 second.'); return; }
+  if (held < 0.3) { slip('Too quick for the chest to rise. Squeeze for about 1 second.'); return; }
+  st.good++; st.t0 = start;
+  $('#bc-good').textContent = `Good breaths: ${st.good} of ${st.need}`;
+  if (st.good >= st.need) { stageDone(st.s.done); return; }
+  simStatus('Chest rises. Compressions never stopped.', 'good');
+}
+
+/* ---------- pace: raise the pacer output until every spike captures ---------- */
+let stripGrid = '';
+for (let x = 0; x <= 240; x += 8) stripGrid += `<line x1="${x}" y1="0" x2="${x}" y2="80" stroke="#1d4a2a" stroke-width="${x % 40 ? 0.4 : 0.9}"/>`;
+for (let y = 0; y <= 80; y += 8) stripGrid += `<line x1="0" y1="${y}" x2="240" y2="${y}" stroke="#1d4a2a" stroke-width="${y % 40 ? 0.4 : 0.9}"/>`;
+STAGES.pace = {
+  start(m, s, body) {
+    const st = m.st;
+    st.ma = 0; st.th = 60 + 5 * Math.floor(Math.random() * 7); st.rate = m.vals.rate || 70;
+    body.innerHTML = `<svg class="sim-strip" viewBox="0 0 240 80" role="img" aria-label="Monitor strip"><rect width="240" height="80" fill="#06120a"/>${stripGrid}<path id="pace-path" fill="none" stroke="#6fe08a" stroke-width="1.6"/></svg>
+      <div class="sim-read">Output <b id="pace-ma">0</b> <small>mA</small> · Rate <b>${st.rate}</b> <small>/min</small></div>
+      <div class="dial-row"><button type="button" class="act dial-btn" id="pace-dn" aria-label="Less output">&minus;</button>
+      <input type="range" id="pace-r" min="0" max="140" step="5" value="0" aria-label="Pacer output in milliamps">
+      <button type="button" class="act dial-btn" id="pace-up" aria-label="More output">+</button></div>`;
+    $('#sim-ctl').innerHTML = '<button type="button" class="act wide primary" id="pace-ok">Capture confirmed</button>';
+    $('#pace-dn').onclick = () => paceSet(m.st.ma - 5);
+    $('#pace-up').onclick = () => paceSet(m.st.ma + 5);
+    $('#pace-r').addEventListener('input', (e) => paceSet(Number(e.target.value)));
+    $('#pace-ok').onclick = paceConfirm;
+    $('#sim-help').textContent = 'Raise the output until every pacer spike has a wide QRS right after it. Left and Right keys work. Enter or Space confirms.';
+    paceSet(0);
+  },
+  key(m, s, k, down) {
+    if (!down) return false;
+    if (/^Arrow/.test(k) && document.activeElement && document.activeElement.id === 'pace-r') return false;
+    if (k === 'ArrowLeft' || k === 'ArrowDown') { paceSet(m.st.ma - 5); return true; }
+    if (k === 'ArrowRight' || k === 'ArrowUp') { paceSet(m.st.ma + 5); return true; }
+    if (A_KEYS.has(k)) { paceConfirm(); return true; }
+    return false;
+  },
+};
+function paceSet(v) {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'pace') return;
+  const st = m.st;
+  st.ma = Math.max(0, Math.min(140, Math.round(v / 5) * 5));
+  $('#pace-ma').textContent = st.ma;
+  const r = $('#pace-r'); if (r && Number(r.value) !== st.ma) r.value = st.ma;
+  $('#pace-path').setAttribute('d', paceStrip(st.ma, st.th, st.rate));
+}
+function paceStrip(ma, th, rate) {
+  const secs = 6, pps = 240 / secs, base = 50, ev = [];
+  if (ma > 0) for (let t = 0.2; t < secs; t += 60 / rate) ev.push({ t, k: ma >= th ? 'cap' : 'spike' });
+  if (ma < th) {
+    for (let t = 0.1; t < secs; t += 60 / 80) ev.push({ t, k: 'p' });
+    for (let t = 0.9; t < secs; t += 60 / 34) ev.push({ t, k: 'esc' });
+  }
+  ev.sort((a, b) => a.t - b.t);
+  let d = `M0 ${base}`, x = 0;
+  for (const e of ev) {
+    const ex = e.t * pps; if (ex < x) continue;
+    d += ` L${ex.toFixed(1)} ${base}`; x = ex;
+    if (e.k === 'p') { d += ' q3 -5 6 0'; x += 6; }
+    else if (e.k === 'spike') { const h = Math.min(30, 8 + ma / 4); d += ` l0 ${-h} l0 ${h}`; }
+    else if (e.k === 'cap') { d += ' l0 -40 l0 40 l4 16 l6 -40 l6 30 l4 -6 q8 -14 16 0'; x += 36; }
+    else { d += ' l4 14 l6 -36 l6 28 l4 -6 q8 -12 16 0'; x += 36; }
+  }
+  return `${d} L240 ${base}`;
+}
+function paceConfirm() {
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'pace') return;
+  const st = m.st;
+  if (st.ma === 0) { slip('The pacer output is at 0 mA. Raise it.'); return; }
+  if (st.ma < st.th) { slip('No capture yet: spikes with no wide QRS after them. Keep raising the output.'); return; }
+  stageDone(`Electrical capture at ${st.ma} mA: a wide QRS after every spike.${st.s.done ? ` ${st.s.done}` : ''}`);
+}
+
+/* ---------- rhythm: tap compressions at 100-120 a minute ---------- */
+STAGES.rhythm = {
+  start(m, s, body) {
+    const st = m.st; st.taps = []; st.n = s.taps || 12;
+    body.innerHTML = `<div class="rate"><span id="mini-rate">--</span> <small>/min</small></div>
       <div class="gauge" aria-hidden="true"><div class="zone"></div><div class="needle" id="mini-needle"></div></div>
       <div class="gauge-lbls" aria-hidden="true"><span>60</span><span>100</span><span>120</span><span>160</span></div>
-      <p id="mini-count">0 / 12</p>
-      <button type="button" class="mini-btn" id="mini-btn" tabindex="-1">Compress</button>`;
-  }
-  const btn = $('#mini-btn');
-  btn.addEventListener('pointerdown', (e) => { e.preventDefault(); miniTap(); });
-  btn.addEventListener('click', (e) => { if (e.detail === 0) e.preventDefault(); });
-}
+      <p id="mini-count">0 / ${st.n}</p>`;
+    $('#sim-ctl').innerHTML = '<button type="button" class="mini-btn" id="mini-btn" tabindex="-1">Compress</button>';
+    pressButton($('#mini-btn'), miniTap, () => {});
+    $('#sim-help').textContent = `Tap ${st.n} compressions at 100-120 per minute. Space works too. A pause over 2 seconds restarts the count.`;
+  },
+  key(m, s, k, down, e) { if (!A_KEYS.has(k)) return false; if (down && !e.repeat) miniTap(); return true; },
+};
 function miniTap() {
-  const m = B && B.mini; if (!m || m.done) return;
-  const now = performance.now();
+  const m = B && B.mini; if (!m || m.done || m.st.s.type !== 'rhythm') return;
+  const st = m.st, t = now();
   const btn = $('#mini-btn'); if (btn) { btn.classList.add('pressed'); setTimeout(() => btn.classList.remove('pressed'), 80); }
-  if (m.type !== 'rhythm') return;
-  if (m.taps.length && now - m.taps[m.taps.length - 1] > 2000) {
-    m.taps = [];
-    $('#mini-rate').textContent = '--';
-    showMsg('warn', 'Too long a pause', 'Every pause drops blood flow to the brain. Count restarted. Minimize interruptions.');
+  if (st.taps.length && t - st.taps[st.taps.length - 1] > 2000) {
+    st.taps = []; $('#mini-rate').textContent = '--';
+    simStatus('Too long a pause. Every pause drops blood flow to the brain. Count restarted.', 'bad');
   }
-  m.taps.push(now); Sound.thump(); B.pressT = 8;
-  const n = m.taps.length;
+  st.taps.push(t); Sound.thump(); B.pressT = 8;
+  const n = st.taps.length;
   if (n >= 2) {
-    const inst = Math.round(60000 / (now - m.taps[n - 2]));
+    const inst = Math.round(60000 / (t - st.taps[n - 2]));
     $('#mini-rate').textContent = inst;
-    const pos = Math.max(0, Math.min(100, ((inst - 60) / 100) * 100));
-    $('#mini-needle').style.left = `calc(${pos}% - 2px)`;
+    $('#mini-needle').style.left = `calc(${Math.max(0, Math.min(100, inst - 60))}% - 2px)`;
   }
-  $('#mini-count').textContent = `${n} / 12`;
-  if (n >= 12) {
-    const iv = []; for (let i = 1; i < n; i++) iv.push(m.taps[i] - m.taps[i - 1]);
-    iv.sort((a, b) => a - b);
-    const rate = Math.round(60000 / iv[Math.floor(iv.length / 2)]);
-    if (rate >= 100 && rate <= 120) finishMini(true, ` Your rate: ${rate}/min. Right in the zone.`);
-    else if (rate < 100) finishMini(false, `Your rate: ${rate}/min. Too slow: blood flow drops. Think "Stayin' Alive" (about 104 beats a minute). Try again.`);
-    else finishMini(false, `Your rate: ${rate}/min. Too fast: above 120 the heart cannot refill and depth suffers. Try again.`);
-  }
+  $('#mini-count').textContent = `${n} / ${st.n}`;
+  if (n < st.n) return;
+  const iv = []; for (let i = 1; i < n; i++) iv.push(st.taps[i] - st.taps[i - 1]);
+  iv.sort((a, b) => a - b);
+  const rate = Math.round(60000 / iv[Math.floor(iv.length / 2)]);
+  if (rate >= 100 && rate <= 120) { stageDone(`Rate ${rate}/min, right in the zone.${st.s.done ? ` ${st.s.done}` : ''}`); return; }
+  st.taps = []; $('#mini-count').textContent = `0 / ${st.n}`;
+  slip(rate < 100 ? `Rate ${rate}/min: too slow, and blood flow drops. Think "Stayin' Alive" (about 104 a minute).` : `Rate ${rate}/min: too fast. Above 120 the heart cannot refill and depth suffers.`);
 }
-/* CAT-style tourniquet: pull the strap snug, twist the windlass rod (drag in
-   circles around it), then lock the rod in the clip. Arrow keys work too. */
+
+/* ---------- windlass: CAT-style tourniquet. Pull the strap snug, twist the
+   rod (drag in circles around it), then lock the rod in the clip. ---------- */
 const TQ = { cx: 84, cy: 100, rod: 30, clipAngle: 180 };
-function startWindlass(o, box) {
-  const m = B.mini;
-  Object.assign(m, { stage: 0, slack: 0, turn: 0, lastA: null, dragging: false, start: 0, drops: [], secs: o.mini.secs, need: o.mini.halfTurns * 180 });
-  box.innerHTML = `
-    <h3>Apply the tourniquet</h3>
-    <ol class="tq-steps" aria-hidden="true"><li id="tq-s0">1. Pull strap</li><li id="tq-s1">2. Twist rod</li><li id="tq-s2">3. Lock in clip</li></ol>
-    <svg class="tq-svg" id="tq-svg" viewBox="0 0 240 200" role="img" aria-label="Tourniquet on the thigh. Drag the strap tab down, drag in circles to twist the rod, then tap the clip.">
-      <rect x="0" y="0" width="240" height="200" fill="#0c111d"/>
-      <rect x="6" y="72" width="228" height="56" rx="26" fill="#e2a77a"/>
-      <rect x="6" y="72" width="228" height="10" rx="5" fill="#f0c29a"/>
-      <ellipse cx="176" cy="100" rx="13" ry="7" fill="#7a0f14"/>
-      <ellipse cx="176" cy="99" rx="9" ry="4" fill="#c8232a"/>
-      <g id="tq-drops"></g>
-      <rect x="70" y="66" width="28" height="68" rx="4" fill="#1b1d22" stroke="#000"/>
-      <rect id="tq-tail" x="74" y="134" width="20" height="48" fill="#1b1d22" stroke="#000"/>
-      <rect id="tq-tab" x="68" y="176" width="32" height="16" rx="3" fill="#f2b632" stroke="#000"/>
-      <text id="tq-tab-lbl" x="84" y="188" text-anchor="middle" font-size="9" font-family="Silkscreen, monospace" fill="#000">PULL</text>
-      <circle id="tq-ring" cx="${TQ.cx}" cy="${TQ.cy}" r="44" fill="none" stroke="#f2b632" stroke-width="2" stroke-dasharray="4 5" opacity="0"/>
-      <g id="tq-clip"><path d="M ${TQ.cx - TQ.rod - 10} ${TQ.cy - 9} h 10 v 18 h -10" fill="none" stroke="#9aa3ad" stroke-width="4"/></g>
-      <line id="tq-rod" x1="${TQ.cx - TQ.rod}" y1="${TQ.cy}" x2="${TQ.cx + TQ.rod}" y2="${TQ.cy}" stroke="#000" stroke-width="9" stroke-linecap="round"/>
-      <line id="tq-rod2" x1="${TQ.cx - TQ.rod}" y1="${TQ.cy}" x2="${TQ.cx + TQ.rod}" y2="${TQ.cy}" stroke="#d9dde3" stroke-width="5" stroke-linecap="round"/>
-      <circle cx="${TQ.cx}" cy="${TQ.cy}" r="7" fill="#333" stroke="#000"/>
-    </svg>
-    <p class="tq-status" id="tq-status" aria-live="polite"></p>
-    <div class="meter" aria-hidden="true"><div id="mini-fill"></div></div>
-    <div class="meter timer" aria-hidden="true"><div id="mini-timer" style="width:100%"></div></div>
-    <p class="fine">Finger or mouse: drag the tab down, then drag in circles around the rod. Keys: Down to pull, Left/Right to twist, Space to lock. The ${m.secs}-second clock starts when you touch it.</p>`;
-  const svg = $('#tq-svg');
-  const toSvg = (e) => { const r = svg.getBoundingClientRect(); return { x: (e.clientX - r.left) * 240 / r.width, y: (e.clientY - r.top) * 200 / r.height }; };
-  svg.addEventListener('pointerdown', (e) => {
-    e.preventDefault(); svg.setPointerCapture(e.pointerId);
-    const p = toSvg(e);
-    if (m.stage === 2) { windlassLock(p); return; }
-    m.dragging = true; m.lastY = p.y; m.lastA = Math.atan2(p.y - TQ.cy, p.x - TQ.cx);
-    if (!m.start) m.start = performance.now();
-  });
-  svg.addEventListener('pointermove', (e) => {
-    if (!m.dragging || m.done) return;
-    const p = toSvg(e);
-    if (m.stage === 0) { const dy = p.y - m.lastY; m.lastY = p.y; if (dy > 0) windlassPull(dy / 90); }
-    else if (m.stage === 1) {
-      const a = Math.atan2(p.y - TQ.cy, p.x - TQ.cx);
-      let d = a - m.lastA; m.lastA = a;
-      if (d > Math.PI) d -= 2 * Math.PI; else if (d < -Math.PI) d += 2 * Math.PI;
-      if (Math.hypot(p.x - TQ.cx, p.y - TQ.cy) > 8) windlassTwist(d * 180 / Math.PI);
-    }
-  });
-  const stop = () => { m.dragging = false; };
-  svg.addEventListener('pointerup', stop); svg.addEventListener('pointercancel', stop);
-  renderWindlass(m);
-}
+STAGES.windlass = {
+  start(m, s, body) {
+    const w = m.st;
+    Object.assign(w, { stage: 0, slack: 0, turn: 0, lastA: null, dragging: false, start: 0, drops: [], secs: s.secs, need: s.halfTurns * 180 });
+    body.innerHTML = `
+      <ol class="sim-steps" aria-hidden="true"><li id="tq-s0">Pull strap</li><li id="tq-s1">Twist rod</li><li id="tq-s2">Lock in clip</li></ol>
+      <svg class="sim-svg" id="tq-svg" viewBox="0 0 240 200" role="img" aria-label="Tourniquet on the thigh. Drag the strap tab down, drag in circles to twist the rod, then tap the clip.">
+        <rect x="0" y="0" width="240" height="200" fill="#0c111d"/>
+        <rect x="6" y="72" width="228" height="56" rx="26" fill="#e2a77a"/>
+        <rect x="6" y="72" width="228" height="10" rx="5" fill="#f0c29a"/>
+        <ellipse cx="176" cy="100" rx="13" ry="7" fill="#7a0f14"/>
+        <ellipse cx="176" cy="99" rx="9" ry="4" fill="#c8232a"/>
+        <g id="tq-drops"></g>
+        <rect x="70" y="66" width="28" height="68" rx="4" fill="#1b1d22" stroke="#000"/>
+        <rect id="tq-tail" x="74" y="134" width="20" height="48" fill="#1b1d22" stroke="#000"/>
+        <rect id="tq-tab" x="68" y="176" width="32" height="16" rx="3" fill="#f2b632" stroke="#000"/>
+        <text id="tq-tab-lbl" x="84" y="188" text-anchor="middle" font-size="9" font-family="Silkscreen, monospace" fill="#000">PULL</text>
+        <circle id="tq-ring" cx="${TQ.cx}" cy="${TQ.cy}" r="44" fill="none" stroke="#f2b632" stroke-width="2" stroke-dasharray="4 5" opacity="0"/>
+        <g id="tq-clip"><path d="M ${TQ.cx - TQ.rod - 10} ${TQ.cy - 9} h 10 v 18 h -10" fill="none" stroke="#9aa3ad" stroke-width="4"/></g>
+        <line id="tq-rod" x1="${TQ.cx - TQ.rod}" y1="${TQ.cy}" x2="${TQ.cx + TQ.rod}" y2="${TQ.cy}" stroke="#000" stroke-width="9" stroke-linecap="round"/>
+        <line id="tq-rod2" x1="${TQ.cx - TQ.rod}" y1="${TQ.cy}" x2="${TQ.cx + TQ.rod}" y2="${TQ.cy}" stroke="#d9dde3" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="${TQ.cx}" cy="${TQ.cy}" r="7" fill="#333" stroke="#000"/>
+      </svg>
+      <div class="meter" aria-hidden="true"><div id="mini-fill"></div></div>
+      <div class="meter timer" aria-hidden="true"><div id="mini-timer" style="width:100%"></div></div>`;
+    $('#sim-help').textContent = `Finger or mouse: drag the tab down, then drag in circles around the rod. Keys: Down to pull, Left and Right to twist, Space to lock. The ${w.secs}-second clock starts when you touch it.`;
+    const svg = $('#tq-svg');
+    svg.addEventListener('pointerdown', (e) => {
+      e.preventDefault(); svg.setPointerCapture(e.pointerId);
+      const p = svgPt(svg, e);
+      if (w.stage === 2) { windlassLock(p); return; }
+      w.dragging = true; w.lastY = p.y; w.lastA = Math.atan2(p.y - TQ.cy, p.x - TQ.cx);
+      if (!w.start) w.start = now();
+    });
+    svg.addEventListener('pointermove', (e) => {
+      if (!w.dragging || m.done) return;
+      const p = svgPt(svg, e);
+      if (w.stage === 0) { const dy = p.y - w.lastY; w.lastY = p.y; if (dy > 0) windlassPull(dy / 90); }
+      else if (w.stage === 1) {
+        const a = Math.atan2(p.y - TQ.cy, p.x - TQ.cx);
+        let d = a - w.lastA; w.lastA = a;
+        if (d > Math.PI) d -= 2 * Math.PI; else if (d < -Math.PI) d += 2 * Math.PI;
+        if (Math.hypot(p.x - TQ.cx, p.y - TQ.cy) > 8) windlassTwist((d * 180) / Math.PI);
+      }
+    });
+    const stop = () => { w.dragging = false; };
+    svg.addEventListener('pointerup', stop); svg.addEventListener('pointercancel', stop);
+    renderWindlass(w);
+  },
+  key(m, s, k, down) {
+    if (!down) return false;
+    const act = { ArrowDown: 'pull', KeyS: 'pull', ArrowRight: 'cw', KeyD: 'cw', ArrowLeft: 'ccw', KeyA: 'ccw' }[k] || (A_KEYS.has(k) ? 'lock' : null);
+    if (!act) return false;
+    windlassKey(act); return true;
+  },
+  update(m) {
+    const w = m.st;
+    const bleed = w.stage === 0 ? 1 : w.stage === 1 ? Math.max(0, 1 - Math.abs(w.turn) / w.need) : 0;
+    if (Math.random() < bleed * 0.5) w.drops.push({ x: 170 + Math.random() * 12, y: 104, v: 0.6 + Math.random() * 0.6 });
+    w.drops = w.drops.filter((d) => (d.y += d.v * 2) < 200);
+    const g = $('#tq-drops');
+    if (g) g.innerHTML = w.drops.map((d) => `<circle cx="${d.x.toFixed(1)}" cy="${d.y.toFixed(1)}" r="2" fill="#d8262c"/>`).join('');
+    if (!w.start) return;
+    const left = 1 - (now() - w.start) / (w.secs * 1000);
+    $('#mini-timer').style.width = `${Math.max(0, left) * 100}%`;
+    if (left <= 0) finishSim(false, w.stage === 0 ? 'Too slow, and the strap was never snug. Pull out the slack first so the rod only needs a few turns.' : 'Too slow. Bright red blood is still coming. Twist until the bleeding stops, then lock the rod.');
+  },
+};
+const windlassState = () => { const m = B && B.mini; return m && !m.done && m.st && m.st.s.type === 'windlass' ? m.st : null; };
 function windlassPull(frac) {
-  const m = B.mini; if (m.stage !== 0) return;
-  if (!m.start) m.start = performance.now();
-  m.slack = Math.min(1, m.slack + frac);
-  if (Math.floor(m.slack * 5) !== Math.floor((m.slack - frac) * 5)) Sound.twist();
-  if (m.slack >= 1) { m.stage = 1; Sound.select(); }
-  renderWindlass(m);
+  const w = windlassState(); if (!w || w.stage !== 0) return;
+  if (!w.start) w.start = now();
+  w.slack = Math.min(1, w.slack + frac);
+  if (Math.floor(w.slack * 5) !== Math.floor((w.slack - frac) * 5)) Sound.twist();
+  if (w.slack >= 1) { w.stage = 1; Sound.select(); }
+  renderWindlass(w);
 }
 function windlassTwist(deg) {
-  const m = B.mini; if (m.stage !== 1) return;
-  const before = Math.floor(Math.abs(m.turn) / 30);
-  m.turn += deg;
-  if (Math.floor(Math.abs(m.turn) / 30) !== before) Sound.twist();
-  if (Math.abs(m.turn) >= m.need) { m.stage = 2; Sound.select(); }
-  renderWindlass(m);
+  const w = windlassState(); if (!w || w.stage !== 1) return;
+  const before = Math.floor(Math.abs(w.turn) / 30);
+  w.turn += deg;
+  if (Math.floor(Math.abs(w.turn) / 30) !== before) Sound.twist();
+  if (Math.abs(w.turn) >= w.need) { w.stage = 2; Sound.select(); }
+  renderWindlass(w);
 }
-function rodAligned(m) {
-  const a = ((Math.abs(m.turn) % 180) + 180) % 180;
+function rodAligned(w) {
+  const a = ((Math.abs(w.turn) % 180) + 180) % 180;
   return a < 22 || a > 158;
 }
 function windlassLock(p) {
-  const m = B.mini; if (m.stage !== 2 || m.done) return;
-  if (p && Math.hypot(p.x - (TQ.cx - TQ.rod - 5), p.y - TQ.cy) > 40) { $('#tq-status').textContent = 'Tap the clip to lock the rod.'; return; }
-  if (!rodAligned(m)) { $('#tq-status').textContent = 'Line the rod up with the clip first.'; m.stage = 1; renderWindlass(m); return; }
+  const w = windlassState(); if (!w || w.stage !== 2) return;
+  if (p && Math.hypot(p.x - (TQ.cx - TQ.rod - 5), p.y - TQ.cy) > 40) { simStatus('Tap the clip to lock the rod.'); return; }
+  if (!rodAligned(w)) { simStatus('Line the rod up with the clip first.'); w.stage = 1; renderWindlass(w); return; }
   Sound.chest();
-  finishMini(true, ' Strap snug, rod twisted until the bleeding stopped, rod locked in the clip. Now write the time.');
+  stageDone(w.s.done);
 }
 function windlassKey(act) {
-  const m = B.mini; if (!m || m.done) return;
-  if (!m.start) m.start = performance.now();
-  if (act === 'pull' || (act === 'lock' && m.stage === 0)) windlassPull(0.25);
-  else if (act === 'cw') { if (m.stage === 2) m.stage = 1; windlassTwist(30); }
-  else if (act === 'ccw') { if (m.stage === 2) m.stage = 1; windlassTwist(-30); }
+  const w = windlassState(); if (!w) return;
+  if (!w.start) w.start = now();
+  if (act === 'pull' || (act === 'lock' && w.stage === 0)) windlassPull(0.25);
+  else if (act === 'cw') { if (w.stage === 2) w.stage = 1; windlassTwist(30); }
+  else if (act === 'ccw') { if (w.stage === 2) w.stage = 1; windlassTwist(-30); }
   else if (act === 'lock') windlassLock(null);
 }
-function renderWindlass(m) {
-  const ang = (m.turn * Math.PI) / 180, dx = Math.cos(ang) * TQ.rod, dy = Math.sin(ang) * TQ.rod;
+function renderWindlass(w) {
+  const ang = (w.turn * Math.PI) / 180, dx = Math.cos(ang) * TQ.rod, dy = Math.sin(ang) * TQ.rod;
   for (const id of ['#tq-rod', '#tq-rod2']) { const r = $(id); r.setAttribute('x1', TQ.cx - dx); r.setAttribute('y1', TQ.cy - dy); r.setAttribute('x2', TQ.cx + dx); r.setAttribute('y2', TQ.cy + dy); }
-  const tail = 48 * (1 - m.slack);
+  const tail = 48 * (1 - w.slack);
   $('#tq-tail').setAttribute('height', Math.max(2, tail));
   $('#tq-tab').setAttribute('y', 134 + tail - 6); $('#tq-tab-lbl').setAttribute('y', 134 + tail + 6);
-  $('#tq-ring').setAttribute('opacity', m.stage === 1 ? 0.9 : 0);
-  const aligned = m.stage === 2 && rodAligned(m);
-  $('#tq-clip').querySelector('path').setAttribute('stroke', aligned ? '#86d993' : '#9aa3ad');
-  ['#tq-s0', '#tq-s1', '#tq-s2'].forEach((id, i) => { $(id).className = i < m.stage ? 'ok' : i === m.stage ? 'now' : ''; });
-  const half = Math.min(m.need / 180, Math.floor(Math.abs(m.turn) / 180));
-  const status = m.stage === 0 ? `Pull the strap snug: ${Math.round(m.slack * 100)}%. Slack now means extra turns later.`
-    : m.stage === 1 ? `Twist! Half turns: ${half} of ${m.need / 180}. Keep going until the bleeding stops.`
+  $('#tq-ring').setAttribute('opacity', w.stage === 1 ? 0.9 : 0);
+  $('#tq-clip').querySelector('path').setAttribute('stroke', w.stage === 2 && rodAligned(w) ? '#86d993' : '#9aa3ad');
+  ['#tq-s0', '#tq-s1', '#tq-s2'].forEach((id, i) => { $(id).className = i < w.stage ? 'ok' : i === w.stage ? 'now' : ''; });
+  const half = Math.min(w.need / 180, Math.floor(Math.abs(w.turn) / 180));
+  const status = w.stage === 0 ? `Pull the strap snug: ${Math.round(w.slack * 100)}%. Slack now means extra turns later.`
+    : w.stage === 1 ? `Twist! Half turns: ${half} of ${w.need / 180}. Keep going until the bleeding stops.`
     : 'Bleeding stopped. Lock the rod in the clip (tap the clip or press Space).';
-  const st = $('#tq-status'); if (st.dataset.last !== status) { st.textContent = status; st.dataset.last = status; }
-  $('#mini-fill').style.width = `${Math.round((m.stage === 0 ? m.slack * 0.3 : m.stage === 1 ? 0.3 + 0.7 * Math.min(1, Math.abs(m.turn) / m.need) : 1) * 100)}%`;
+  const st = $('#sim-status'); if (st && st.dataset.last !== status) { simStatus(status); st.dataset.last = status; }
+  $('#mini-fill').style.width = `${Math.round((w.stage === 0 ? w.slack * 0.3 : w.stage === 1 ? 0.3 + 0.7 * Math.min(1, Math.abs(w.turn) / w.need) : 1) * 100)}%`;
 }
-function updateWindlass(m) {
-  const bleed = m.stage === 0 ? 1 : m.stage === 1 ? Math.max(0, 1 - Math.abs(m.turn) / m.need) : 0;
-  if (Math.random() < bleed * 0.5) m.drops.push({ x: 170 + Math.random() * 12, y: 104, v: 0.6 + Math.random() * 0.6 });
-  m.drops = m.drops.filter((d) => (d.y += d.v * 2) < 200);
-  const g = $('#tq-drops');
-  if (g) g.innerHTML = m.drops.map((d) => `<circle cx="${d.x.toFixed(1)}" cy="${d.y.toFixed(1)}" r="2" fill="#d8262c"/>`).join('');
-  if (m.start) {
-    const left = 1 - (performance.now() - m.start) / (m.secs * 1000);
-    $('#mini-timer').style.width = `${Math.max(0, left) * 100}%`;
-    if (left <= 0) finishMini(false, m.stage === 0 ? 'Too slow, and the strap was never snug. Pull out the slack first so the rod only needs a few turns.' : 'Too slow. Bright red blood is still coming. Twist until the bleeding stops, then lock the rod.');
+
+/* Test hook helpers (tests/smoke.mjs). */
+function simInfo() {
+  const m = B && B.mini; if (!m || m.done || !m.st) return null;
+  const st = m.st, s = st.s, out = { si: m.si, n: m.sim.stages.length, type: s.type, s: JSON.parse(JSON.stringify(s)), slips: m.slips };
+  if (s.type === 'place') {
+    const sc = SCENES[s.scene];
+    out.want = placeWant(st).map((id) => ({ id, x: sc.zones[id].x, y: sc.zones[id].y }));
+    out.tok = st.tok ? { x: st.tok.x, y: st.tok.y } : null;
+    out.decoys = (s.decoys || []).slice();
+  }
+  return out;
+}
+function simDo(action, arg) {
+  switch (action) {
+    case 'skip': clockSkew += arg; break;
+    case 'place': placeZone(arg); break;
+    case 'dial': dialSet(arg); break;
+    case 'confirm': if (simType() === 'pace') paceConfirm(); else dialConfirm(); break;
+    case 'pace': paceSet(arg); break;
+    case 'order': orderPick(arg); break;
+    case 'press': if (simType() === 'bagcpr') bagDown(); else holdDown(); break;
+    case 'release': if (simType() === 'bagcpr') bagUp(); else holdUp(); break;
+    case 'go': signalGo(); break;
+    case 'shock': shockAct(arg); break;
+    case 'tap': miniTap(); break;
+    case 'windlass': windlassKey(arg); break;
+    default: throw new Error(`unknown sim action ${action}`);
   }
 }
-function finishMini(ok, text) {
-  const m = B.mini; m.done = true;
-  $('#b-mini').hidden = true; $('#b-actions').hidden = false; $('#b-foot').hidden = false;
-  B.phase = 'act'; B.mini = null;
-  if (ok) return doCorrect(m.o, text);
-  B.time += 1; renderBars();
-  Sound.warn();
-  showMsg('warn', 'Not quite', m.type === 'windlass' ? `${text} Pick the tourniquet again to retry.` : `${text} Pick compressions again to retry.`);
-  renderActions();
-}
+
 function updateBattle() {
   if (!B) return;
   if (B.hitT > 0) B.hitT--; if (B.hurtT > 0) B.hurtT--; if (B.laughT > 0) B.laughT--; if (B.pressT > 0) B.pressT--;
   if (B.won && B.deadT < 1) B.deadT = Math.min(1, B.deadT + 0.02);
   if (B.fleeArm > 0) { B.fleeArm--; if (B.fleeArm === 0) $('#b-flee').textContent = B.kind === 'exam' ? 'Leave the trial' : 'Abandon call'; }
   const m = B.mini;
-  if (m && m.type === 'windlass' && !m.done) updateWindlass(m);
+  if (m && !m.done && m.st && STAGES[m.st.s.type].update) STAGES[m.st.s.type].update(m, m.st.s);
 }
 
 /* ============================================================
@@ -1903,7 +2505,7 @@ function renderArena() {
   px(g, 36, 84, 48, 4, 'rgba(0,0,0,.3)');
   if (!isExam && c.patient.pose === 'lie') {
     g.save(); g.translate(60 + sh, 76); g.rotate(-Math.PI / 2); g.drawImage(patCanvas, -24, -24); g.restore();
-    if (B.pressT > 0 || (B.mini && B.mini.type === 'rhythm')) { const d = B.pressT > 4 ? 3 : 0; px(g, 61, 64 + d, 10, 6, C.ink); px(g, 62, 65 + d, 8, 4, '#e8b48a'); }
+    if (B.pressT > 0 || simType() === 'rhythm' || simType() === 'bagcpr') { const d = B.pressT > 4 ? 3 : 0; px(g, 61, 64 + d, 10, 6, C.ink); px(g, 62, 65 + d, 8, 4, '#e8b48a'); }
   } else {
     g.drawImage(patCanvas, 30 + sh, 40);
   }
@@ -2027,12 +2629,7 @@ addEventListener('keydown', (e) => {
   const k = e.code;
   Sound.unlock();
   if (mode === 'battle') {
-    if (B && B.phase === 'mini' && B.mini && B.mini.type === 'windlass') {
-      const act = { ArrowDown: 'pull', KeyS: 'pull', ArrowRight: 'cw', KeyD: 'cw', ArrowLeft: 'ccw', KeyA: 'ccw' }[k] || (A_KEYS.has(k) ? 'lock' : null);
-      if (act) { e.preventDefault(); windlassKey(act); }
-      return;
-    }
-    if (B && B.phase === 'mini' && A_KEYS.has(k)) { e.preventDefault(); if (!e.repeat) miniTap(); return; }
+    if (B && B.phase === 'mini' && B.mini) { if (simKey(e, true)) e.preventDefault(); return; }
     if (B && (B.phase === 'act' || B.phase === 'q') && /^Digit[0-9]$/.test(k)) {
       const n = k === 'Digit0' ? '10' : k.slice(5);
       const btn = document.querySelector(`#b-actions [data-key="${n}"]`);
@@ -2048,7 +2645,10 @@ addEventListener('keydown', (e) => {
   if (A_KEYS.has(k)) { e.preventDefault(); if (!e.repeat) pressA = true; return; }
   if (B_KEYS.has(k)) { e.preventDefault(); if (!e.repeat) pressB = true; }
 });
-addEventListener('keyup', (e) => { if (KEYMAP[e.code]) releaseDir(KEYMAP[e.code]); });
+addEventListener('keyup', (e) => {
+  if (mode === 'battle' && B && B.phase === 'mini' && B.mini) { if (simKey(e, false)) e.preventDefault(); return; }
+  if (KEYMAP[e.code]) releaseDir(KEYMAP[e.code]);
+});
 addEventListener('blur', () => { keysHeld.clear(); dirOrder.length = 0; });
 document.querySelectorAll('#pad [data-dir]').forEach((b) => {
   const d = b.dataset.dir;
@@ -2111,6 +2711,8 @@ window.__jrma = {
   answer: (i) => answer(i),
   miniTap: () => miniTap(),
   windlassKey: (act) => windlassKey(act),
+  simInfo: () => simInfo(),
+  sim: (action, arg) => simDo(action, arg),
   warp: (sx, sy) => { player.x = sx * VW + 128; player.y = sy * VH + 6 * T + 12; scr.x = sx; scr.y = sy; cam.x = sx * VW; cam.y = sy * VH; mode = 'world'; updateHUD(); },
   get battle() { return B; }, get mode() { return mode; }, get save() { return save; },
 };

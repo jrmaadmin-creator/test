@@ -27,7 +27,7 @@
 
 ## Limits
 
-- This does not train hands-on skill. The CPR tap game trains rate only, not depth or recoil. Pair it with a feedback manikin.
+- The hands-on simulations train landmarks, sequence, timing, and drug math. A screen cannot train depth, force, or feel: the CPR taps train rate only, not depth or recoil. Pair the game with manikins and skills labs.
 - Calls are single-provider decision sequences. Real calls run in parallel across a crew.
 - Scope and doses follow NH PCP v9.3. Local medical direction and agency policy still apply.
 - Progress is saved per device. There is no completion record for CE credit yet (see ADR-0001, revisit trigger 3).

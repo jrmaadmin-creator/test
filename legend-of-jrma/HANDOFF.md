@@ -23,9 +23,7 @@ To update the shared link from a new session, publish the `--artifact` file with
 
 - **Game:** Zelda-style overworld of Jaffrey (8 areas). Calls are turn-based battles where the condition is the monster.
 - **Levels:** 3 levels (EMT, AEMT, Paramedic). Each has a few monster calls, a boss call, then a Protocol Trial that advances the license (EMT → AEMT → Paramedic → "Legend of JRMA" title).
-- **Hands-on simulations:**
-  - tourniquet: pull the strap, twist the windlass in circles, lock the rod in the clip
-  - CPR: tap 12 compressions at 100-120/min
+- **Hands-on simulations:** 46 of them, one on every step where the player performs a skill (see "Simulations" below). Assessments and decisions stay as choices.
 - **Content:** 12 calls and 53 trial questions, all checked against NH PCP v9.3. See `docs/reference/call-content.md`.
 - **Characters:**
   - Chief Adam (gloves, station advice)
@@ -47,11 +45,12 @@ To update the shared link from a new session, publish the `--artifact` file with
 | Officers are set in `crew.js`; text uses `{chief}` `{partner}` `{trainer}` | Names can change without editing any call text |
 | Training Officer runs the trials instead of a medical director | The user wanted officers only |
 | Public officer listings were not used | They are out of date after the 2026 leadership change; names come from the user |
+| Every performed intervention is a staged simulation written as data (ADR-0002) | The user asked for real-world simulations like the tourniquet for every intervention; shared stage types keep it reviewable |
 | Shared link is a private claude.ai artifact | The user asked for a weblink for officers; it carries JRMA's name, so it stays private until the user shares it |
 
 ## Open items
 
-1. **Hands-on simulations for every intervention.** Requested 2026-09-29. Status is in the "Simulations" section below.
+1. **Play-test the simulations with a crew member** on a phone and a station computer. Timing windows (BVM rhythm, bag every 10th compression, pulse check) are set from standards but not yet tried by real users.
 2. **Partner/FTO:** needs an officer's name, or keep Sully.
 3. **Officer appearance** (hair, skin, beard, glasses) for Chief Adam and Capt. Joshua. Consent from both is not yet confirmed in writing.
 4. **Adult anaphylaxis (2.2A)** first page did not extract from the docx. Confirm the adult epi figures against the printed protocol.
@@ -66,4 +65,13 @@ To update the shared link from a new session, publish the `--artifact` file with
 
 ## Simulations
 
-Every intervention the player performs should be a hands-on simulation. Assessments and decisions stay as choices. The engine has a generic simulation system in `index.html`. Each call step can name a simulation in its `sim` field in `content/calls.js`. See the list of simulation types in `docs/how-to/add-a-call.md`.
+Status: done 2026-09-29. Every intervention the player performs is a hands-on simulation; assessments and decisions stay as choices.
+
+- **Engine:** `index.html`, section "Hands-on simulations". Ten stage types: place, hold, dial, order, signal, shock, bagcpr, pace, rhythm, windlass.
+- **Content:** each step's `sim` field in `content/calls.js`. Shared builders (`simKit`) at the top of that file cover pulse checks, glucometer, IV start, boluses, pads, thigh injections, and drug draw-up.
+- **Art and spots:** `content/scenes.js` (face, hand, legs, chest, arm, floor, bathroom, LZ map, helicopter, staging map, apartment, nebulizer, auto-injector).
+- **Rules:** a wrong spot or mistimed press is a fumble (feedback only); `sev` on a spot costs hearts (shocking with hands on, walking behind the tail rotor, parking in view on a weapon call). Three fumbles end the attempt. After two on one stage, the partner highlights the spot.
+- **How to add one:** `docs/how-to/add-a-call.md`, "Add a hands-on simulation". Why this design: `docs/adr/0002-hands-on-simulations-as-staged-data.md`.
+- **Sources outside NH PCP** (CAT steps, EpiPen hold time, nebulizer flow, lead placement): `docs/reference/call-content.md`, "Technique details not in NH PCP".
+- **Tests:** `npm test` validates every stage and plays all 46 simulations. The overdose sharps drag, the anaphylaxis safety-cap tap, and the first arrest pulse check use real mouse input; the bleed replay uses Tab and Space; the windlass runs by mouse and by keys. Probes check that a wrong spot costs no hearts and that shocking without "clear" costs one.
+- **Size watch:** `index.html` is about 2,700 lines. ADR-0001 says to revisit the single-file engine at about 3,000.

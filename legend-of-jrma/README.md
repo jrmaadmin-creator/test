@@ -1,6 +1,6 @@
 # The Legend of JRMA
 
-An over-the-top EMS training RPG for JRMA crews. Walk a Zelda-style overworld, take calls, and beat the condition "monsters" by choosing the right interventions in the right order. Each license level ends with a boss call and a protocol trial. Pass the trial to level up: EMT, then AEMT, then Paramedic, then Legend.
+An over-the-top EMS training RPG for JRMA crews. Walk a Zelda-style overworld, take calls, and beat the condition "monsters" by choosing the right interventions in the right order, then performing them hands-on: drag the pads to the chest, hold a pulse check, draw up the dose, twist the tourniquet. Each license level ends with a boss call and a protocol trial. Pass the trial to level up: EMT, then AEMT, then Paramedic, then Legend.
 
 Content is checked against the **New Hampshire Patient Care Protocols v9.3** (effective 2025-11-07). Every call and trial question cites its NH section; where NH is silent, it says so and names the national source. See `docs/reference/call-content.md`. It is a training aid, not a protocol. The NH PCP and your medical director have the final word.
 
@@ -15,7 +15,7 @@ Content is checked against the **New Hampshire Patient Care Protocols v9.3** (ef
 | Move | Arrow keys or WASD | D-pad |
 | Talk, open chests, read signs | Space, Enter, or Z | A |
 | Pick an action in a call | Click, or keys 1-9 | Tap |
-| CPR and tourniquet mini-games | Space | Tap the big button |
+| Hands-on skills (tourniquet, CPR, pulse checks, IVs, pads, leads, drug math) | Tab to a spot, Space to act, arrows to adjust, 1-9 for buttons | Drag the item to the spot, hold, or slide |
 
 Progress saves in the browser on that device.
 
@@ -39,7 +39,9 @@ Also in the world: 8 clinical pearls hidden in chests, a goose, and a ghost who 
 
 ```
 index.html              game engine (canvas overworld, call and trial panels)
-content/calls.js        levels, calls, clinical pearls
+content/calls.js        levels, calls, hands-on simulations, clinical pearls
+content/scenes.js       art and hotspots for the simulations
+content/crew.js         which JRMA officer plays each role
 content/exams.js        protocol trial question banks
 tests/smoke.mjs         content checks + full playthrough in Chromium
 tools/bundle.mjs        builds the one-file version in dist/

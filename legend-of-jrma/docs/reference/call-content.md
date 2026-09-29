@@ -51,6 +51,44 @@ These are the places where NH differs from what many providers assume, or from o
 | Restraint position | Lateral, semi-recumbent, or supine; prone only briefly; never hog-tie | 6.5 |
 | Pacing sedation | Before or during pacing when feasible (midazolam, lorazepam, diazepam, or ketamine) | 3.1A |
 
+## Hands-on simulations
+
+Every intervention the player performs is a simulation (`sim` in `content/calls.js`). Assessments and decisions stay as choices.
+
+| Call | Simulations |
+|---|---|
+| Chainsaw vs. Leg | Tourniquet site on the leg; CAT-style windlass (pull, twist, lock) |
+| Unresponsive in the Restroom | Sharps into the container; carotid pulse check 5-10 s; head-tilt chin-lift and OPA sizing; BVM breaths 1 s, every 5-6 s; naloxone 1 mg each nostril |
+| Acting Drunk at the Potluck | Glucometer (lance the side of the fingertip, strip to the drop); oral glucose between cheek and gum |
+| Bee Beard Gone Wrong | Auto-injector: safety off, outer thigh, hold 3 s; non-rebreather at 8 L/min or more, fill the reservoir first |
+| Stage for PD | Staging spot out of sight with an exit; wait for "scene secure" on the radio; stand with the door behind you |
+| Unresponsive in the Bathroom | Pulse check; drag to the hallway floor; hand position and compressions; AED pads; clear and shock; resume CPR; bag 1 breath every 10 compressions |
+| Double-Dosed Insulin | NPA sizing and insertion; glucometer; IV start (band, site, 10-30 degree angle, finish in order); hang D10 |
+| Lost in the Hay Maze | Nebulizer setup and oxygen flow; second neb; draw up 0.3 mL of 1 mg/mL epinephrine and inject the outer thigh |
+| Rollover: Fly Him to UMass | Landing zone site; IV and a 250 mL bolus; wait for the wave-in and approach from the front; MIST handoff |
+| Chest Pain in the Corner Office | Chest leads V1-V6; aspirin 4 x 81 mg; V4R; IV avoiding the right wrist and a 250 mL bolus |
+| Fainted at the Scratch Tickets | IV start; atropine 1 mg = 10 mL of 0.1 mg/mL; pacing rate, mA to capture, femoral pulse |
+| The Throne Returns | Take over compressions and place pads; charge, clear, shock; resume CPR; tibial IO; shock plus epinephrine 1 mg = 10 mL; shock plus amiodarone 300 mg = 6 mL of 50 mg/mL; supraglottic airway, capnography, and bagging; pulse check at the ETCO2 jump |
+
+### Technique details not in NH PCP
+
+| Detail | Source |
+|---|---|
+| CAT tourniquet steps (pull strap, twist until bleeding stops, lock in clip; usually 3 half turns or fewer) | Manufacturer training (North American Rescue) |
+| Pulse check at least 5 and no more than 10 seconds | AHA BLS |
+| OPA sized from the corner of the mouth to the earlobe or jaw angle; NPA from the tip of the nose to the earlobe | National EMT curriculum |
+| BVM breath over about 1 second, just to chest rise | AHA |
+| Lance the side of the fingertip | Glucometer manufacturer instructions and national EMT curriculum |
+| Auto-injector: blue safety release off, outer thigh, hold 3 seconds | EpiPen manufacturer instructions (other devices differ) |
+| Fill the non-rebreather reservoir before applying | National EMT curriculum |
+| Nebulizer oxygen flow 6-8 L/min | Typical manufacturer range; check the device |
+| IV angle 10-30 degrees; release the tourniquet before flushing | National AEMT curriculum |
+| Chest lead positions V1-V6 and V4R | AHA/ACC/HRS electrocardiography standard |
+| Pacing: raise mA to capture, confirm with a femoral pulse | ACLS |
+| IO needle: through skin to bone, drill to the pop, remove the stylet, flush | EZ-IO manufacturer training |
+| Helicopter approach only when waved in, from the front | Air service standards |
+| Staging out of sight with an exit route; door behind you inside | EMS scene-safety practice |
+
 ## Trial question banks
 
 | Trial | Grants | Questions in bank | Drawn per attempt | Misses allowed | NH-silent questions |
