@@ -49,6 +49,7 @@ Docs follow [Diataxis](https://diataxis.fr/):
 - Reference: [docs/reference/rhythm-schema.md](docs/reference/rhythm-schema.md)
 - Explanation: [docs/explanation/timing-model.md](docs/explanation/timing-model.md)
 - Decisions: [docs/adr/](docs/adr/)
+- Status and handoff: [docs/status.md](docs/status.md)
 
 ## Accuracy
 

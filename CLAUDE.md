@@ -22,3 +22,4 @@
 - No runtime CDN or network calls; everything ships inside the built file. `crew.js` uses `window.claude` only when present.
 - Run `npm run check && npm run build` before committing; commit `dist/`.
 - Decisions: `docs/adr/`. Docs use Diataxis folders under `docs/`.
+- Status, owner decisions and open items: `docs/status.md`. Update it at the end of each work session.
