@@ -91,7 +91,7 @@ test('report has MIST sections, vitals trend, treatments with times', () => {
 
 test('service worker caches every app file', () => {
   const sw = readFileSync(new URL('../app/sw.js', import.meta.url), 'utf8');
-  const protoFiles = readdirSync(new URL('../app/js/protocols/', import.meta.url));
+  const protoFiles = readdirSync(new URL('../app/js/protocols/', import.meta.url)).filter(f => f.endsWith('.js'));
   for (const f of protoFiles) assert.ok(sw.includes(`js/protocols/${f}`), `sw.js missing ${f}`);
   for (const f of ['js/app.js', 'js/engine.js', 'css/app.css', 'index.html']) assert.ok(sw.includes(f), f);
 });
