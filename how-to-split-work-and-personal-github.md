@@ -1,6 +1,6 @@
 # How to split GitHub into a JRMA organization and a personal account
 
-Type: how-to. Status: v0.1, 2026-09-29, proposed (not yet run). Owner: you. Why: `adr-001-github-organization-for-jrma.md`.
+Type: how-to. Status: v0.1, 2026-09-29, not run; superseded by `adr-002-one-github-account-for-now.md`. Kept for later. Owner: you. Why: `adr-001-github-organization-for-jrma.md`.
 
 ## Result when done
 

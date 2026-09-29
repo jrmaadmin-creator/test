@@ -1,6 +1,6 @@
 # ADR-001: JRMA's GitHub becomes an organization; personal projects move to a personal account
 
-Type: decision record. Status: proposed 2026-09-29. The JRMA Hub chat records it; the Chief's GitHub account completes it (G-07). Owner: you. Steps: `how-to-split-work-and-personal-github.md`.
+Type: decision record. Status: superseded 2026-09-29 by `adr-002-one-github-account-for-now.md` (you chose one account for now). Kept as the reference if the organization question comes back. Owner: you. Steps: `how-to-split-work-and-personal-github.md`.
 
 ## Context
 
