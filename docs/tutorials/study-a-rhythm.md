@@ -14,4 +14,6 @@ You will learn second-degree AV block type I (Wenckebach) by watching it happen,
 10. Switch to **12-lead** and select **2° type II**. Click lead V1 and read the "Lead V1" box: what view of the heart does it give?
 11. Switch to **Quiz**. Answer ten questions. Your misses come back more often; the **Your weakest rhythms** list shows what to study next.
 
-Repeat for any rhythm. The five-question method is in the **Reading** tab; the **Treatment** tab shows the AHA algorithm steps (NH protocol check pending).
+12. Switch to **Scenarios** and run **Dizzy after chores**. Treat the patient step by step; the monitor changes when you pace.
+
+Repeat for any rhythm. The five-question method is in the **Reading** tab; the **Treatment** tab shows the NH v9.3 steps with protocol numbers.

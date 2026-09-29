@@ -4,6 +4,8 @@
 import { RHYTHMS } from '../src/js/rhythms.js';
 import { Engine } from '../src/js/engine.js';
 import { leadSignal, qrsAxis, LEADS } from '../src/js/ecg.js';
+import { TREATMENT, TREATMENT_FOR, TREAT_Q } from '../src/js/clinical.js';
+import { SCENARIOS } from '../src/js/scenarios.js';
 
 const SECONDS = 60;
 let failures = 0;
@@ -137,6 +139,20 @@ for (const id of ['nsr', 'rbbb', 'lbbb', 'pvc', 'vt', 'paced', 'avb3', 'wpw', 'i
   process.stdout.write(`${id} ${qrsAxis(n.beat.comps)?.toFixed(0)}°  `);
 }
 console.log('(QRS axes)');
+// ---- Clinical content integrity ----
+for (const r of RHYTHMS) expectTrue(`treatment mapped for ${r.id}`, TREATMENT[TREATMENT_FOR[r.id]]);
+for (const [k, t] of Object.entries(TREATMENT)) for (const st of t.steps) expectTrue(`treatment ${k} step has level, text and citation`, st.length === 3 && st[0] && st[1] && st[2]);
+for (const [k, list] of Object.entries(TREAT_Q)) {
+  expectTrue(`treatment question key ${k} exists`, TREATMENT[k]);
+  for (const q of list) expectTrue(`question "${q.q.slice(0, 40)}" has 3 distinct distractors`, q.x.length === 3 && !q.x.includes(q.a) && new Set(q.x).size === 3);
+}
+for (const sc of SCENARIOS) {
+  expectTrue(`scenario ${sc.id} rhythm exists`, byId[sc.rhythm]);
+  for (const st of sc.steps) {
+    expectTrue(`scenario ${sc.id}: one correct answer in "${st.q.slice(0, 30)}"`, st.o.filter((o) => o[1]).length === 1);
+    if (st.rhythm) expectTrue(`scenario ${sc.id} step rhythm ${st.rhythm} exists`, byId[st.rhythm]);
+  }
+}
 for (const f of leadFails) console.log(`FAIL 12-lead: ${f}`);
-if (!leadFails.length) console.log('12-lead patterns: all textbook checks pass');
+if (!leadFails.length) console.log(`12-lead patterns, treatment (${Object.keys(TREATMENT).length} protocols) and ${SCENARIOS.length} scenarios: all checks pass`);
 process.exit(failures || leadFails.length ? 1 : 0);

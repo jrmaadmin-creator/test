@@ -29,7 +29,8 @@ const shuffle = (a) => {
 };
 
 export class Quiz {
-  constructor(root, { rhythms, groups, onLoad, onStudy, onAnswer, onSettings }) {
+  constructor(root, { rhythms, groups, onLoad, onStudy, onAnswer, onSettings, treatQuestion }) {
+    this.treatQuestion = treatQuestion;
     this.root = root;
     this.rhythms = rhythms;
     this.groups = groups;
@@ -38,7 +39,7 @@ export class Quiz {
     this.onAnswer = onAnswer;
     this.onSettings = onSettings;
     this.stats = loadStats();
-    this.settings = { hard: false, stripOnly: false, artifacts: true, ...(this.stats.settings || {}) };
+    this.settings = { hard: false, stripOnly: false, artifacts: true, treatment: true, ...(this.stats.settings || {}) };
     this.current = null;
     this.answered = false;
     this.build();
@@ -66,6 +67,8 @@ export class Quiz {
     const r = this.pick();
     this.current = r.id;
     this.answered = false;
+    this.tq = null;
+    this.tqPick = null;
     this.onLoad(r.id);
     const pool = this.pool().filter((x) => x.id !== r.id);
     const same = shuffle(pool.filter((x) => x.group === r.group)).slice(0, 2);
@@ -91,7 +94,24 @@ export class Quiz {
     } else s.streak = 0;
     saveStats(s);
     this.lastPick = id;
+    if (this.settings.treatment && this.treatQuestion) {
+      const tq = this.treatQuestion(this.current);
+      if (tq) this.tq = { ...tq, options: shuffle([tq.a, ...tq.x]) };
+    }
     this.onAnswer?.(s);
+    this.render();
+  }
+
+  answerTreat(text) {
+    if (!this.tq || this.tqPick != null) return;
+    this.tqPick = text;
+    const ok = text === this.tq.a;
+    const t = this.stats.treat || { r: 0, w: 0 };
+    if (ok) t.r += 1;
+    else t.w += 1;
+    this.stats.treat = t;
+    saveStats(this.stats);
+    this.onAnswer?.(this.stats);
     this.render();
   }
 
@@ -114,6 +134,7 @@ export class Quiz {
         <label class="toggle"><input type="checkbox" id="quiz-set-hard"> <span>Hard: choose from every rhythm</span></label>
         <label class="toggle"><input type="checkbox" id="quiz-set-strip"> <span>Strip only (hide the 3D heart)</span></label>
         <label class="toggle"><input type="checkbox" id="quiz-set-art"> <span>Include monitor artifacts</span></label>
+        <label class="toggle"><input type="checkbox" id="quiz-set-treat"> <span>Ask a treatment question after each rhythm (NH v9.3)</span></label>
         <button type="button" class="btn-link" id="quiz-reset">Reset my quiz stats</button>
       </details>
       <section class="quiz-weak"><h3>Your weakest rhythms</h3><ol id="quiz-weak"></ol></section>`;
@@ -144,6 +165,7 @@ export class Quiz {
     bind('#quiz-set-hard', 'hard');
     bind('#quiz-set-strip', 'stripOnly');
     bind('#quiz-set-art', 'artifacts');
+    bind('#quiz-set-treat', 'treatment');
     this.root.querySelector('#quiz-reset').addEventListener('click', (e) => {
       const b = e.currentTarget;
       if (b.dataset.confirm !== '1') {
@@ -163,8 +185,9 @@ export class Quiz {
   render() {
     const s = this.stats;
     const pct = s.total ? Math.round((100 * s.correct) / s.total) : 0;
+    const tr = s.treat && s.treat.r + s.treat.w ? ` · treatment ${s.treat.r}/${s.treat.r + s.treat.w}` : '';
     this.root.querySelector('#quiz-score').textContent = s.total
-      ? `${s.correct} of ${s.total} correct (${pct}%) · streak ${s.streak} · best ${s.best}`
+      ? `${s.correct} of ${s.total} correct (${pct}%) · streak ${s.streak} · best ${s.best}${tr}`
       : 'Watch the heart and the strip, measure if you need to, then answer.';
 
     const opts = this.root.querySelector('#quiz-options');
@@ -205,6 +228,34 @@ export class Quiz {
       res.querySelector('.quiz-tip').textContent = `Tip: ${r.tip}`;
       res.querySelector('#quiz-next').addEventListener('click', () => this.next());
       res.querySelector('#quiz-study').addEventListener('click', () => this.onStudy(r.id));
+      if (this.tq) {
+        const box = document.createElement('div');
+        box.className = 'quiz-treat';
+        const h = document.createElement('p');
+        h.className = 'quiz-verdict';
+        h.textContent = 'Treatment question';
+        const qq = document.createElement('p');
+        qq.textContent = this.tq.q;
+        box.append(h, qq);
+        for (const text of this.tq.options) {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'quiz-opt quiz-opt-small';
+          b.textContent = text;
+          b.disabled = this.tqPick != null;
+          if (this.tqPick != null && text === this.tq.a) b.dataset.state = 'right';
+          else if (this.tqPick === text) b.dataset.state = 'wrong';
+          b.addEventListener('click', () => this.answerTreat(text));
+          box.appendChild(b);
+        }
+        if (this.tqPick != null) {
+          const f = document.createElement('p');
+          f.className = 'quiz-tip';
+          f.textContent = `${this.tqPick === this.tq.a ? 'Correct.' : `Answer: ${this.tq.a}.`} Source: ${this.tq.cite === 'AHA' ? 'AHA ACLS' : `NH Patient Care Protocols v9.3, ${this.tq.cite}`}.`;
+          box.appendChild(f);
+        }
+        res.insertBefore(box, res.querySelector('.quiz-actions'));
+      }
     }
 
     const weak = Object.entries(s.per)

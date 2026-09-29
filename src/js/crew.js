@@ -85,7 +85,7 @@ export async function initCrew(panel, rhythms) {
     } catch (e) {
       if (e?.code === 'invalid_argument' || e?.code === 'permission_denied') {
         refused = true;
-        note('You can view the crew table, but you do not have permission to add results. Ask the page owner to give you Contributor access.');
+        note('You can view the crew table, but your results cannot be saved with your access level. People invited by email need Editor access to save results; ask the page owner.');
       }
     }
     writing = false;

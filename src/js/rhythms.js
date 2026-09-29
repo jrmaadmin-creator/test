@@ -838,6 +838,45 @@ export const RHYTHMS = [
       s.t += rr;
     },
   },
+  {
+    id: 'pea-wide',
+    name: 'PEA, slow and wide',
+    short: 'PEA (wide)',
+    group: 'Cardiac arrest',
+    pulseless: true,
+    noKick: true,
+    summary: 'Slow, wide complexes on the monitor and no pulse. Often a metabolic cause such as hyperkalemia.',
+    criteria: {
+      rate: 'Usually slow (shown: 40)',
+      rhythm: 'Regular or slightly irregular',
+      p: 'Usually absent or flattened',
+      pr: 'None',
+      qrs: 'Wide (shown: 0.16 s). Pulse: none',
+    },
+    mechanism:
+      'The ventricles still generate slow, wide electrical complexes, but the muscle is too poisoned to contract. High potassium, severe acidosis or sodium-channel blocking drugs slow conduction (wide QRS) and weaken contraction until there is no pulse.',
+    watch: 'Slow violet ripples still spread through the ventricles, but the chambers barely move and the pulse line is flat.',
+    causes: [
+      'Hyperkalemia (missed dialysis, renal failure)',
+      'Severe acidosis',
+      'Sodium-channel blocker toxicity (tricyclic antidepressants)',
+      'Massive MI, end-stage arrest',
+    ],
+    significance:
+      'Cardiac arrest, not shockable. NH 3.2A: wide complex PEA is often metabolic; consider calcium and sodium bicarbonate along with CPR and epinephrine.',
+    tip: 'Slow, wide and pulseless: think potassium and poisons.',
+    expect: { vRate: [38, 42], qrs: [0.14, 0.18], regular: true },
+    next(b, s) {
+      ventricularFocus(b, s.t, {
+        at: 'ivr',
+        first: 'LV',
+        rr: 1.5,
+        amp: 0.9,
+        caption: 'A slow ventricular focus fires, but the poisoned muscle produces no pulse.',
+      });
+      s.t += 1.5;
+    },
+  },
 
   // ------------------------------------------ Bundle branch & pre-excitation
   {

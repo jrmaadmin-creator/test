@@ -6,7 +6,8 @@ import { Strip } from './strip.js';
 import { HeartView, STRUCTURE_SEGS } from './heart3d.js';
 import { LEADS, LEAD_NAMES, vectorAt } from './ecg.js';
 import { TwelveLead, drawAxes, axisWords } from './twelve.js';
-import { TREATMENT, TREATMENT_FOR, TWELVE, TWELVE_BASICS, NH_STATUS, SOURCES } from './clinical.js';
+import { TREATMENT, TREATMENT_FOR, TWELVE, TWELVE_BASICS, NH_STATUS, SOURCES, INSTABILITY, treatQuestionFor } from './clinical.js';
+import { ScenarioView } from './scenarios.js';
 import { CompareView, SETS } from './compare.js';
 import { Quiz } from './quiz.js';
 import { initCrew } from './crew.js';
@@ -78,7 +79,10 @@ const quiz = new Quiz($('#panel-quiz'), {
     $('#strip-name').textContent = quiz.answered ? byId[quiz.current].name : 'Unknown rhythm';
   },
   onSettings: () => applyModeLayout(),
+  treatQuestion: treatQuestionFor,
 });
+const scenario = new ScenarioView($('#panel-scenario'), { byId, onRhythm: (id) => loadRhythm(id, { quiz: true }) });
+const QUIZLIKE = new Set(['quiz', 'scenario']);
 
 const el = (tag, cls, text) => {
   const n = document.createElement(tag);
@@ -167,8 +171,8 @@ function loadRhythm(id, o = {}) {
 function writeHash() {
   if (!state.rhythm) return;
   const h =
-    state.mode === 'quiz'
-      ? 'quiz'
+    QUIZLIKE.has(state.mode)
+      ? state.mode
       : state.mode === 'compare'
         ? `compare.${state.compareSet}`
         : state.mode === 'twelve'
@@ -189,7 +193,8 @@ function setMode(mode) {
   for (const b of document.querySelectorAll('#modes button')) b.setAttribute('aria-pressed', String(b.dataset.mode === mode));
   applyModeLayout();
   if (mode === 'quiz' && prev !== 'quiz') quiz.next();
-  if (prev === 'quiz' && mode !== 'quiz') loadRhythm(quiz.current || state.rhythm.id);
+  if (mode === 'scenario' && prev !== 'scenario') scenario.showList();
+  if (QUIZLIKE.has(prev) && !QUIZLIKE.has(mode)) loadRhythm(prev === 'quiz' ? quiz.current || state.rhythm.id : state.rhythm.id);
   if (mode === 'twelve') {
     twelve.set(state.rhythm);
     renderTwelvePanel();
@@ -205,20 +210,21 @@ function setMode(mode) {
 function applyModeLayout() {
   const m = state.mode;
   const app = $('#app');
-  app.className = `app mode-${m}${m === 'quiz' && quiz.settings.stripOnly ? ' strip-only' : ''}`;
-  $('#monitor').hidden = !(m === 'learn' || (m === 'quiz' && !quiz.settings.stripOnly));
+  const quizlike = QUIZLIKE.has(m);
+  app.className = `app mode-${m}${quizlike ? ' quizlike' : ''}${m === 'quiz' && quiz.settings.stripOnly ? ' strip-only' : ''}`;
+  $('#monitor').hidden = !(m === 'learn' || m === 'scenario' || (m === 'quiz' && !quiz.settings.stripOnly));
   $('#pathway').hidden = m !== 'learn';
   $('#twelve-view').hidden = m !== 'twelve';
   $('#compare-view').hidden = m !== 'compare';
   for (const b of document.querySelectorAll('#tabs button')) b.hidden = b.dataset.modes !== m;
   heart?.setVectorMode(state.vector && m === 'learn', state.lead, LEADS[state.lead].axis);
-  $('#caption').hidden = m === 'quiz';
-  $('#opt-labels').closest('label').hidden = m === 'quiz';
-  $('#opt-vector').closest('label').hidden = m === 'quiz';
-  // The timeline, labels and readouts would give quiz answers away.
-  strip.setBands({ ladder: m === 'quiz' ? false : state.ladder, pulse: state.pulse });
+  $('#caption').hidden = quizlike;
+  $('#opt-labels').closest('label').hidden = quizlike;
+  $('#opt-vector').closest('label').hidden = quizlike;
+  // The timeline and labels would give answers away. Scenarios keep the monitor numbers.
+  strip.setBands({ ladder: quizlike ? false : state.ladder, pulse: state.pulse });
   $('#readouts').hidden = m === 'quiz';
-  for (const id of ['#opt-waves', '#opt-intervals', '#opt-ladder']) $(id).closest('label').hidden = m === 'quiz';
+  for (const id of ['#opt-waves', '#opt-intervals', '#opt-ladder']) $(id).closest('label').hidden = quizlike;
 }
 
 function selectTab(id) {
@@ -300,10 +306,14 @@ function renderTreatmentPanel(r) {
   const warn = el('div', 'protocol-note');
   warn.append(el('b', null, NH_STATUS.version), el('span', null, NH_STATUS.note));
   p.appendChild(warn);
+  if (t.steps.some((x) => x[2] === '3.5A' || x[2] === '3.1A')) p.appendChild(el('p', 'unstable', INSTABILITY));
   const ol = el('ol', 'treat-steps');
-  for (const [lvl, text] of t.steps) {
+  const LVL = { All: 'all', 'EMR/EMT': 'emt', AEMT: 'aemt', Paramedic: 'para', AHA: 'aha' };
+  for (const [lvl, text, cite] of t.steps) {
     const li = el('li');
-    li.append(el('span', `lvl lvl-${lvl.toLowerCase()}`, lvl), el('span', null, text));
+    const body = el('span', null, text);
+    if (cite) body.appendChild(el('small', 'cite', cite === 'AHA' ? 'AHA ACLS' : `NH ${cite}`));
+    li.append(el('span', `lvl lvl-${LVL[lvl] || 'all'}`, lvl === 'Paramedic' ? 'Medic' : lvl), body);
     ol.appendChild(li);
   }
   p.appendChild(ol);
@@ -312,7 +322,7 @@ function renderTreatmentPanel(r) {
     n.append(el('b', null, 'Key point'), document.createTextNode(t.note));
     p.appendChild(n);
   }
-  p.append(el('p', 'source', `Source: ${SOURCES.aha}.`), el('p', 'source', SOURCES.scope));
+  p.append(el('p', 'source', `Source: ${SOURCES.nh}.`), el('p', 'source', SOURCES.levels));
   p.scrollTop = 0;
 }
 
@@ -671,7 +681,7 @@ function bindControls() {
   document.addEventListener('keydown', (e) => {
     const tag = e.target.tagName;
     if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || e.metaKey || e.ctrlKey || e.altKey) return;
-    if (state.mode === 'quiz' && quiz.key(e)) {
+    if ((state.mode === 'quiz' && quiz.key(e)) || (state.mode === 'scenario' && scenario.key(e))) {
       e.preventDefault();
       return;
     }
@@ -698,7 +708,7 @@ function bindControls() {
 
 function routeHash() {
   const [a, b] = location.hash.slice(1).split('.');
-  if (a === 'quiz') return setMode('quiz');
+  if (a === 'quiz' || a === 'scenario') return setMode(a);
   if (a === 'compare') {
     if (SETS[b]) state.compareSet = b;
     return setMode('compare');
@@ -732,8 +742,8 @@ function frame(now) {
   }
   if (live) {
     strip.draw(state.simT, engine, state.rhythm, {
-      waveLabels: state.waveLabels && state.mode !== 'quiz',
-      intervals: state.intervals && state.mode !== 'quiz',
+      waveLabels: state.waveLabels && !QUIZLIKE.has(state.mode),
+      intervals: state.intervals && !QUIZLIKE.has(state.mode),
     });
     updateReadouts(state.simT);
   }
@@ -767,4 +777,4 @@ initCrew($('#panel-crew'), RHYTHMS).then((c) => {
 requestAnimationFrame(frame);
 
 // Test hook: lets automated checks drive the app deterministically.
-window.__hcl = { state, engine, loadRhythm, setPlaying, setMode, setLead, quiz };
+window.__hcl = { state, engine, loadRhythm, setPlaying, setMode, setLead, quiz, scenario };

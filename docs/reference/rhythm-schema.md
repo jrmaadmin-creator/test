@@ -25,7 +25,7 @@
 | `show` | string[] | Optional 3D structures to display |
 | `expect` | `{ vRate, aRate, pr, qrs, regular }` | Ranges enforced by `npm run check` |
 
-Clinical text lives in `src/js/clinical.js`: `TWELVE[id]` (12-lead findings) and `TREATMENT_FOR[id]` → a key in `TREATMENT`.
+Clinical text lives in `src/js/clinical.js`: `TWELVE[id]` (12-lead findings), `TREATMENT_FOR[id]` → a key in `TREATMENT` (steps are `[level, text, NH protocol number or 'AHA']`), and `TREAT_Q[key]` quiz questions (`{ q, a, x: [3 distractors], cite }`). Scenarios in `src/js/scenarios.js`: `{ id, title, dispatch, patient, vitals, rhythm, steps: [{ q, o: [[text, correct, feedback]], rhythm? }] }`.
 
 ## Beat (`src/js/engine.js`)
 
@@ -65,4 +65,4 @@ Frontal angles use ECG convention (+90° = down). Chest angles: 0° = patient's 
 
 ## Links
 
-`#<rhythm-id>` (Learn), `#12lead.<rhythm-id>`, `#compare.<set>` (`avblocks`, `narrow`, `wide`, `arrest`, `origin`, `artifacts`), `#quiz`.
+`#<rhythm-id>` (Learn), `#12lead.<rhythm-id>`, `#compare.<set>` (`avblocks`, `narrow`, `wide`, `arrest`, `origin`, `artifacts`), `#quiz`, `#scenario`.

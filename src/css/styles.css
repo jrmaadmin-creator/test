@@ -459,8 +459,24 @@ table.facts td:last-child { font-family: var(--font-mono); font-variant-numeric:
 .treat-steps li { display: grid; grid-template-columns: 3.4em minmax(0, 1fr); gap: 10px; align-items: start; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
 .treat-steps li + li { margin-top: 0; }
 .lvl { font: 700 0.72rem/1 var(--font-mono); padding: 4px 0; text-align: center; border-radius: 3px; color: var(--surface); margin-top: 2px; }
-.lvl-bls { background: var(--bls); }
-.lvl-als { background: var(--als); }
+.lvl-all { background: var(--muted); }
+.lvl-emt { background: var(--bls); }
+.lvl-aemt { background: var(--accent); }
+.lvl-para { background: var(--als); }
+.lvl-aha { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+.cite { display: block; margin-top: 2px; font: 600 0.72rem var(--font-mono); color: var(--muted); }
+.unstable { font-size: var(--step--1); border-left: 3px solid var(--block); padding-left: 10px; }
+.case-list { list-style: none; padding: 0 !important; display: grid; gap: 6px; }
+.case-list li + li { margin-top: 0; }
+.case-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; display: grid; gap: 6px; background: var(--surface-2); }
+.vitals { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 2px 0 0; }
+.vitals div { display: flex; gap: 5px; align-items: baseline; }
+.vitals dt { font: 600 var(--step--1) var(--font-display); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.vitals dd { margin: 0; font: 600 var(--step-0) var(--font-mono); }
+.case-q { font-size: var(--step-1); }
+.case-back { margin-bottom: 4px; color: var(--accent); }
+.quiz-treat { display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 10px; margin-top: 4px; }
+.quiz-opt.quiz-opt-small { grid-template-columns: 1fr; font-size: var(--step--1); padding: 8px 10px; }
 .source { font-size: var(--step--1); color: var(--muted); }
 
 /* ---------- Quiz ---------- */
@@ -506,17 +522,17 @@ kbd { font: 600 0.72rem var(--font-mono); border: 1px solid var(--line); border-
 .crew-table td:first-child { font-family: var(--font-body); }
 
 /* ---------- Mode layouts ---------- */
-.app.mode-compare, .app.mode-quiz {
+.app.mode-compare, .app.quizlike {
   grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
   grid-template-areas: "top top" "stage info" "strip strip";
 }
-.app.mode-compare .rail, .app.mode-quiz .rail { display: none; }
+.app.mode-compare .rail, .app.quizlike .rail { display: none; }
 .app.mode-compare { grid-template-areas: "top top" "stage info" "stage info"; }
 .app.mode-compare .strip-wrap { display: none; }
 .app.mode-quiz .strip-hint { display: none; }
 .app.strip-only .stage { display: none; }
 .app.strip-only { grid-template-areas: "top top" "strip info" "strip info"; }
-.app.mode-quiz .rhythm-select { visibility: hidden; }
+.app.quizlike .rhythm-select { visibility: hidden; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1180px) {
@@ -529,7 +545,7 @@ kbd { font: 600 0.72rem var(--font-mono); border: 1px solid var(--line); border-
   }
   .rail { display: none; }
   .rhythm-select { display: block; flex: 1 1 260px; max-width: 420px; }
-  .app.mode-quiz .rhythm-select, .app.mode-compare .rhythm-select { display: none; }
+  .app.quizlike .rhythm-select, .app.mode-compare .rhythm-select { display: none; }
 }
 @media (max-width: 760px) {
   html, body { height: auto; }
@@ -546,7 +562,7 @@ kbd { font: 600 0.72rem var(--font-mono); border: 1px solid var(--line); border-
   .pathway li { font-size: 0.75rem; }
   .info { max-height: none; }
   .panel { overflow: visible; }
-  .app.mode-compare, .app.mode-quiz, .app.strip-only { grid-template-columns: minmax(0, 1fr); grid-template-areas: "top" "stage" "strip" "info"; }
+  .app.mode-compare, .app.quizlike, .app.strip-only { grid-template-columns: minmax(0, 1fr); grid-template-areas: "top" "stage" "strip" "info"; }
   .app.strip-only { grid-template-areas: "top" "strip" "info"; }
   .twelve-scroll { max-height: none; }
   .compare-view { overflow: visible; }

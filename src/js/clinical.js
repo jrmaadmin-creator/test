@@ -1,163 +1,174 @@
-// Clinical content kept apart from the rhythm generators: 12-lead findings and
-// treatment. Treatment follows the AHA adult ACLS algorithms taught in paramedic
-// courses (AHA / NREMT). NH Patient Care Protocols v9.3 have NOT been checked
-// against this text yet: see NH_STATUS. No step here overrides local protocol.
+// Clinical content kept apart from the rhythm generators: 12-lead findings,
+// treatment and treatment quiz questions.
+//
+// Treatment follows the State of New Hampshire Patient Care Protocols v9.3
+// (NH Division of Fire Standards and Training & EMS; approved by the NH EMS
+// Medical Control Board). Each step cites its protocol number. Where NH says
+// "follow applicable AHA ACLS guidelines" and gives no detail, the AHA step is
+// tagged AHA. Doses are copied from the protocol text; do not edit them from
+// memory (ADR 0004).
 
 export const NH_STATUS = {
-  version: 'NH Patient Care Protocols v9.3 (Nov 2025)',
-  verified: false,
-  note: 'Not yet checked against the NH protocol text. Your NH protocol book and medical control govern treatment.',
+  version: 'NH Patient Care Protocols v9.3',
+  verified: true,
+  note: 'Adult steps from protocols 3.1A, 3.2A, 3.4, 3.5A and 3.6. Sedation options, pediatric doses and full pearls are in the protocol book. Medical control and your protocol book govern care.',
 };
 
 export const SOURCES = {
-  aha: 'AHA Adult ACLS algorithms (2020 guidelines; 2025 update, Circulation 2025;152 suppl 2)',
-  scope: 'BLS = EMR/EMT level; ALS = paramedic level (National EMS Scope of Practice Model; NH Appendix 4 may differ)',
+  nh: 'State of New Hampshire Patient Care Protocols, Version 9.3 (Nov 2025)',
+  levels: 'Levels follow the NH standing-order headings: EMR/EMT, AEMT, Paramedic. "All" = Routine Patient Care. "AHA" = AHA ACLS step used where the NH protocol defers to ACLS.',
 };
 
-const UNSTABLE =
-  'Unstable means the rhythm is causing hypotension, acutely altered mental status, signs of shock, ischemic chest discomfort or acute heart failure.';
+export const INSTABILITY =
+  'Hemodynamically unstable (NH 3.5A pearls): hypotension, acutely altered mental status, signs of shock, signs of acute heart failure, or ischemic chest pain.';
 
-// Each step: [level, text]. Levels: 'BLS' or 'ALS'.
+const CPR = ['EMR/EMT', 'Perform 2-minute cycles of uninterrupted chest compressions (100–120/min, metronome if possible). Interrupt compressions only for rhythm/pulse check and defibrillation.', '3.2A, 3.6'];
+const VENT = ['EMR/EMT', 'Ventilation: high-flow oxygen by non-rebreather for passive ventilation, OR BVM 1 breath every 10 compressions without interrupting compressions. Use BVM for non-cardiac causes (respiratory, trauma).', '3.2A'];
+const EPI = ['AEMT', 'Place IV/IO without interrupting compressions. After the first 2-minute cycle, consider epinephrine 1 mg IV (0.1 mg/mL); repeat every other cycle.', '3.2A'];
+const ROSC = ['Paramedic', 'If ROSC: Post Resuscitative Care. Maintain systolic BP over 90 mmHg or MAP 65 mmHg or higher; IV fluid in 250 mL boluses, not to exceed 2000 mL; consider vasopressors (push-dose epinephrine 10–20 mcg every 2 min, norepinephrine 1–80 mcg/min, or epinephrine 2–10 mcg/min). STEMI criteria: transport per STEMI agreement and call a STEMI Alert.', '3.4'];
+const DURATION = ['Paramedic', 'Consider resuscitation for up to 60 minutes from dispatch, including transport for potential reversible causes. Termination: Resuscitation Initiation & Termination 8.15.', '3.2A'];
+
+// Each step: [level, text, NH protocol number or 'AHA'].
 export const TREATMENT = {
   none: {
-    title: 'No rhythm-specific treatment',
+    title: 'No rhythm-specific protocol',
     steps: [
-      ['BLS', 'Assess the patient: airway, breathing, circulation, mental status, skin signs.'],
-      ['BLS', 'Treat the chief complaint. Reassess and watch for rhythm changes.'],
+      ['All', 'Routine Patient Care. Treat the chief complaint and reassess.', '1.0'],
+      ['All', 'Watch for rhythm changes; obtain a 12-lead if the patient has cardiac symptoms.', 'AHA'],
     ],
   },
   sinusTach: {
     title: 'Treat the cause, not the rate',
     steps: [
-      ['BLS', 'Look for the reason: pain, fever, hypovolemia or bleeding, hypoxia, anxiety, sepsis, toxins, PE.'],
-      ['BLS', 'Oxygen if hypoxemic. Control bleeding. Position for perfusion.'],
-      ['ALS', 'IV access; fluids if hypovolemic. Treat pain and fever per protocol.'],
-      ['ALS', 'Do not cardiovert or give rate-slowing drugs for sinus tachycardia: the body needs the rate.'],
+      ['All', 'Routine Patient Care. Look for the reason: pain, fever, hypovolemia or bleeding, hypoxia, anxiety, sepsis, toxins.', '3.5A'],
+      ['Paramedic', 'The tachycardia protocol’s electrical and drug treatment is for tachyarrhythmias other than sinus tachycardia. Treat underlying causes such as hypoxemia, dehydration and fever.', '3.5A'],
     ],
   },
   ectopy: {
     title: 'Usually observation',
     steps: [
-      ['BLS', 'Assess for chest pain, shortness of breath and hypoxia. Oxygen if hypoxemic.'],
-      ['ALS', 'Monitor and obtain a 12-lead if symptomatic. Look for runs, couplets or R-on-T.'],
-      ['ALS', 'Treat causes (hypoxia, ischemia, electrolyte problems, stimulants). Antiarrhythmics are not routine for isolated ectopy.'],
+      ['All', 'Routine Patient Care. Assess for chest pain, shortness of breath and hypoxia.', '1.0'],
+      ['Paramedic', 'Obtain a 12-lead if symptomatic. Look for runs, couplets or R-on-T. Treat causes; antiarrhythmics are not routine for isolated ectopy.', 'AHA'],
     ],
   },
   brady: {
-    title: 'AHA adult bradycardia algorithm',
+    title: 'Bradycardia – Adult (3.1A)',
     steps: [
-      ['BLS', 'Is the rate slow for this patient (usually under 50/min in a bradyarrhythmia)? Support airway and breathing; oxygen if hypoxemic.'],
-      ['ALS', 'Cardiac monitor, blood pressure, SpO2, IV access, 12-lead ECG. Look for causes (inferior MI, drugs, hyperkalemia, hypoxia).'],
-      ['ALS', `${UNSTABLE} If none of these: monitor and observe.`],
-      ['ALS', 'If unstable: atropine 1 mg IV bolus, repeat every 3–5 min, maximum 3 mg.'],
-      ['ALS', 'If atropine does not work: transcutaneous pacing, or a dopamine infusion (5–20 mcg/kg/min) or epinephrine infusion (2–10 mcg/min).'],
-      ['ALS', 'Consider expert consultation and transvenous pacing.'],
+      ['All', 'Routine Patient Care. Consider underlying causes (acute coronary syndrome, hyperkalemia, hypoxia, hypothermia). 12-lead ECG if available.', '3.1A'],
+      ['Paramedic', 'Symptomatic and hemodynamically unstable: consider atropine 1 mg IV every 3–5 minutes to a maximum of 3 mg.', '3.1A'],
+      ['Paramedic', 'Consider transcutaneous pacing, with procedural sedation before or during pacing if feasible (for example midazolam 2.5 mg IV, may repeat once in 5 minutes; other options in 3.1A).', '3.1A'],
+      ['Paramedic', 'Consider vasopressor: epinephrine 2–10 mcg/min via pump, OR norepinephrine 1–80 mcg/min via pump (start 1–15 mcg/min, titrate 2–5 mcg/min every 5 min). If an infusion is not immediately available: push-dose epinephrine 10–20 mcg (1–2 mL of 10 mcg/mL) every 2 minutes.', '3.1A'],
+      ['Paramedic', 'Contact Medical Control for expert consultation.', '3.1A'],
+      ['Paramedic', 'Other causes: hyperkalemia with ECG changes, see Hyperkalemia 2.9. Beta blocker overdose: glucagon up to 5 mg IV over 3–5 min. Calcium channel or beta blocker overdose: calcium gluconate 3 g IV/IO (preferred with a pulse) or calcium chloride 1 g IV/IO, each in 50–100 mL 0.9% NaCl over 5–10 min.', '3.1A'],
     ],
-    note: 'Atropine works on the SA and AV nodes. It is often ineffective when the block is below the AV node (Mobitz II, third-degree with a wide escape): move to pacing early.',
+    note: 'Atropine acts on the SA and AV nodes, so it often fails when the block is below the AV node (Mobitz II, third-degree with a wide escape). NH 3.1A lists pacing and vasopressors alongside atropine; do not delay them. Note that NH lists norepinephrine and epinephrine, not dopamine.',
   },
   ivr: {
-    title: 'Support the escape rhythm',
+    title: 'Support the escape rhythm (3.1A)',
     steps: [
-      ['BLS', 'Check for a pulse. No pulse: this is PEA; start CPR (cardiac arrest).'],
-      ['ALS', 'With a pulse and poor perfusion: follow the bradycardia algorithm; transcutaneous pacing is often needed.'],
-      ['ALS', 'Do not give amiodarone or lidocaine: suppressing the only pacemaker left can cause asystole.'],
-      ['ALS', 'Look for causes: hypoxia, hyperkalemia, acidosis, overdose, MI. After reperfusion, accelerated idioventricular rhythm is usually self-limited.'],
+      ['EMR/EMT', 'Check for a pulse. No pulse: this is PEA; start CPR (Cardiac Arrest 3.2A).', '3.2A'],
+      ['Paramedic', 'With a pulse and poor perfusion: follow Bradycardia 3.1A (atropine, transcutaneous pacing, vasopressors).', '3.1A'],
+      ['AHA', 'Do not give amiodarone or lidocaine: suppressing the only pacemaker left can cause asystole.', 'AHA'],
     ],
   },
   svt: {
-    title: 'AHA adult tachycardia algorithm: narrow, regular',
+    title: 'Tachycardia – Adult (3.5A): narrow, regular',
     steps: [
-      ['ALS', `Monitor, 12-lead, IV access. ${UNSTABLE}`],
-      ['ALS', 'Unstable: synchronized cardioversion (sedate if possible); energy per your monitor and protocol.'],
-      ['BLS', 'Stable: vagal maneuvers (modified Valsalva: strain, then lie flat with legs raised).'],
-      ['ALS', 'Adenosine 6 mg rapid IV push followed by a saline flush; if needed, 12 mg.'],
-      ['ALS', 'If still not converted: beta-blocker or calcium channel blocker per protocol, or expert consultation.'],
+      ['All', 'Routine Patient Care. 12-lead ECG if available.', '3.5A'],
+      ['Paramedic', 'Unstable: synchronized cardioversion, narrow regular rhythm 50–100 J biphasic or 200 J monophasic; escalate if no conversion (biphasic: follow manufacturer). Sedate before or during if feasible.', '3.5A'],
+      ['Paramedic', 'Stable, regular, over 150 bpm: vagal maneuvers.', '3.5A'],
+      ['Paramedic', 'Adenosine 6 mg rapid IVP; may repeat at 12 mg in 1–2 minutes if no conversion. May repeat the successful dose if the rhythm recurs. Give through a proximal (antecubital) vein with a rapid saline flush.', '3.5A'],
+      ['Paramedic', 'Or rate control: diltiazem 0.25 mg/kg IV (max 20 mg) over 2 min, may repeat in 15 min at 0.35 mg/kg (max 20 mg); OR metoprolol 5 mg IV over 2–5 min, repeat every 5 min to a max of 15 mg.', '3.5A'],
     ],
-    note: 'Record a strip while giving adenosine. A brief pause that reveals flutter waves means the rhythm was atrial flutter, not AVNRT.',
+    note: 'Record a strip while giving adenosine. A pause that reveals flutter waves means the rhythm was flutter, not SVT.',
   },
   afib: {
-    title: 'A-fib / flutter with rapid ventricular response',
+    title: 'Tachycardia – Adult (3.5A): narrow, irregular',
     steps: [
-      ['ALS', `Monitor, 12-lead, IV access. A controlled rate with good perfusion: monitor and transport. ${UNSTABLE}`],
-      ['ALS', 'Unstable from the rate: synchronized cardioversion. AHA 2025 favors a higher first shock for A-fib (200 J or more biphasic); follow your monitor and protocol.'],
-      ['ALS', 'Stable RVR: rate control with a calcium channel blocker (diltiazem) or beta-blocker per protocol.'],
-      ['ALS', 'Ask about onset (over 48 hours raises clot risk with conversion) and blood thinners (bleeding risk in trauma).'],
+      ['All', 'Routine Patient Care. 12-lead ECG if available.', '3.5A'],
+      ['Paramedic', 'Unstable: synchronized cardioversion, narrow irregular rhythm 120–200 J biphasic or 200 J monophasic; escalate if no conversion. Sedate if feasible.', '3.5A'],
+      ['Paramedic', 'Stable rate control: diltiazem 0.25 mg/kg IV (max 20 mg) over 2 min, may repeat in 15 min at 0.35 mg/kg (max 20 mg); consider infusion 5–15 mg/hour. OR metoprolol 5 mg IV over 2–5 min, repeat every 5 min to max 15 mg, aiming for a ventricular rate of 90–100.', '3.5A'],
+      ['Paramedic', 'Diltiazem, metoprolol, amiodarone and adenosine are contraindicated in A-fib with a history of, or suspected, WPW. Use lower doses in frail or debilitated patients.', '3.5A'],
     ],
-    note: 'If the complexes are wide, bizarre and very fast, think pre-excited A-fib (WPW): avoid AV-node blockers.',
+    note: 'Ask about onset and blood thinners; both matter for the receiving hospital and for trauma.',
   },
   wideTach: {
-    title: 'AHA adult tachycardia algorithm: wide complex',
+    title: 'Tachycardia – Adult (3.5A): wide complex',
     steps: [
-      ['BLS', 'Check for a pulse. No pulse: pulseless VT is cardiac arrest; defibrillate (shockable algorithm).'],
-      ['ALS', `Monitor, 12-lead if stable, IV access. ${UNSTABLE}`],
-      ['ALS', 'Unstable with a pulse: synchronized cardioversion (sedate if possible). If it will not synchronize, defibrillate.'],
-      ['ALS', 'Stable, regular and monomorphic: consider adenosine only if the rhythm is regular and monomorphic.'],
-      ['ALS', 'Antiarrhythmic: amiodarone 150 mg IV over 10 min, repeat if VT recurs; other agents per protocol and expert consultation.'],
+      ['EMR/EMT', 'Check for a pulse. No pulse: pulseless VT is cardiac arrest (3.2A).', '3.2A'],
+      ['Paramedic', 'Unstable: synchronized cardioversion, wide regular rhythm 100 J biphasic or monophasic. Sedate if feasible.', '3.5A'],
+      ['Paramedic', 'Stable, regular and monomorphic only: consider adenosine 6 mg rapid IV, may repeat at 12 mg after 1–2 minutes.', '3.5A'],
+      ['Paramedic', 'Amiodarone 150 mg IV in 50–100 mL 0.9% NaCl or D5W over 10 minutes; may repeat once in 10 minutes; if successful consider 1 mg/min infusion.', '3.5A'],
+      ['Paramedic', 'Lidocaine (second line) 1–1.5 mg/kg IV; may repeat once in 5 min to a max of 3 mg/kg; if successful consider 1–4 mg/min infusion.', '3.5A'],
     ],
-    note: 'Treat any wide-complex tachycardia as VT until proven otherwise.',
+    note: 'Wide complex tachycardia should be considered VT until proven otherwise (NH 3.5A pearl).',
   },
   torsades: {
-    title: 'Polymorphic VT / torsades de pointes',
+    title: 'Polymorphic VT / torsades (3.5A, 3.2A)',
     steps: [
-      ['BLS', 'Check for a pulse. No pulse: cardiac arrest, defibrillate.'],
-      ['ALS', 'Unstable with a pulse: unsynchronized shock (defibrillation energy). Polymorphic complexes cannot be reliably synchronized.'],
-      ['ALS', 'Magnesium sulfate 1–2 g IV (given faster in arrest, slower when a pulse is present).'],
-      ['ALS', 'Correct low potassium and magnesium; stop QT-prolonging drugs; expert consultation.'],
+      ['EMR/EMT', 'Check for a pulse. No pulse: cardiac arrest (3.2A), defibrillate.', '3.2A'],
+      ['Paramedic', 'Unstable with a pulse: 120–200 J biphasic or 360 J monophasic, using unsynchronized defibrillation doses if unable to sync.', '3.5A'],
+      ['Paramedic', 'Consider magnesium sulfate 1–2 g IV over 5 minutes.', '3.5A'],
+      ['AHA', 'Correct low potassium and magnesium; stop QT-prolonging drugs.', 'AHA'],
     ],
   },
   shockable: {
-    title: 'AHA adult cardiac arrest: VF / pulseless VT',
+    title: 'Cardiac Arrest – Adult (3.2A): VF / pulseless VT',
     steps: [
-      ['BLS', 'Start high-quality CPR: 100–120/min, at least 2 in deep, full recoil, minimal pauses, 30:2 without an advanced airway. Attach the AED/defibrillator.'],
-      ['BLS', 'Shock as soon as the rhythm is shockable (AED at BLS level).'],
-      ['ALS', 'Manual defibrillation: biphasic at the manufacturer’s dose (commonly 120–200 J; if unknown, use the maximum); monophasic 360 J. Resume CPR immediately for 2 minutes.'],
-      ['ALS', 'Vascular access: IV first, IO if IV fails (AHA 2025).'],
-      ['ALS', 'Epinephrine 1 mg IV/IO every 3–5 min, after initial shocks have failed.'],
-      ['ALS', 'Refractory VF/pVT: amiodarone 300 mg, then 150 mg; or lidocaine 1–1.5 mg/kg, then 0.5–0.75 mg/kg.'],
-      ['ALS', 'Advanced airway and waveform capnography; after an advanced airway, 1 breath every 6 s with continuous compressions. ETCO2 under 10 mmHg: improve CPR.'],
-      ['ALS', 'Treat reversible causes (H’s and T’s).'],
+      CPR,
+      VENT,
+      EPI,
+      ['Paramedic', 'Defibrillate as indicated at the device’s maximum energy. Compress while charging; resume compressions immediately after the shock.', '3.2A'],
+      ['Paramedic', 'Administer an anti-dysrhythmic per ACLS: amiodarone 300 mg IV/IO, then 150 mg; or lidocaine 1–1.5 mg/kg, then 0.5–0.75 mg/kg.', '3.2A · AHA'],
+      ['Paramedic', 'After 4 cycles (8 minutes): consider endotracheal intubation without interrupting compressions.', '3.2A'],
+      ['Paramedic', 'Refractory VF: Double Sequential Defibrillation (Procedure 6.2) if a second manual defibrillator is available; otherwise change pads from anterior-apex to anterior-posterior.', '3.2A'],
+      DURATION,
+      ROSC,
     ],
   },
   nonShockable: {
-    title: 'AHA adult cardiac arrest: asystole / PEA',
+    title: 'Cardiac Arrest – Adult (3.2A): asystole / PEA',
     steps: [
-      ['BLS', 'High-quality CPR. Attach the AED/monitor; do not shock asystole or PEA.'],
-      ['ALS', 'Vascular access (IV first, IO if IV fails). Epinephrine 1 mg IV/IO as soon as possible, then every 3–5 min.'],
-      ['ALS', 'Advanced airway and waveform capnography.'],
-      ['ALS', 'Search for and treat reversible causes: Hypovolemia, Hypoxia, Hydrogen ion (acidosis), Hypo/hyperkalemia, Hypothermia; Tension pneumothorax, Tamponade, Toxins, Thrombosis (pulmonary), Thrombosis (coronary).'],
-      ['ALS', 'Check the rhythm every 2 minutes. If it becomes VF/pVT, switch to the shockable pathway.'],
+      CPR,
+      VENT,
+      EPI,
+      ['Paramedic', 'Narrow complex PEA is often mechanical (hemorrhage/hypovolemia, tension pneumothorax, massive MI, PE): IV fluid boluses for hypovolemia; needle decompression for tension pneumothorax.', '3.2A'],
+      ['Paramedic', 'Wide complex PEA is often metabolic (hyperkalemia, sodium-channel blocker toxicity): calcium gluconate 3 g IV OR calcium chloride (10%) 1 g IV, AND sodium bicarbonate 1–2 mEq/kg IV.', '3.2A'],
+      ['Paramedic', 'Suspected pre-existing metabolic acidosis: consider sodium bicarbonate 1–2 mEq/kg IV.', '3.2A'],
+      DURATION,
+      ROSC,
     ],
-    note: 'Asystole: confirm in a second lead, check connections and gain before treating it as asystole.',
+    note: 'Asystole: confirm in a second lead and check connections and gain before treating it as asystole (AHA).',
   },
   bbb: {
     title: 'Look for the cause',
     steps: [
-      ['ALS', 'No treatment for the block itself. Obtain a 12-lead and compare with an old ECG if available.'],
-      ['ALS', 'New block with chest pain or shortness of breath: treat as possible ACS (or PE for RBBB) per protocol and notify the receiving hospital.'],
+      ['All', 'Routine Patient Care. 12-lead ECG; compare with an old ECG if available.', '1.0'],
+      ['Paramedic', 'New block with chest pain or shortness of breath: treat as possible ACS (Acute Coronary Syndrome 3.0) and notify the receiving hospital.', '3.0'],
     ],
   },
   wpw: {
-    title: 'Pre-excitation',
+    title: 'Pre-excitation (3.5A)',
     steps: [
-      ['ALS', 'In sinus rhythm: no field treatment. Document the delta wave and transport for evaluation if symptomatic.'],
-      ['ALS', 'Regular tachycardia with a narrow QRS (orthodromic AVRT): treat like SVT.'],
-      ['ALS', 'Irregular, wide, very fast (pre-excited A-fib): do not give adenosine, calcium channel blockers, beta-blockers or digoxin. Unstable: synchronized cardioversion. Stable: expert consultation.'],
+      ['All', 'In sinus rhythm: no field treatment. Document the delta wave.', 'AHA'],
+      ['Paramedic', 'Regular narrow tachycardia: treat per 3.5A narrow regular.', '3.5A'],
+      ['Paramedic', 'Diltiazem, metoprolol, amiodarone and adenosine are contraindicated in A-fib with a history of or suspected WPW. Unstable: synchronized cardioversion (narrow irregular 120–200 J biphasic). Stable: contact Medical Control.', '3.5A'],
     ],
   },
   paced: {
     title: 'Check the pacemaker',
     steps: [
-      ['BLS', 'Ask about the device and look for the card. Assess perfusion.'],
-      ['ALS', 'Check for failure to capture, failure to sense, and failure to pace.'],
-      ['ALS', 'Pacemaker failure with symptomatic bradycardia: follow the bradycardia algorithm, including transcutaneous pacing. Keep pads away from the device.'],
+      ['All', 'Ask about the device and look for the card. Assess perfusion.', '1.0'],
+      ['Paramedic', 'Look for failure to capture, failure to sense and failure to pace.', 'AHA'],
+      ['Paramedic', 'Pacemaker failure with unstable bradycardia: Bradycardia 3.1A, including transcutaneous pacing. Keep pads away from the device.', '3.1A'],
     ],
   },
   artifact: {
     title: 'Fix the signal, check the patient',
     steps: [
-      ['BLS', 'Look at the patient and check a pulse before acting on the monitor.'],
-      ['BLS', 'Check electrodes (skin prep, fresh pads, dry skin), cables and connections.'],
-      ['ALS', 'Change to another lead and increase gain as needed. Never defibrillate based on the monitor alone.'],
+      ['EMR/EMT', 'Look at the patient and check a pulse before acting on the monitor.', 'AHA'],
+      ['EMR/EMT', 'Check electrodes (skin prep, fresh pads, dry skin), cables and connections.', 'AHA'],
+      ['Paramedic', 'Change leads and adjust gain. Never defibrillate based on the monitor alone.', 'AHA'],
     ],
   },
 };
@@ -187,6 +198,7 @@ export const TREATMENT_FOR = {
   lbbb: 'bbb',
   wpw: 'wpw',
   paced: 'paced',
+  'pea-wide': 'nonShockable',
   'art-movement': 'artifact',
   'art-tremor': 'artifact',
   'art-60': 'artifact',
@@ -214,6 +226,7 @@ export const TWELVE = {
   torsades: 'A 12-lead before or after an episode shows the long QT (a corrected QT over about 0.50 s is high risk). The complexes twist at different moments in different leads because the vector rotates.',
   vf: 'No lead shows organized complexes. Never delay defibrillation for a 12-lead.',
   asystole: 'Confirm a flat line in at least two leads. A small wavefront running perpendicular to one lead can look flat in that lead only.',
+  'pea-wide': 'Wide, slow complexes with no pulse. After ROSC, a 12-lead looking for hyperkalemia (peaked T waves, wide QRS, flattened P waves) supports calcium and bicarbonate.',
   pea: 'The 12-lead is not part of arrest care. After return of pulses it looks for STEMI, hyperkalemia (peaked T waves, wide QRS) or right heart strain (PE).',
   rbbb: 'V1–V2: rsR′. I, aVL, V5–V6: wide, slurred S wave. QRS 0.12 s or more. The late right ventricle vector points right and forward: toward V1, away from V6.',
   lbbb: 'V1: deep, broad QS or rS. I, aVL, V5–V6: broad, notched R with no Q wave. ST segments and T waves point opposite the QRS. LBBB hides MI patterns; physicians use the Sgarbossa criteria.',
@@ -237,3 +250,47 @@ export const TWELVE_BASICS = [
   ['Axis in two leads', 'QRS up in I and up in aVF: normal. Up in I, down in aVF: left axis. Down in I, up in aVF: right axis. Down in both: northwest (extreme) axis, think VT.'],
   ['Chest electrode placement', 'V1: 4th intercostal space, right of the sternum. V2: 4th space, left of the sternum. V4: 5th space, midclavicular line. V3: halfway between V2 and V4. V5: level with V4, anterior axillary line. V6: level with V4, midaxillary line.'],
 ];
+
+// Treatment questions asked after the rhythm in Quiz mode. `a` is the correct
+// answer; `x` are distractors. `cite` names the NH protocol.
+export const TREAT_Q = {
+  brady: [
+    { q: 'Symptomatic bradycardia with hypotension and confusion. First medication in NH 3.1A?', a: 'Atropine 1 mg IV every 3–5 min, max 3 mg', x: ['Adenosine 6 mg rapid IV push', 'Amiodarone 150 mg IV over 10 min', 'Epinephrine 1 mg IV every other cycle'], cite: '3.1A' },
+    { q: 'Atropine failed and pacing is not yet working. Which vasopressor does NH 3.1A list?', a: 'Norepinephrine 1–80 mcg/min or epinephrine 2–10 mcg/min (push-dose epi 10–20 mcg if no pump)', x: ['Dopamine 5–20 mcg/kg/min', 'Diltiazem 0.25 mg/kg IV', 'Adenosine 12 mg rapid IV push'], cite: '3.1A' },
+  ],
+  ivr: [{ q: 'Idioventricular rhythm at 35 with a weak pulse and hypotension. What should you avoid?', a: 'Amiodarone or lidocaine (they can abolish the only pacemaker)', x: ['Transcutaneous pacing', 'Atropine per 3.1A', 'A 12-lead ECG'], cite: '3.1A / AHA' }],
+  svt: [
+    { q: 'Stable, regular narrow tachycardia at 180. Vagal maneuvers failed. Next step in NH 3.5A?', a: 'Adenosine 6 mg rapid IVP, then 12 mg in 1–2 min if needed', x: ['Synchronized cardioversion at 360 J', 'Atropine 1 mg IV', 'Amiodarone 300 mg IV push'], cite: '3.5A' },
+    { q: 'Unstable narrow regular tachycardia. Starting synchronized energy in NH 3.5A?', a: '50–100 J biphasic (200 J monophasic)', x: ['Device maximum, unsynchronized', '120–200 J biphasic', '2 J/kg'], cite: '3.5A' },
+  ],
+  afib: [
+    { q: 'Stable A-fib with RVR, no WPW history. A rate-control option in NH 3.5A?', a: 'Diltiazem 0.25 mg/kg IV over 2 min (max 20 mg)', x: ['Adenosine 12 mg rapid IV push', 'Defibrillate at maximum energy', 'Magnesium sulfate 2 g IV'], cite: '3.5A' },
+    { q: 'Unstable A-fib with RVR. Starting synchronized energy in NH 3.5A?', a: '120–200 J biphasic (200 J monophasic)', x: ['50–100 J biphasic', '100 J biphasic or monophasic', 'Device maximum, unsynchronized'], cite: '3.5A' },
+  ],
+  wideTach: [
+    { q: 'Stable monomorphic VT with a pulse. First-line antiarrhythmic in NH 3.5A?', a: 'Amiodarone 150 mg IV over 10 min, may repeat once', x: ['Amiodarone 300 mg rapid IV push', 'Diltiazem 0.25 mg/kg IV', 'Atropine 1 mg IV'], cite: '3.5A' },
+    { q: 'Monomorphic VT becomes unstable but keeps a pulse. NH 3.5A energy?', a: 'Synchronized 100 J (wide regular)', x: ['50 J synchronized', 'No shock; give adenosine', 'Device maximum, unsynchronized'], cite: '3.5A' },
+  ],
+  torsades: [{ q: 'Torsades de pointes with a pulse. Medication in NH 3.5A?', a: 'Magnesium sulfate 1–2 g IV over 5 min', x: ['Adenosine 6 mg rapid IV push', 'Metoprolol 5 mg IV', 'Diltiazem 0.25 mg/kg IV'], cite: '3.5A' }],
+  shockable: [
+    { q: 'VF on the monitor, adult. At what energy does NH 3.2A say to defibrillate?', a: 'The device’s maximum energy', x: ['50 J, then escalate', '2 J/kg', 'Synchronized 100 J'], cite: '3.2A' },
+    { q: 'VF persists after several shocks and a second manual defibrillator is on scene. NH 3.2A option?', a: 'Double Sequential Defibrillation (Procedure 6.2)', x: ['Stop CPR and transport', 'Synchronized cardioversion', 'Atropine 1 mg IV'], cite: '3.2A' },
+  ],
+  nonShockable: [
+    { q: 'When does NH 3.2A have the AEMT first consider epinephrine in adult arrest?', a: 'After the first 2-minute cycle, then every other cycle', x: ['Before starting CPR', 'Only after 3 shocks', 'Every cycle (every 2 minutes)'], cite: '3.2A' },
+    { q: 'Wide complex PEA in a dialysis patient. What does NH 3.2A suggest?', a: 'Calcium (gluconate 3 g or chloride 1 g) and sodium bicarbonate 1–2 mEq/kg', x: ['Defibrillate at maximum energy', 'Atropine 1 mg IV', 'Adenosine 6 mg rapid IV push'], cite: '3.2A' },
+    { q: 'Narrow complex PEA after a large GI bleed. Most likely cause group in NH 3.2A?', a: 'Mechanical: hypovolemia, so give IV fluid boluses', x: ['Metabolic: give calcium and bicarbonate', 'Electrical: defibrillate', 'Vagal: give atropine'], cite: '3.2A' },
+  ],
+  sinusTach: [{ q: 'Sinus tachycardia at 125 from a GI bleed. Best treatment?', a: 'Treat the cause (bleeding control, fluids)', x: ['Adenosine 6 mg rapid IV push', 'Synchronized cardioversion', 'Diltiazem 0.25 mg/kg IV'], cite: '3.5A' }],
+  ectopy: [{ q: 'Occasional premature beats (PACs or unifocal PVCs), patient comfortable and well perfused. Treatment?', a: 'Assess and treat causes; no antiarrhythmic', x: ['Amiodarone 150 mg IV', 'Lidocaine 1.5 mg/kg IV', 'Synchronized cardioversion'], cite: 'AHA' }],
+  wpw: [{ q: 'Irregular, wide, very fast rhythm in a patient with known WPW. Which drugs does NH 3.5A call contraindicated?', a: 'Diltiazem, metoprolol, amiodarone and adenosine', x: ['None of them', 'Only lidocaine', 'Only magnesium'], cite: '3.5A' }],
+  paced: [{ q: 'Pacer spikes with no QRS after them, pulse 30, BP 70/40. NH-supported treatment?', a: 'Transcutaneous pacing (Bradycardia 3.1A), sedation if feasible', x: ['Adenosine 6 mg rapid IV push', 'Diltiazem 0.25 mg/kg IV', 'Defibrillate at maximum energy'], cite: '3.1A' }],
+  artifact: [{ q: 'The monitor shows VF but the patient is talking to you. First action?', a: 'Check the patient and the leads before treating the monitor', x: ['Defibrillate at maximum energy', 'Start CPR', 'Give amiodarone 300 mg'], cite: 'AHA' }],
+  bbb: [{ q: 'New LBBB in a patient with crushing chest pain. What does the field plan focus on?', a: 'Treat as possible ACS (3.0), 12-lead, notify the hospital', x: ['Transcutaneous pacing', 'Adenosine 6 mg rapid IV push', 'Synchronized cardioversion'], cite: '3.0' }],
+};
+
+export function treatQuestionFor(rhythmId) {
+  const list = TREAT_Q[TREATMENT_FOR[rhythmId]];
+  if (!list) return null;
+  return list[Math.floor(Math.random() * list.length)];
+}

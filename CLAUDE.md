@@ -8,7 +8,8 @@
 
 ## Map
 - `src/js/rhythms.js`: rhythm content, generators, `expect` ranges. Start here.
-- `src/js/clinical.js`: 12-lead findings and treatment (AHA; NH not verified, see ADR 0004).
+- `src/js/clinical.js`: 12-lead findings, NH v9.3 treatment, treatment quiz questions (ADR 0004).
+- `src/js/scenarios.js`: scenario cases; each answer cites an NH protocol.
 - `src/js/engine.js`: beat builders (acts, chambers, comps) + mechanics (pulse per beat).
 - `src/js/ecg.js`: vector model, lead axes, shapes, artifacts. All leads come from here.
 - `src/js/heart3d.js`: anatomy coordinates, 3D rendering, contraction, vector arrow.
@@ -17,7 +18,7 @@
 
 ## Rules
 - Medical content: plain English, AHA/NREMT criteria. Change a generator's `criteria` text and `expect` ranges together.
-- Never add NH protocol doses from memory; cite protocol number and page (ADR 0004).
+- Never add NH protocol doses from memory; copy from the protocol text and cite the protocol number (ADR 0004).
 - No runtime CDN or network calls; everything ships inside the built file. `crew.js` uses `window.claude` only when present.
 - Run `npm run check && npm run build` before committing; commit `dist/`.
 - Decisions: `docs/adr/`. Docs use Diataxis folders under `docs/`.

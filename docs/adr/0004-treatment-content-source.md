@@ -1,20 +1,22 @@
-# ADR 0004: Treatment content follows AHA ACLS until NH protocols are verified
+# ADR 0004: Treatment content follows NH Patient Care Protocols v9.3
 
-- Status: Accepted (revisit when the NH PDF is readable)
+- Status: Accepted (revised 2026-09-29)
 - Date: 2026-09-29
 
 ## Context
 
-The user asked for treatment that lines up with the New Hampshire Patient Care Protocols. The current version is v9.3 (Bulletin #96, released November 2025; clarifications only, no cardiac changes since v9.0, effective 6/1/2024). The development environment's network policy blocks the NH hosting domains (`mm.nh.gov`, `www.fstems.dos.nh.gov`, `www.nh.gov`), so the protocol text could not be read. Writing NH doses from memory risks teaching the wrong dose.
+The user asked for treatment that lines up with the New Hampshire Patient Care Protocols. The current version is v9.3 (Bulletin #96, November 2025; no cardiac changes since v9.0, effective 6/1/2024). The development environment's network policy blocks the NH hosting domains, so the first version used AHA ACLS content with a "not yet verified" notice. The user then supplied the v9.3 protocol document directly.
 
 ## Decision
 
-- Treatment steps in `src/js/clinical.js` follow the AHA adult ACLS algorithms (bradycardia, tachycardia, cardiac arrest), which the user's paramedic course (AHA and NREMT) teaches.
-- Each step is tagged BLS or ALS using the National EMS Scope of Practice Model, not NH Appendix 4.
-- Every treatment panel shows a visible notice: "NH Patient Care Protocols v9.3: not yet checked against the NH protocol text."
-- `NH_STATUS.verified` stays `false` until each step has been compared with the NH PDF and given a protocol number and page.
+- Adult treatment steps in `src/js/clinical.js` come from NH protocols 1.0 Routine Patient Care, 3.0 Acute Coronary Syndrome, 3.1A Bradycardia, 3.2A Cardiac Arrest, 3.4 Post Resuscitative Care, 3.5A Tachycardia and 3.6 Team Focused CPR. Doses and energies are copied from the protocol text.
+- Every step carries its protocol number. Page numbers are not cited because the source was a Word document without fixed pagination; the protocol number is the stable reference.
+- Levels follow the NH standing-order headings (EMR/EMT, AEMT, Paramedic; "All" for Routine Patient Care).
+- Where NH says "follow applicable AHA ACLS guidelines" without detail (for example the arrest anti-dysrhythmic dose), the step is tagged AHA.
+- Quiz treatment questions and scenarios use the same content and citations. `npm run check` verifies every rhythm maps to a treatment, every step has a citation, and every question and scenario step has exactly one correct answer.
 
 ## Consequences
 
-- No NH-specific dose appears in the app until it is sourced.
-- To finish: allow the NH domains in the environment's network settings, or put the PDF in the repo or Google Drive, then compare and cite each step.
+- When NH publishes a new version, update `clinical.js` and `scenarios.js` from the new text and bump `NH_STATUS.version`.
+- Sedation options, pediatric doses and full pearls are summarized, not reproduced; the panel points to the protocol book.
+- The original PDF/Word file is not committed (large, and owned by the State).
