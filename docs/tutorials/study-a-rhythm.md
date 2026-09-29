@@ -10,5 +10,8 @@ You will learn second-degree AV block type I (Wenckebach) by watching it happen,
 6. Press **Pause**. Drag across the strip from one P wave to the next. The calipers read 0.75 s: the P waves are perfectly regular even though the QRS complexes are not.
 7. Open the **Rhythm** tab and read "What the conduction system is doing". Say it back in your own words.
 8. Compare with **2° type II**: same regular P waves, but the PR never changes and the block happens lower, in the His bundle.
+9. Switch to **Compare** and pick **AV blocks**. Read the AV tier of the timeline from top to bottom: the slope lengthens in first-degree, lengthens then stops in type I, stops without warning in type II, and never crosses in third-degree.
+10. Switch to **12-lead** and select **2° type II**. Click lead V1 and read the "Lead V1" box: what view of the heart does it give?
+11. Switch to **Quiz**. Answer ten questions. Your misses come back more often; the **Your weakest rhythms** list shows what to study next.
 
-Repeat steps 3 to 7 for any rhythm. The five-question method is in the **Reading a strip** tab.
+Repeat for any rhythm. The five-question method is in the **Reading** tab; the **Treatment** tab shows the AHA algorithm steps (NH protocol check pending).

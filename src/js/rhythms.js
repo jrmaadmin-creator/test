@@ -18,7 +18,7 @@ import {
   ventricles,
   ventricularFocus,
 } from './engine.js';
-import { comp, fibWaves, flutterWave, vfWave, asystoleLine } from './ecg.js';
+import { comp, DIR, SHAPES, fibVector, flutterVector, vfVector, asystoleVector, norm, neg } from './ecg.js';
 
 export const GROUPS = [
   'Sinus',
@@ -26,8 +26,10 @@ export const GROUPS = [
   'Junctional',
   'AV blocks',
   'Ventricular',
+  'Cardiac arrest',
   'Bundle branch & pre-excitation',
   'Paced',
+  'Monitor artifacts',
 ];
 
 const FILTER = { at: 0.55, kind: 'filter' };
@@ -230,7 +232,8 @@ export const RHYTHMS = [
     tip: 'Sawtooth baseline. Count flutter waves per QRS to get the ratio.',
     show: ['flutterLoop'],
     loop: { seg: 'flutterLoop', period: 0.2 },
-    baseline: (t) => flutterWave(t, 0.2, 0.35, 0.26),
+    baseline: (t) => flutterVector(t, 0.2, 0.35),
+    noKick: true,
     expect: { vRate: [73, 77], aRate: [290, 310], qrs: [0, 0.11], regular: true },
     next(b, s) {
       const t0 = s.t;
@@ -279,7 +282,8 @@ export const RHYTHMS = [
       'Loss of the atrial “kick” reduces cardiac output (the kick supplies roughly 20–30% of ventricular filling). Blood pools in the quivering atria and can clot, raising stroke risk. Watch for RVR, and ask about blood thinners, which matter in trauma and bleeding.',
     tip: 'Irregularly irregular with no P waves is atrial fibrillation until proven otherwise.',
     ambient: { chaos: 'atria' },
-    baseline: fibWaves,
+    baseline: fibVector,
+    noKick: true,
     seed: 23,
     expect: { vRate: [75, 100], qrs: [0, 0.11], regular: false },
     next(b, s) {
@@ -321,6 +325,7 @@ export const RHYTHMS = [
     tip: 'Regular, narrow, too fast to see P waves, and does not drift up and down the way sinus tachycardia does.',
     show: ['avnrtLoop'],
     loop: { seg: 'avnrtLoop', period: 1 / 3 },
+    noKick: true,
     expect: { vRate: [176, 184], qrs: [0, 0.11], regular: true },
     next(b, s) {
       const q = s.t;
@@ -334,7 +339,7 @@ export const RHYTHMS = [
       for (const seg of ['intAnt', 'intMid', 'intPost']) act(b, seg, q - 0.03, q + 0.02, { rev: true, kind: 'ectopic' });
       chamber(b, 'RA', q - 0.02, q + 0.06, q + 0.16, q + 0.26);
       chamber(b, 'LA', q, q + 0.08, q + 0.18, q + 0.28);
-      addComps(b, [comp(q + 0.075, -0.05, 0.012)]);
+      addComps(b, [comp(q + 0.075, 0.06, 0.012, 0.012, DIR.pRetro)]);
       caption(b, q + 0.02, 'The same lap travels back up into the atria. The P wave is buried in the QRS.');
       s.t += rr;
     },
@@ -366,6 +371,7 @@ export const RHYTHMS = [
     significance:
       'A rate of 40–60 may not maintain perfusion, and the atria may contract at the wrong moment, losing the atrial kick. Assess for signs of poor perfusion.',
     tip: 'Narrow QRS, inverted or missing P wave, rate 40–60.',
+    noKick: true,
     expect: { vRate: [48, 52], pr: [0.06, 0.119], qrs: [0, 0.11], regular: true },
     next(b, s) {
       const t = s.t;
@@ -522,6 +528,7 @@ export const RHYTHMS = [
     significance:
       'Often symptomatic and unstable. A wide ventricular escape is slow and unreliable. Expect to pace.',
     tip: '“If P’s and Q’s don’t agree, then you have a third degree.” Map the P waves with calipers: they keep a steady beat straight through everything.',
+    noKick: true,
     init(s) {
       s.ta = 0.35;
       s.tv = 0.9;
@@ -714,9 +721,12 @@ export const RHYTHMS = [
     next(b, s) {
       const q = s.t;
       const rr = 0.26 + (s.rng() - 0.5) * 0.09;
-      const c = Math.cos((2 * Math.PI * q) / 2.6);
-      const amp = Math.sign(c || 1) * (0.15 + 0.85 * Math.abs(c));
-      addComps(b, [comp(q + 0.065, amp, 0.042, 0.045), comp(q + 0.175, -0.55 * amp, 0.045)]);
+      // The wavefront's direction rotates, so each lead sees the complexes grow,
+      // shrink through zero and flip: the "twisting of the points".
+      const ph = (2 * Math.PI * q) / 2.6;
+      const v = norm(Math.cos(ph), Math.sin(ph), 0.3 * Math.sin(ph / 2));
+      addComps(b, [comp(q + 0.065, 1.05, 0.042, 0.045, v), comp(q + 0.175, 0.55, 0.045, 0.045, neg(v))], true);
+      b.wide = true;
       chamber(b, 'LV', q, q + 0.1, q + 0.12, q + 0.24);
       chamber(b, 'RV', q + 0.02, q + 0.12, q + 0.14, q + 0.25);
       b.qrs = q;
@@ -727,7 +737,8 @@ export const RHYTHMS = [
     id: 'vf',
     name: 'Ventricular fibrillation',
     short: 'V-fib',
-    group: 'Ventricular',
+    group: 'Cardiac arrest',
+    pulseless: true,
     summary: 'Chaotic, disorganized electrical activity in the ventricles. No complexes, no pumping, no pulse.',
     criteria: {
       rate: 'None; not countable',
@@ -750,7 +761,7 @@ export const RHYTHMS = [
     tip: 'Confirm the patient is pulseless. A loose lead or patient movement can mimic VF.',
     ambient: { chaos: 'ventricles', chaosRate: 160 },
     ambientCaption: 'Chaotic impulses fire across the ventricles. No organized depolarization, no cardiac output.',
-    baseline: vfWave,
+    baseline: vfVector,
     expect: { vRate: [0, 0] },
     next(b, s) {
       s.t += 1;
@@ -760,7 +771,8 @@ export const RHYTHMS = [
     id: 'asystole',
     name: 'Asystole',
     short: 'Asystole',
-    group: 'Ventricular',
+    group: 'Cardiac arrest',
+    pulseless: true,
     summary: 'No electrical activity. A nearly flat line.',
     criteria: {
       rate: 'None',
@@ -781,12 +793,49 @@ export const RHYTHMS = [
     significance:
       'Cardiac arrest, not shockable. Before calling it asystole, confirm in a second lead, check that the leads are connected, and turn up the gain: fine VF can look flat.',
     tip: 'Flatline protocol: check leads, gain, and a second lead.',
-    baseline: asystoleLine,
+    baseline: asystoleVector,
     noNoise: true,
     ambientCaption: 'No electrical activity anywhere in the heart.',
     expect: { vRate: [0, 0] },
     next(b, s) {
       s.t += 1;
+    },
+  },
+
+  {
+    id: 'pea',
+    name: 'Pulseless electrical activity (PEA)',
+    short: 'PEA',
+    group: 'Cardiac arrest',
+    pulseless: true,
+    summary: 'The monitor shows an organized rhythm, but the heart produces no pulse. Electrical activity without effective pumping.',
+    criteria: {
+      rate: 'Any (shown: sinus at 110)',
+      rhythm: 'Any organized rhythm other than VF, VT or asystole',
+      p: 'May be present and normal',
+      pr: 'May be normal',
+      qrs: 'Narrow or wide (shown: narrow). Pulse: none',
+    },
+    mechanism:
+      'The conduction system still fires in order, so the monitor looks organized. The problem is mechanical: either the heart muscle cannot contract (severe acidosis, hyperkalemia, massive MI, toxins) or the heart cannot fill or empty (hypovolemia, tension pneumothorax, cardiac tamponade, pulmonary embolism). Electricity without a pulse is cardiac arrest.',
+    watch: 'The conduction system lights up on schedule and the strip looks almost normal, but the chambers do not squeeze and the pulse line stays flat.',
+    causes: [
+      'Hypovolemia, hypoxia, hydrogen ion (acidosis)',
+      'Hypo- or hyperkalemia, hypothermia',
+      'Tension pneumothorax, cardiac tamponade',
+      'Toxins, thrombosis (pulmonary embolism or coronary)',
+    ],
+    significance:
+      'Cardiac arrest, not shockable. Start CPR. Survival depends on finding and fixing the cause. A narrow, fast PEA suggests a mechanical cause (hypovolemia, tamponade, tension pneumothorax, PE); a slow, wide PEA suggests a metabolic or muscle cause (hyperkalemia, acidosis, massive MI, toxins).',
+    tip: 'A rhythm that should have a pulse but does not is PEA. Treat the patient, not the monitor.',
+    expect: { vRate: [108, 112], pr: [0.12, 0.2], qrs: [0, 0.11], regular: true },
+    next(b, s) {
+      const rr = 60 / 110;
+      sinusBeat(b, s.t, 0.14, {
+        rr,
+        qrsCaption: 'The ventricles depolarize normally, but the muscle produces no pulse.',
+      });
+      s.t += rr;
     },
   },
 
@@ -819,7 +868,7 @@ export const RHYTHMS = [
     tip: 'Turn-signal rule: last deflection of the QRS in V1 points up, so the right “turn signal” is on.',
     expect: { vRate: [73, 77], pr: [0.12, 0.2], qrs: [0.12, 0.14], regular: true },
     next(b, s) {
-      sinusBeat(b, s.t, 0.16, { rr: 0.8, lead: 'V1', shape: 'rbbb', rbbb: true });
+      sinusBeat(b, s.t, 0.16, { rr: 0.8, shape: 'rbbb', rbbb: true });
       s.t += 0.8;
     },
   },
@@ -850,7 +899,7 @@ export const RHYTHMS = [
     tip: 'Turn-signal rule: last deflection of the QRS in V1 points down, so the left “turn signal” is on.',
     expect: { vRate: [73, 77], pr: [0.12, 0.2], qrs: [0.14, 0.16], regular: true },
     next(b, s) {
-      sinusBeat(b, s.t, 0.16, { rr: 0.8, lead: 'V1', shape: 'lbbb', lbbb: true, tAmp: 0.32 });
+      sinusBeat(b, s.t, 0.16, { rr: 0.8, shape: 'lbbb', lbbb: true });
       s.t += 0.8;
     },
   },
@@ -895,9 +944,8 @@ export const RHYTHMS = [
       chamber(b, 'RV', q + 0.055, q + 0.12, q + 0.2, q + 0.35);
       caption(b, q, 'Delta wave: early, slow activation through muscle. The normal impulse then fuses in.');
       const qt = 0.36;
-      const shape = { comps: [comp(q + 0.04, 0.32, 0.03, 0.012), comp(q + 0.07, 0.95, 0.011, 0.01), comp(q + 0.097, -0.2, 0.009)] };
-      addComps(b, shape.comps);
-      addComps(b, [comp(q + qt - 0.095, 0.18, 0.06, 0.038)]);
+      addComps(b, SHAPES.wpw(q).comps, true);
+      addComps(b, SHAPES.T(q, qt, 0.25));
       label(b, q + 0.02, 'δ', 'ectopic');
       label(b, q + 0.06, 'QRS', 'normal');
       label(b, q + qt - 0.095, 'T', 'normal');
@@ -939,10 +987,89 @@ export const RHYTHMS = [
         first: 'RV',
         rr: 60 / 70,
         shape: 'paced',
+        amp: 1.1,
         tAmp: 0.35,
         caption: 'The pacemaker fires (spike). The impulse spreads from the RV apex through muscle: wide QRS.',
       });
       s.t += 60 / 70;
+    },
+  },
+
+  // ------------------------------------------------------ Monitor artifacts
+  {
+    id: 'art-movement',
+    name: 'Artifact: patient movement',
+    short: 'Movement',
+    group: 'Monitor artifacts',
+    artifact: 'movement',
+    summary: 'Large, irregular swings from the patient moving. In bursts it can look like VF or VT.',
+    criteria: { rate: 'Underlying rhythm (shown: sinus at 80)', rhythm: 'Regular underneath the bursts', p: 'Visible between bursts', pr: '0.12–0.20 s', qrs: 'Normal complexes keep marching through the artifact on time' },
+    mechanism: 'Nothing is wrong with the heart. Muscle activity and electrode motion add electrical signals the monitor cannot tell apart from the heart’s.',
+    watch: 'The 3D heart keeps firing normal sinus beats the whole time. Only the strip changes.',
+    causes: ['Seizure, agitation, shivering hard', 'CPR, moving the patient, rough road during transport', 'Swinging or tugged cables'],
+    significance: 'Look at the patient before acting on the monitor: a talking patient with a pulse is not in VF. Never shock based on the monitor alone.',
+    tip: 'Look for normal QRS complexes marching through the mess at the old rate.',
+    expect: { vRate: [77, 83], pr: [0.12, 0.2], qrs: [0, 0.11], regular: true },
+    next(b, s) {
+      sinusBeat(b, s.t, 0.16, { rr: 0.75, quiet: true });
+      s.t += 0.75;
+    },
+  },
+  {
+    id: 'art-tremor',
+    name: 'Artifact: muscle tremor',
+    short: 'Tremor',
+    group: 'Monitor artifacts',
+    artifact: 'tremor',
+    summary: 'Fine, fast, irregular fuzz from shivering or tremor. It can look like A-fib.',
+    criteria: { rate: 'Underlying rhythm (shown: sinus at 88)', rhythm: 'Regular', p: 'Hard to see under the fuzz', pr: '0.12–0.20 s where visible', qrs: 'Normal' },
+    mechanism: 'Skeletal muscle is electrically active too. Shivering or tremor adds small, rapid, irregular signals to every lead that crosses the moving muscle.',
+    watch: 'The heart is in normal sinus rhythm. The fuzz comes from the arms and chest muscles, not the heart.',
+    causes: ['Cold or shivering', 'Anxiety, pain', 'Parkinson disease or other tremor', 'Patient tensing or holding the arms up'],
+    significance: 'A regular R-R interval with a fuzzy baseline is sinus rhythm with tremor, not A-fib. Warm and reassure the patient, support the arms, and move limb electrodes onto the torso.',
+    tip: 'A-fib is irregularly irregular. Tremor usually rides on a regular rhythm.',
+    expect: { vRate: [85, 91], pr: [0.12, 0.2], qrs: [0, 0.11], regular: true },
+    next(b, s) {
+      sinusBeat(b, s.t, 0.16, { rr: 0.68, quiet: true });
+      s.t += 0.68;
+    },
+  },
+  {
+    id: 'art-60',
+    name: 'Artifact: 60-cycle interference',
+    short: '60-cycle',
+    group: 'Monitor artifacts',
+    artifact: 'ac60',
+    summary: 'A thick, evenly spaced buzz on the baseline from nearby electrical equipment.',
+    criteria: { rate: 'Underlying rhythm (shown: sinus at 75)', rhythm: 'Regular', p: 'Blurred by the interference', pr: 'Hard to measure', qrs: 'Normal' },
+    mechanism: 'Household and vehicle power alternates 60 times a second. Poor electrode contact or nearby equipment lets that current leak into the tracing as a regular, fine oscillation.',
+    watch: 'The heart is in normal sinus rhythm. The interference is added outside the body.',
+    causes: ['Dried gel or poor skin contact', 'Cables near power cords, electric beds or blankets', 'Ungrounded equipment, inverters'],
+    significance: 'It hides P waves and small details, so fix the signal before interpreting. Replace electrodes, move cables away from power sources, and check the monitor filter setting.',
+    tip: 'Uniform, evenly spaced fuzz is electrical. Irregular fuzz is muscle.',
+    expect: { vRate: [72, 78], pr: [0.12, 0.2], qrs: [0, 0.11], regular: true },
+    next(b, s) {
+      sinusBeat(b, s.t, 0.16, { rr: 0.8, quiet: true });
+      s.t += 0.8;
+    },
+  },
+  {
+    id: 'art-loose',
+    name: 'Artifact: loose lead',
+    short: 'Loose lead',
+    group: 'Monitor artifacts',
+    artifact: 'looseLL',
+    summary: 'An electrode losing contact makes the tracing drop out. On one lead it can look like asystole or a long pause.',
+    criteria: { rate: 'Underlying rhythm (shown: sinus at 75)', rhythm: 'Regular, with dropouts in the affected leads', p: 'Normal where the signal is present', pr: '0.12–0.20 s', qrs: 'Normal; missing during dropouts' },
+    mechanism: 'Each lead is built from specific electrodes. When the left-leg electrode loses contact, every lead that uses it (II, III, aVF, and partly aVR, aVL and the chest leads) loses the heart’s signal. Lead I uses only the two arm electrodes, so it keeps showing the rhythm.',
+    watch: 'The heart never stops. Switch the strip to lead I and the rhythm is still there.',
+    causes: ['Sweat, hair, dried gel', 'Patient movement, cable tension', 'Electrode placed over bone or on broken skin'],
+    significance: 'A flat line on the monitor: check the patient first, then the leads, gain, and a second lead. This is why the asystole approach teaches confirming in two leads.',
+    tip: 'Flat in one lead but not another is a lead problem, not asystole.',
+    expect: { vRate: [72, 78], pr: [0.12, 0.2], qrs: [0, 0.11], regular: true },
+    next(b, s) {
+      sinusBeat(b, s.t, 0.16, { rr: 0.8, quiet: true });
+      s.t += 0.8;
     },
   },
 ];

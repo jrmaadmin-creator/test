@@ -3,7 +3,7 @@
 // chambers depolarize (chambers), and the ECG wave components it produces
 // (comps). Because both views read the same record, they cannot drift apart.
 
-import { SHAPES, qtFor } from './ecg.js';
+import { SHAPES, qtFor, DIR, FOCUS_DIR, neg } from './ecg.js';
 
 // Seeded RNG so a rhythm always generates the same strip.
 export function mulberry32(seed) {
@@ -62,8 +62,9 @@ export function interval(b, kind, t0, t1) {
 export function caption(b, t, text) {
   b.captions.push({ t, text });
 }
-export function addComps(b, comps) {
+export function addComps(b, comps, isQrs = false) {
   for (const c of comps) {
+    if (isQrs) c.qrs = true;
     b.comps.push(c);
     span(b, c.t - 5 * c.s1, c.t + 5 * c.s2);
   }
@@ -77,7 +78,6 @@ export function spike(b, t) {
 
 // SA node fires at t; impulse crosses the atria. Returns arrival time at the AV node.
 export function sinusAtria(b, t, o = {}) {
-  const lead = o.lead || 'II';
   act(b, 'sa', t, t + 0.025);
   act(b, 'bachmann', t + 0.01, t + 0.07);
   act(b, 'intAnt', t + 0.01, t + 0.045);
@@ -86,7 +86,7 @@ export function sinusAtria(b, t, o = {}) {
   chamber(b, 'RA', t, t + 0.07, t + 0.2, t + 0.32);
   chamber(b, 'LA', t + 0.03, t + 0.1, t + 0.23, t + 0.35);
   ripple(b, 'sa', t, t + 0.14);
-  addComps(b, SHAPES[lead].P(t));
+  addComps(b, SHAPES.P(t));
   label(b, t + 0.05, 'P', o.pKind || 'normal');
   if (o.caption !== false) {
     caption(b, t, o.caption || 'SA node fires. The impulse spreads across both atria, drawing the P wave.');
@@ -101,7 +101,7 @@ export function ectopicAtria(b, t, o = {}) {
   chamber(b, 'RA', t, t + 0.08, t + 0.2, t + 0.32);
   chamber(b, 'LA', t + 0.035, t + 0.11, t + 0.23, t + 0.35);
   act(b, 'intPost', t + 0.02, t + 0.06, { kind: 'ectopic' });
-  addComps(b, SHAPES.II.Pectopic(t));
+  addComps(b, SHAPES.Pectopic(t));
   label(b, t + 0.045, "P'", 'ectopic');
   caption(b, t, o.caption || 'An irritable atrial cell fires before the SA node. Its P wave looks different.');
   b.p.push(t);
@@ -115,7 +115,7 @@ export function junctionalFire(b, t) {
   for (const s of ['intAnt', 'intMid', 'intPost']) act(b, s, t + 0.005, t + 0.05, { rev: true, kind: 'ectopic' });
   chamber(b, 'RA', t + 0.01, t + 0.08, t + 0.22, t + 0.34);
   chamber(b, 'LA', t + 0.03, t + 0.1, t + 0.24, t + 0.36);
-  addComps(b, SHAPES.II.Pinv(t));
+  addComps(b, SHAPES.Pinv(t));
   label(b, t + 0.045, 'P', 'ectopic');
   caption(b, t, 'The AV junction fires on its own. The impulse travels backward into the atria, so the P wave is inverted.');
   b.p.push(t);
@@ -136,10 +136,9 @@ export function avNode(b, tIn, tOut, o = {}) {
 
 // His bundle -> bundle branches -> Purkinje -> ventricles, QRS onset at q.
 export function ventricles(b, q, o = {}) {
-  const lead = o.lead || 'II';
   const kind = o.kind || 'normal';
   const rr = o.rr || 0.8;
-  const shape = SHAPES[lead][o.shape || 'narrow'](q);
+  const shape = SHAPES[o.shape || 'narrow'](q);
   const qt = qtFor(rr, shape.width > 0.11);
 
   if (o.hisBlock) {
@@ -186,8 +185,11 @@ export function ventricles(b, q, o = {}) {
     }
   }
 
-  addComps(b, shape.comps);
-  const tComps = SHAPES[lead].T(q, qt, o.tAmp);
+  addComps(b, shape.comps, true);
+  // Bundle branch blocks repolarize in the opposite direction to the late, slow part of the QRS.
+  const T_BY_SHAPE = { rbbb: [0.25, DIR.rbbbT], lbbb: [0.32, neg(DIR.lvSlow)] };
+  const [tA, tDir] = T_BY_SHAPE[o.shape] || [0.35, DIR.T];
+  const tComps = SHAPES.T(q, qt, o.tAmp ?? tA, tDir);
   addComps(b, tComps);
   label(b, q + shape.width / 2, 'QRS', kind);
   label(b, tComps[0].t, 'T', 'normal');
@@ -201,7 +203,8 @@ export function ventricles(b, q, o = {}) {
 export function ventricularFocus(b, q, o = {}) {
   const at = o.at || 'pvc';
   const rr = o.rr || 1;
-  const shape = o.shape === 'paced' ? SHAPES.II.paced(q) : SHAPES.II.wide(q, o.amp);
+  const dir = FOCUS_DIR[at];
+  const shape = SHAPES.wide(q, dir, o.amp);
   const qt = qtFor(rr, true);
   ripple(b, at, q, q + 0.2, 'ectopic');
   const first = o.first || 'RV';
@@ -212,8 +215,8 @@ export function ventricularFocus(b, q, o = {}) {
     spike(b, q - 0.004);
     act(b, 'pacer', q - 0.03, q - 0.004, { kind: 'ectopic' });
   }
-  addComps(b, shape.comps);
-  const tComps = SHAPES.II.Twide(q, qt, o.tAmp ?? -0.45 * Math.sign(o.amp ?? 1));
+  addComps(b, shape.comps, true);
+  const tComps = SHAPES.Twide(q, qt, o.tAmp ?? 0.4, neg(dir));
   addComps(b, tComps);
   label(b, q + shape.width / 2, o.label || 'QRS', 'ectopic');
   label(b, tComps[0].t, 'T', 'normal');
@@ -223,6 +226,7 @@ export function ventricularFocus(b, q, o = {}) {
   }
   b.qrs = q;
   b.qrsWidth = shape.width;
+  b.wide = true;
 }
 
 // Convenience: one fully conducted sinus beat.
@@ -243,6 +247,26 @@ export class Engine {
     this.state = { t: 0.35, n: 0, rng: mulberry32(rhythm.seed || 11) };
     rhythm.init?.(this.state);
     this.beats = [];
+    this.lastQ = null;
+  }
+
+  // Mechanical layer: how hard each beat squeezes, from how long the ventricles
+  // had to fill (R-R), whether the atria helped (atrial kick), and whether the
+  // ventricles contracted in a coordinated way.
+  mechanics(b) {
+    const r = this.rhythm;
+    const kick = !r.noKick && !r.pulseless;
+    for (const c of b.chambers) if (c.ch === 'RA' || c.ch === 'LA') c.m = kick ? 1 : 0;
+    if (b.qrs == null) return;
+    const rr = this.lastQ == null ? r.nominalRR || 0.8 : b.qrs - this.lastQ;
+    this.lastQ = b.qrs;
+    let sv = 1 - Math.exp(-Math.max(rr - 0.18, 0) / 0.22);
+    if (!kick) sv *= 0.85;
+    if (b.wide) sv *= r.wideFactor ?? 0.7;
+    if (r.pulseless) sv = 0;
+    sv = Math.min(sv, 1.05);
+    b.mech = { t: b.qrs, sv };
+    for (const c of b.chambers) if (c.ch === 'RV' || c.ch === 'LV') c.m = sv;
   }
 
   ensure(tUntil) {
@@ -251,6 +275,7 @@ export class Engine {
       const b = newBeat();
       this.rhythm.next(b, this.state);
       this.state.n += 1;
+      this.mechanics(b);
       if (b.tStart === Infinity) {
         b.tStart = b.tEnd = this.state.t;
       }
