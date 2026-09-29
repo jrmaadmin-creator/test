@@ -1,0 +1,93 @@
+export default {
+  id: 'respiratory',
+  title: 'Respiratory Distress',
+  category: 'Medical',
+  verified: false,
+  source: { doc: 'DRAFT from general EMT-B practice; NH v9.2 text not loaded', section: null, page: null },
+  keywords: ['sob', 'shortness of breath', 'asthma', 'copd', 'chf', 'breathing', 'dyspnea'],
+  start: 'speech',
+  nodes: {
+    speech: {
+      type: 'question',
+      text: 'How many words can the patient speak per breath?',
+      answers: [
+        { label: 'Full sentences', finding: 'Speaking full sentences', next: 'hx' },
+        { label: 'Short phrases', finding: 'Speaking in short phrases', next: 'hx' },
+        { label: '1-2 words / cannot speak', finding: '1-2 word dyspnea', redFlag: 'Severe respiratory distress', next: 'hx' },
+      ],
+    },
+    hx: {
+      type: 'question',
+      text: 'Relevant history',
+      ask: 'Do you have asthma, COPD/emphysema, or heart failure? Is this like before?',
+      answers: [
+        { label: 'Asthma', finding: 'History of asthma', suggest: ['Asthma exacerbation'], next: 'lungs' },
+        { label: 'COPD', finding: 'History of COPD', suggest: ['COPD exacerbation'], next: 'lungs' },
+        { label: 'CHF', finding: 'History of CHF', suggest: ['CHF / pulmonary edema'], next: 'lungs' },
+        { label: 'None / unknown', next: 'lungs' },
+      ],
+    },
+    lungs: {
+      type: 'question',
+      text: 'Lung sounds',
+      answers: [
+        { label: 'Wheezes', finding: 'Wheezing', suggest: ['Asthma exacerbation', 'COPD exacerbation', 'Anaphylaxis'], next: 'fever' },
+        { label: 'Crackles / rales', finding: 'Crackles', suggest: ['CHF / pulmonary edema', 'Pneumonia'], next: 'fever' },
+        { label: 'Diminished one side', finding: 'Unilateral diminished breath sounds', suggest: ['Pneumothorax', 'Pneumonia'], redFlag: 'Unilateral diminished breath sounds', next: 'fever' },
+        { label: 'Stridor', finding: 'Stridor', suggest: ['Upper airway obstruction', 'Anaphylaxis'], redFlag: 'Stridor', next: 'fever' },
+        { label: 'Clear', finding: 'Lung sounds clear', suggest: ['PE', 'Anxiety / hyperventilation', 'Metabolic acidosis'], next: 'fever' },
+      ],
+    },
+    fever: {
+      type: 'question',
+      text: 'Other clues',
+      ask: 'Any fever, cough, leg swelling, hives, or new exposure?',
+      answers: [
+        { label: 'Fever / productive cough', finding: 'Fever/productive cough', suggest: ['Pneumonia', 'Infection / sepsis'], next: 'o2' },
+        { label: 'Leg swelling / weight gain / orthopnea', finding: 'Edema/orthopnea', suggest: ['CHF / pulmonary edema'], next: 'o2' },
+        { label: 'One swollen leg / recent immobility', finding: 'Unilateral leg swelling or immobility', suggest: ['PE'], next: 'o2' },
+        { label: 'Hives / swelling / exposure', finding: 'Allergic signs', suggest: ['Anaphylaxis'], redFlag: 'Consider anaphylaxis: open Allergic Reaction protocol', next: 'o2' },
+        { label: 'None', next: 'o2' },
+      ],
+    },
+    o2: {
+      type: 'action',
+      text: 'Oxygen, titrated',
+      detail: 'Position of comfort (usually upright).',
+      verify: 'NH v9.2 SpO2 targets, including COPD target',
+      report: 'O2 titrated, position of comfort',
+      critical: true,
+      next: 'mdiCheck',
+    },
+    mdiCheck: {
+      type: 'question',
+      text: 'Patient has a prescribed rescue inhaler / nebulizer?',
+      answers: [
+        { label: 'Yes, wheezing present', next: 'mdi' },
+        { label: 'No / not indicated', next: 'cpap' },
+      ],
+    },
+    mdi: {
+      type: 'action',
+      text: "Assist with patient's prescribed bronchodilator",
+      verify: 'NH v9.2 EMT bronchodilator authorization (patient-assisted vs EMS-carried albuterol) and dose',
+      report: 'Assisted bronchodilator',
+      next: 'cpap',
+    },
+    cpap: {
+      type: 'action',
+      text: 'Consider CPAP if authorized and indicated',
+      detail: 'Typical indications: moderate-severe distress, alert, able to follow commands, adequate BP.',
+      verify: 'NH v9.2 EMT CPAP authorization, indications, and contraindications',
+      report: 'CPAP',
+      next: 'als',
+    },
+    als: {
+      type: 'action',
+      text: 'Request ALS if severe or not improving; transport',
+      report: 'ALS requested / transport',
+      critical: true,
+      next: 'END',
+    },
+  },
+};
