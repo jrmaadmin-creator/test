@@ -87,9 +87,9 @@ const FOCI = {
   sa: P.sa,
   av: V(-0.38, 0.37, 0.05),
   pac: V(-1.48, 0.78, 0.22),
-  pvc: V(-0.28, -0.12, 0.74),
+  pvc: V(-0.15, 0.2, 0.7), // right ventricular outflow tract
   ivr: V(0.78, -1.5, 0.12),
-  escape: V(0.28, -1.05, 0.05),
+  escape: V(0.2, -0.2, 0.0), // high septum
   vt: V(0.98, -1.42, 0.4),
   pacerTip: V(0.02, -1.38, 0.45),
   septumR: V(-0.02, -0.55, 0.3),
@@ -263,9 +263,67 @@ export class HeartView {
 
     this.sparks = [];
     this.sparkDebt = 0;
+    this.buildVector();
 
     new ResizeObserver(() => this.resize()).observe(container);
     this.resize();
+  }
+
+  // The heart's instantaneous electrical vector, its recent path (the loop a
+  // vectorcardiogram draws), and the axis of the lead being displayed.
+  buildVector() {
+    this.vecOrigin = V(0.1, -0.35, 0.05);
+    this.vecArrow = new THREE.ArrowHelper(V(1, 0, 0), this.vecOrigin, 1, 0xffd27a, 0.22, 0.14);
+    this.vecArrow.renderOrder = 6;
+    for (const m of [this.vecArrow.line.material, this.vecArrow.cone.material]) {
+      m.depthTest = false;
+      m.transparent = true;
+    }
+    this.vecArrow.visible = false;
+    this.root.add(this.vecArrow);
+    this.trailN = 90;
+    this.trailPos = new Float32Array(this.trailN * 3);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(this.trailPos, 3));
+    this.trail = new THREE.Line(g, new THREE.LineBasicMaterial({ color: 0xffd27a, transparent: true, opacity: 0.55, depthTest: false }));
+    this.trail.renderOrder = 6;
+    this.trail.visible = false;
+    this.trail.frustumCulled = false;
+    this.root.add(this.trail);
+    this.trailHead = 0;
+
+    this.leadLine = new THREE.ArrowHelper(V(1, 0, 0), this.vecOrigin, 4.4, 0x3cc2b1, 0.24, 0.16);
+    this.leadLine.visible = false;
+    for (const m of [this.leadLine.line.material, this.leadLine.cone.material]) {
+      m.depthTest = false;
+      m.transparent = true;
+      m.opacity = 0.85;
+    }
+    this.leadLine.renderOrder = 6;
+    this.root.add(this.leadLine);
+    this.leadLabel = document.createElement('span');
+    this.leadLabel.className = 'hlabel hlabel-r lead-tag';
+    this.leadLabel.innerHTML = '<i></i><span></span>';
+    this.leadLabel.hidden = true;
+    this.labelLayer.appendChild(this.leadLabel);
+    this.showVector = false;
+  }
+
+  setVectorMode(on, lead, axis) {
+    this.showVector = on;
+    this.vecArrow.visible = false;
+    this.trail.visible = on;
+    this.leadLine.visible = on && !!axis;
+    this.leadLabel.hidden = !(on && axis);
+    if (axis) {
+      const d = V(axis[0], axis[1], axis[2]).normalize();
+      this.leadLine.position.copy(this.vecOrigin).addScaledVector(d, -2.2);
+      this.leadLine.setDirection(d);
+      this.leadTip = this.vecOrigin.clone().addScaledVector(d, 2.35);
+      this.leadLabel.lastChild.textContent = `Lead ${lead} (+)`;
+    }
+    for (let i = 0; i < this.trailN; i++) this.trailPos.set([this.vecOrigin.x, this.vecOrigin.y, this.vecOrigin.z], i * 3);
+    this.trail.geometry.attributes.position.needsUpdate = true;
   }
 
   resetView() {
@@ -459,7 +517,7 @@ export class HeartView {
 
   // ---- Per-frame update --------------------------------------------------------
 
-  update(t, beats, dtSim) {
+  update(t, beats, dtSim, vec) {
     for (const s of Object.values(this.segs)) {
       s.glow = 0;
       s.color.copy(COLOR.normal);
@@ -484,6 +542,7 @@ export class HeartView {
     };
 
     const chamberAct = { RA: 0, LA: 0, RV: 0, LV: 0 };
+    const squeeze = { RA: 0, LA: 0, RV: 0, LV: 0 };
 
     for (const b of beats) {
       for (const a of b.acts) {
@@ -540,6 +599,16 @@ export class HeartView {
         else v = 0.7 * (1 - (t - c.r0) / Math.max(c.r1 - c.r0, 1e-3));
         if (v > chamberAct[c.ch]) chamberAct[c.ch] = v;
       }
+      // Mechanical contraction follows depolarization; c.m is how hard (0 = PEA).
+      for (const c of b.chambers) {
+        if (!c.m) continue;
+        const atrial = c.ch === 'RA' || c.ch === 'LA';
+        const s0 = atrial ? c.d1 : c.d0 + 0.04;
+        const s1 = atrial ? c.d1 + 0.13 : c.r1 + 0.02;
+        if (t < s0 || t > s1) continue;
+        const k = Math.sin((Math.PI * (t - s0)) / (s1 - s0)) * c.m;
+        if (k > squeeze[c.ch]) squeeze[c.ch] = k;
+      }
 
       for (const r of b.ripples) {
         if (t < r.t0 || t > r.t1 || ri >= this.ripplePool.length) continue;
@@ -595,7 +664,37 @@ export class HeartView {
     });
 
     // Apply.
-    for (const [id, m] of Object.entries(this.chambers)) m.material.uniforms.uAct.value = chamberAct[id];
+    const quiver = (ch) => (chaos === 'atria' && (ch === 'RA' || ch === 'LA')) || (chaos === 'ventricles' && (ch === 'RV' || ch === 'LV'));
+    for (const [id, m] of Object.entries(this.chambers)) {
+      m.material.uniforms.uAct.value = chamberAct[id];
+      const depth = id === 'RA' || id === 'LA' ? 0.07 : 0.08;
+      const q = quiver(id) ? 0.012 * Math.sin(t * 173 + id.length) : 0;
+      m.scale.setScalar(1 - depth * squeeze[id] + q);
+    }
+
+    // Electrical vector.
+    if (this.showVector && vec) {
+      const v3 = V(vec[0], vec[1], vec[2]);
+      const len = v3.length();
+      if (len > 0.03) {
+        this.vecArrow.visible = true;
+        this.vecArrow.setDirection(v3.clone().normalize());
+        this.vecArrow.setLength(Math.min(len * 1.5, 2.4), 0.22, 0.14);
+      } else {
+        this.vecArrow.visible = false;
+      }
+      const tip = this.vecOrigin.clone().addScaledVector(v3, 1.5);
+      const i = this.trailHead;
+      if (dtSim > 0) {
+        // Shift the trail so it reads oldest -> newest.
+        this.trailPos.copyWithin(0, 3);
+        this.trailPos.set([tip.x, tip.y, tip.z], (this.trailN - 1) * 3);
+        this.trail.geometry.attributes.position.needsUpdate = true;
+      }
+      this.trailHead = i;
+    } else {
+      this.vecArrow.visible = false;
+    }
     const hl = this.highlight && performance.now() < this.highlight.until ? STRUCTURE_SEGS[this.highlight.id] || [] : [];
     const hlPulse = 0.55 + 0.45 * Math.sin(performance.now() / 140);
     for (const [id, s] of Object.entries(this.segs)) {
@@ -631,6 +730,10 @@ export class HeartView {
     const w = this.container.clientWidth;
     const h = this.container.clientHeight;
     const v = new THREE.Vector3();
+    if (!this.leadLabel.hidden && this.leadTip) {
+      v.copy(this.leadTip).project(this.camera);
+      this.leadLabel.style.transform = `translate(${((v.x + 1) / 2) * w}px, ${((1 - v.y) / 2) * h}px)`;
+    }
     for (const l of this.labels) {
       const on = showLabels && (l.only ? l.visible : true);
       l.el.hidden = !on;
