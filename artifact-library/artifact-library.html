@@ -1,0 +1,266 @@
+<title>Clifton's Artifact Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky control bar (search + area chips), pinned strip, then one section per life area with a wrapping tile grid. */
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --fg: #16202b;
+  --muted: #5a6776;
+  --line: #d9dfe7;
+  --accent: #0d5fb3;        /* Star of Life blue */
+  --accent-ink: #ffffff;
+  --stripe: #e8a317;        /* reflective chevron amber, used for pins only */
+  --a-ops: #0d5fb3; --a-lead: #7a3fb0; --a-medic: #c0392b; --a-career: #1f8a5b; --a-daily: #b8740a; --a-hist: #5a6776;
+  --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 8px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f151c; --surface: #17202a; --fg: #e6ebf1; --muted: #93a1b1; --line: #2a3643;
+  --accent: #5aa3ec; --accent-ink: #0b1219; --stripe: #f2b73d;
+  --a-ops: #5aa3ec; --a-lead: #b58ae0; --a-medic: #ee7a6c; --a-career: #5cc794; --a-daily: #e7a94a; --a-hist: #9aa7b6;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f151c; --surface: #17202a; --fg: #e6ebf1; --muted: #93a1b1; --line: #2a3643;
+  --accent: #5aa3ec; --accent-ink: #0b1219; --stripe: #f2b73d;
+  --a-ops: #5aa3ec; --a-lead: #b58ae0; --a-medic: #ee7a6c; --a-career: #5cc794; --a-daily: #e7a94a; --a-hist: #9aa7b6;
+  color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.45 }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px }
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px }
+h1 { font-family: var(--display); font-weight: 700; font-size: 2.1rem; letter-spacing: .01em; margin: 0; line-height: 1; text-wrap: balance }
+.tally { font-family: var(--mono); font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums }
+.tally b { color: var(--fg); font-weight: 500 }
+
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 12px; margin-top: 8px; border-bottom: 1px solid var(--line); display: grid; gap: 10px }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+input, select, textarea, button { font: inherit; color: inherit }
+#q { flex: 1 1 240px; min-width: 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface) }
+select { padding: 9px 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface) }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); padding: 8px 12px; cursor: pointer }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600 }
+.btn:hover { border-color: var(--accent) }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.chips { display: flex; flex-wrap: wrap; gap: 6px }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 11px; font-size: .82rem; cursor: pointer; display: inline-flex; gap: 6px; align-items: center }
+.chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--muted)) }
+.chip .n { font-family: var(--mono); color: var(--muted); font-variant-numeric: tabular-nums }
+.chip[aria-pressed="true"] { border-color: var(--fg); font-weight: 600 }
+label.tog { display: inline-flex; gap: 6px; align-items: center; font-size: .85rem; color: var(--muted); cursor: pointer }
+
+section.area { margin-top: 26px }
+section.area > h2 { font-family: var(--display); font-weight: 600; font-size: 1.25rem; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 10px; display: flex; gap: 10px; align-items: baseline }
+section.area > h2 .n { font-family: var(--mono); font-size: .8rem; color: var(--muted); letter-spacing: 0 }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px }
+.tile { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--c, var(--muted)); border-radius: var(--r); padding: 12px 12px 10px; display: grid; gap: 6px; min-width: 0 }
+.tile.archived { opacity: .62 }
+.tile .t { display: flex; gap: 8px; align-items: start; justify-content: space-between }
+.tile a.name { font-weight: 600; color: var(--fg); text-decoration: none; overflow-wrap: anywhere }
+.tile a.name:hover { color: var(--accent); text-decoration: underline }
+.tile .note { font-size: .86rem; color: var(--muted); overflow-wrap: anywhere }
+.tile .meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; font-family: var(--mono); font-size: .74rem; color: var(--muted) }
+.tile .acts { display: flex; gap: 4px }
+.icon { border: 0; background: transparent; cursor: pointer; padding: 2px 6px; border-radius: 6px; color: var(--muted); font-size: .8rem }
+.icon:hover { background: var(--bg); color: var(--fg) }
+.pin { font-size: 1.05rem; line-height: 1; color: var(--line) }
+.pin[aria-pressed="true"] { color: var(--stripe) }
+.tag { font-family: var(--mono); font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; border: 1px solid var(--line); border-radius: 4px; padding: 0 5px }
+
+.edit { display: grid; gap: 8px; border-top: 1px dashed var(--line); padding-top: 8px }
+.edit input, .edit select, .edit textarea { width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg) }
+.edit textarea { min-height: 54px; resize: vertical }
+.edit .row { justify-content: space-between }
+.danger { color: #c0392b; border-color: currentColor }
+
+#addPanel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) }
+#addPanel label { display: grid; gap: 4px; font-size: .8rem; color: var(--muted); min-width: 0 }
+#addPanel input, #addPanel select { padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); width: 100% }
+#addPanel .row { grid-column: 1 / -1; justify-content: flex-end }
+.msg { font-size: .85rem; color: var(--muted) }
+.empty { margin-top: 28px; padding: 22px; border: 1px dashed var(--line); border-radius: var(--r); color: var(--muted); max-width: 62ch }
+.empty strong { color: var(--fg) }
+@media (prefers-reduced-motion: no-preference) { .tile { transition: border-color .15s } .tile:hover { border-color: var(--c) } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Clifton's Artifact Library</h1>
+    <div class="tally" id="tally">Loading library…</div>
+  </header>
+
+  <div class="bar">
+    <div class="row">
+      <input id="q" type="search" placeholder="Search titles and notes  ( / )" aria-label="Search artifacts">
+      <select id="sort" aria-label="Sort">
+        <option value="updated">Recently updated</option>
+        <option value="az">A to Z</option>
+      </select>
+      <label class="tog"><input id="showArch" type="checkbox"> Show archived</label>
+      <button class="btn primary" id="addBtn" type="button">Add artifact</button>
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Filter by area"></div>
+  </div>
+
+  <form id="addPanel" hidden>
+    <label>Title<input id="aTitle" required placeholder="Paramedic Track"></label>
+    <label>Artifact link<input id="aUrl" required placeholder="https://claude.ai/artifact/…"></label>
+    <label>Area<select id="aArea"></select></label>
+    <label>Note<input id="aNote" placeholder="What it is for"></label>
+    <div class="row"><span class="msg" id="aMsg"></span><button class="btn" type="button" id="aCancel">Cancel</button><button class="btn primary" type="submit">Save</button></div>
+  </form>
+
+  <main id="main">
+    <div class="empty" id="empty"><strong>Your artifacts will appear here.</strong> Tiles are grouped by area: JRMA Operations, Leadership, Paramedic School, Career, Daily &amp; Boards, History &amp; Media. Use <strong>Add artifact</strong> to file a new link.</div>
+  </main>
+</div>
+
+<script>
+const AREAS = [
+  { key: "ops",    name: "JRMA Operations",  c: "--a-ops" },
+  { key: "lead",   name: "Leadership",       c: "--a-lead" },
+  { key: "medic",  name: "Paramedic School", c: "--a-medic" },
+  { key: "career", name: "Career",           c: "--a-career" },
+  { key: "daily",  name: "Daily & Boards",   c: "--a-daily" },
+  { key: "hist",   name: "History & Media",  c: "--a-hist" },
+];
+const areaOf = k => AREAS.find(a => a.key === k) || AREAS[AREAS.length - 1];
+const $ = s => document.querySelector(s);
+const state = { items: [], area: "all", q: "", sort: "updated", arch: false, editing: null, confirmDel: null };
+let col = null;
+
+try { state.sort = localStorage.getItem("lib.sort") || "updated"; state.arch = localStorage.getItem("lib.arch") === "1"; } catch (e) {}
+$("#sort").value = state.sort; $("#showArch").checked = state.arch;
+$("#aArea").innerHTML = AREAS.map(a => `<option value="${a.key}">${a.name}</option>`).join("");
+
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function idFromUrl(u) { const m = /artifact\/([A-Za-z0-9_-]+)/.exec(u || ""); return m ? m[1] : null; }
+function fmt(d) { return d ? d.slice(0, 10) : ""; }
+
+function visible() {
+  const q = state.q.trim().toLowerCase();
+  return state.items.filter(i =>
+    (state.arch || i.status !== "archive") &&
+    (!q || (i.title + " " + (i.note || "")).toLowerCase().includes(q)));
+}
+function sorted(list) {
+  return list.slice().sort(state.sort === "az"
+    ? (a, b) => a.title.localeCompare(b.title)
+    : (a, b) => (b.updated || "").localeCompare(a.updated || "") || a.title.localeCompare(b.title));
+}
+
+function tile(i) {
+  const a = areaOf(i.area);
+  const editing = state.editing === i.id;
+  return `<article class="tile${i.status === "archive" ? " archived" : ""}" style="--c: var(${a.c})" data-id="${esc(i.id)}">
+    <div class="t">
+      <a class="name" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a>
+      <button class="icon pin" type="button" data-act="pin" aria-pressed="${!!i.pinned}" aria-label="${i.pinned ? "Unpin" : "Pin"} ${esc(i.title)}">★</button>
+    </div>
+    ${i.note ? `<div class="note">${esc(i.note)}</div>` : ""}
+    <div class="meta"><span>${i.status === "archive" ? '<span class="tag">archived</span> ' : ""}updated ${esc(fmt(i.updated))}</span>
+      <span class="acts"><button class="icon" type="button" data-act="edit">${editing ? "Close" : "Edit"}</button></span></div>
+    ${editing ? `<div class="edit">
+      <input id="e-title-${esc(i.id)}" data-f="title" value="${esc(i.title)}" aria-label="Title">
+      <select id="e-area-${esc(i.id)}" data-f="area" aria-label="Area">${AREAS.map(x => `<option value="${x.key}"${x.key === i.area ? " selected" : ""}>${x.name}</option>`).join("")}</select>
+      <textarea id="e-note-${esc(i.id)}" data-f="note" aria-label="Note" placeholder="Note">${esc(i.note)}</textarea>
+      <div class="row">
+        <button class="btn${state.confirmDel === i.id ? " danger" : ""}" type="button" data-act="del">${state.confirmDel === i.id ? "Confirm remove" : "Remove"}</button>
+        <span class="row">
+          <button class="btn" type="button" data-act="arch">${i.status === "archive" ? "Restore" : "Archive"}</button>
+          <button class="btn primary" type="button" data-act="save">Save</button>
+        </span>
+      </div></div>` : ""}
+  </article>`;
+}
+
+function render() {
+  const vis = visible();
+  const total = state.items.filter(i => i.status !== "archive").length;
+  const archived = state.items.length - total;
+  const pinnedN = state.items.filter(i => i.pinned && i.status !== "archive").length;
+  $("#tally").innerHTML = `<b>${total}</b> active · <b>${pinnedN}</b> pinned · <b>${archived}</b> archived`;
+
+  const counts = Object.fromEntries(AREAS.map(a => [a.key, vis.filter(i => i.area === a.key).length]));
+  $("#chips").innerHTML =
+    `<button class="chip" type="button" data-area="all" aria-pressed="${state.area === "all"}">All <span class="n">${vis.length}</span></button>` +
+    AREAS.map(a => `<button class="chip" type="button" data-area="${a.key}" style="--c: var(${a.c})" aria-pressed="${state.area === a.key}"><span class="dot"></span>${a.name} <span class="n">${counts[a.key]}</span></button>`).join("");
+
+  if (!state.items.length) return;
+  let html = "";
+  const pinned = sorted(vis.filter(i => i.pinned && (state.area === "all" || i.area === state.area)));
+  if (pinned.length) html += `<section class="area"><h2>Pinned <span class="n">${pinned.length}</span></h2><div class="grid">${pinned.map(tile).join("")}</div></section>`;
+  for (const a of AREAS) {
+    if (state.area !== "all" && state.area !== a.key) continue;
+    const list = sorted(vis.filter(i => i.area === a.key && !i.pinned));
+    if (!list.length) continue;
+    html += `<section class="area"><h2 style="color: var(${a.c})">${a.name} <span class="n">${list.length}</span></h2><div class="grid">${list.map(tile).join("")}</div></section>`;
+  }
+  $("#main").innerHTML = html || `<div class="empty"><strong>No matches.</strong> Clear the search or turn on Show archived.</div>`;
+}
+
+async function write(id, data) {
+  if (!col) return;
+  try { await col.doc(id).update(data); }
+  catch (e) { $("#tally").textContent = "Save failed: " + (e.message || e.code) + ". Only editors can change the library."; }
+}
+
+$("#chips").addEventListener("click", e => {
+  const b = e.target.closest("[data-area]"); if (!b) return;
+  state.area = b.dataset.area; render();
+});
+$("#q").addEventListener("input", e => { state.q = e.target.value; render(); });
+$("#sort").addEventListener("change", e => { state.sort = e.target.value; try { localStorage.setItem("lib.sort", state.sort); } catch (x) {} render(); });
+$("#showArch").addEventListener("change", e => { state.arch = e.target.checked; try { localStorage.setItem("lib.arch", state.arch ? "1" : "0"); } catch (x) {} render(); });
+document.addEventListener("keydown", e => { if (e.key === "/" && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA") { e.preventDefault(); $("#q").focus(); } });
+
+$("#main").addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const card = b.closest(".tile"); const id = card.dataset.id;
+  const item = state.items.find(i => i.id === id); if (!item) return;
+  const act = b.dataset.act;
+  if (act === "pin") { await write(id, { pinned: !item.pinned }); }
+  else if (act === "edit") { state.editing = state.editing === id ? null : id; state.confirmDel = null; render(); }
+  else if (act === "arch") { await write(id, { status: item.status === "archive" ? "active" : "archive" }); }
+  else if (act === "save") {
+    const f = n => card.querySelector(`[data-f="${n}"]`).value.trim();
+    state.editing = null;
+    await write(id, { title: f("title") || item.title, area: f("area"), note: f("note") });
+  } else if (act === "del") {
+    if (state.confirmDel !== id) { state.confirmDel = id; render(); return; }
+    state.confirmDel = null; state.editing = null;
+    try { await col.doc(id).delete(); } catch (x) { $("#tally").textContent = "Remove failed: " + (x.message || x.code); }
+  }
+});
+
+$("#addBtn").addEventListener("click", () => { $("#addPanel").hidden = !$("#addPanel").hidden; if (!$("#addPanel").hidden) $("#aTitle").focus(); });
+$("#aCancel").addEventListener("click", () => { $("#addPanel").hidden = true; });
+$("#addPanel").addEventListener("submit", async e => {
+  e.preventDefault();
+  const url = $("#aUrl").value.trim(); const id = idFromUrl(url);
+  if (!id) { $("#aMsg").textContent = "Paste a claude.ai/artifact/… link."; return; }
+  if (state.items.some(i => i.id === id)) { $("#aMsg").textContent = "That artifact is already in the library."; return; }
+  if (!col) { $("#aMsg").textContent = "Library storage is not available in this view."; return; }
+  try {
+    await col.doc(id).set({ title: $("#aTitle").value.trim(), url, area: $("#aArea").value, note: $("#aNote").value.trim(),
+      pinned: false, status: "active", updated: new Date().toISOString().slice(0, 10), added: new Date().toISOString().slice(0, 10) });
+    $("#addPanel").reset(); $("#aMsg").textContent = ""; $("#addPanel").hidden = true;
+  } catch (x) { $("#aMsg").textContent = "Save failed: " + (x.message || x.code); }
+});
+
+render();
+(async () => {
+  const db = await claude.use("db");
+  if (!db) { $("#tally").textContent = "Library storage is not available in this view."; return; }
+  col = db.collection("items");
+  col.onSnapshot(snap => {
+    state.items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    render();
+  }, err => { $("#tally").textContent = "Could not load the library: " + err.message; });
+})();
+</script>
