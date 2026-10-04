@@ -3,7 +3,7 @@ export default {
   title: 'Stroke / TIA',
   category: 'Medical',
   verified: false,
-  source: { doc: 'DRAFT from general EMT-B practice; NH v9.2 text not loaded', section: null, page: null },
+  source: { doc: 'DRAFT from general EMT-B practice; NH v9.3 text not loaded', section: null, page: null },
   keywords: ['stroke', 'cva', 'tia', 'weakness', 'facial droop', 'slurred speech', 'befast'],
   start: 'lkw',
   nodes: {
@@ -77,8 +77,8 @@ export default {
     lvo: {
       type: 'info',
       text: 'Large vessel occlusion screen',
-      items: ['Use the LVO / severity scale named in NH v9.2', 'Result drives destination (comprehensive vs primary stroke center)'],
-      verify: 'Which LVO scale NH v9.2 uses and its destination cutoffs',
+      items: ['Use the LVO / severity scale named in NH v9.3', 'Result drives destination (comprehensive vs primary stroke center)'],
+      verify: 'Which LVO scale NH v9.3 uses and its destination cutoffs',
       next: 'alert',
     },
     alert: {

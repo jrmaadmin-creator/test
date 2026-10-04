@@ -1,11 +1,11 @@
 // Standard EMT-B patient assessment sequence (scene size-up + primary survey).
-// Not NH-specific text. Compare against NH v9.2 "Universal Patient Care" before setting verified: true.
+// Not NH-specific text. Compare against NH v9.3 "Universal Patient Care" before setting verified: true.
 export default {
   id: 'assessment',
   title: 'Scene Size-Up + Primary Survey',
   category: 'Assessment',
   verified: false,
-  source: { doc: 'Standard EMT-B assessment (NREMT sequence); NH v9.2 Universal Patient Care not yet loaded', section: null, page: null },
+  source: { doc: 'Standard EMT-B assessment (NREMT sequence); NH v9.3 Universal Patient Care not yet loaded', section: null, page: null },
   keywords: ['primary', 'scene', 'abc', 'start'],
   start: 'scene',
   nodes: {
@@ -75,7 +75,7 @@ export default {
       type: 'action',
       text: 'Assist ventilations with BVM + oxygen',
       detail: 'Ventilate at the NH protocol rate. Confirm chest rise.',
-      verify: 'Ventilation rate per NH v9.2',
+      verify: 'Ventilation rate per NH v9.3',
       report: 'BVM ventilation with O2',
       critical: true,
       next: 'bleeding',

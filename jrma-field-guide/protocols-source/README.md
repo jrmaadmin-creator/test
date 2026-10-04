@@ -1,7 +1,5 @@
 # Protocol source
 
-Put the current **New Hampshire Patient Care Protocols** PDF here (v9.2 as of July 2025).
+Current version: **NH Patient Care Protocols v9.3** (Bulletin #96, effective 2025-11-07).
 
-Download from the NH Division of Fire Standards & Training and EMS: https://www.fstems.dos.nh.gov
-
-The build environment could not reach that site, so the file must be added by hand. Commit it as `nh-pcp-v9.2.pdf`.
+The file is not committed (large, State-owned). The owner keeps it in Google Drive as "NH Patient Care Protocols v9.3 (effective 2025-11-07)" (PDF and .docx). The State site blocks downloads from cloud servers, so new sessions read it through the Google Drive connector.

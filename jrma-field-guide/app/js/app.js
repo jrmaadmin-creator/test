@@ -1,10 +1,17 @@
 import * as E from './engine.js';
 import { PROTOCOLS, BY_ID, OPQRST, SAMPLE } from './protocols/index.js';
+import { ALERTS, REQUESTS, DEFAULT_SETTINGS, buildPrearrival, mailtoLink } from './prearrival.js';
+import { buildPdf } from './pdf.js';
 
 const STORE = 'emt-call-v1';
 const REASSESS_MS = { stable: 15 * 60e3, unstable: 5 * 60e3 };
 
+const SETTINGS = 'jrma-settings-v1';
+
 let call = load() || E.newCall();
+call.moi ??= '';
+call.prearrival ??= { etaMin: '', level: 'BLS', alerts: [], requests: [], sentAt: null };
+let settings = loadSettings();
 let tab = 'call';
 let reassessMode = 'stable';
 
@@ -14,6 +21,14 @@ function load() {
 }
 function save() {
   try { localStorage.setItem(STORE, JSON.stringify(call)); } catch { /* storage blocked: call still works in memory */ }
+}
+
+// Settings (unit name, callback, fax address) survive End Call; they hold no patient data.
+function loadSettings() {
+  try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS) || '{}') }; } catch { return { ...DEFAULT_SETTINGS }; }
+}
+function saveSettings() {
+  try { localStorage.setItem(SETTINGS, JSON.stringify(settings)); } catch { /* ignore */ }
 }
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -70,6 +85,8 @@ function renderCall() {
     </div>
     <label for="dispatch">Dispatched as</label>
     <input id="dispatch" value="${esc(call.dispatch)}" placeholder="e.g. difficulty breathing">
+    <label for="moi">MOI / NOI (no street names or locations)</label>
+    <input id="moi" value="${esc(call.moi)}" placeholder="e.g. MVC rollover, restrained driver / sudden SOB">
     <label for="cc">Chief complaint (patient's words)</label>
     <input id="cc" value="${esc(call.chiefComplaint)}" placeholder="e.g. chest pressure">
     ${matches.length ? `<div class="stack" style="margin-top:8px">${matches.map(m => `<button data-open="${m.id}">Open: ${esc(m.title)}</button>`).join('')}</div>` : ''}
@@ -106,6 +123,7 @@ function bindCall() {
   field('dispatch', v => call.dispatch = v);
   field('dest', v => call.destination = v);
   field('notes', v => call.notes = v);
+  field('moi', v => call.moi = v);
   $('#cc').onchange = () => { call.chiefComplaint = $('#cc').value; commit(); };
   $('#reMode').onchange = e => { reassessMode = e.target.value; tick(); };
   $('#endCall').onclick = () => {
@@ -131,7 +149,7 @@ function renderProtocol() {
 
   const run = call.runs[p.id];
   const node = E.currentNode(call, p);
-  const banner = p.verified ? '' : `<div class="unverified">UNVERIFIED: not yet checked against NH Patient Care Protocols v9.2. Follow the official protocol.</div>`;
+  const banner = p.verified ? '' : `<div class="unverified">UNVERIFIED: not yet checked against NH Patient Care Protocols v9.3. Follow the official protocol.</div>`;
   const src = `<p class="muted">Source: ${esc(p.source.doc)}${p.source.section ? `, ${esc(p.source.section)}` : ''}${p.source.page ? `, p. ${esc(p.source.page)}` : ''}</p>`;
   let body;
   if (!node) {
@@ -259,6 +277,78 @@ function bindReport() {
   };
 }
 
+// ---------- PRE-ARRIVAL tab ----------
+function renderPrearrival() {
+  const pa = call.prearrival;
+  const r = buildPrearrival(call, settings, BY_ID);
+  const chk = (list, key) => list.map(x => `<label class="chk"><input type="checkbox" data-${key}="${esc(x)}" ${pa[key].includes(x) ? 'checked' : ''}> ${esc(x)}</label>`).join('');
+  return `
+  <h2>Pre-arrival to ${esc(settings.destination)}</h2>
+  <p class="muted">Send 5-10 min out. Age, sex, and clinical data only. Notes and History are never included.</p>
+  <div class="card">
+    <div class="grid2">
+      <div><label for="eta">ETA (minutes)</label><input id="eta" inputmode="numeric" value="${esc(pa.etaMin)}"></div>
+      <div><label for="lvl">Care level</label><select id="lvl">${['BLS', 'AEMT', 'ALS'].map(l => `<option ${pa.level === l ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+    </div>
+    <h3>Alerts</h3>${chk(ALERTS, 'alerts')}
+    <h3>Requests</h3>${chk(REQUESTS, 'requests')}
+  </div>
+  <div class="stack">
+    <button class="primary" id="sendFax">Email to ${esc(settings.destination)} fax</button>
+    <button id="sharePdf">Share PDF</button>
+  </div>
+  ${pa.sentAt ? `<p class="muted">Last sent ${E.hhmm(pa.sentAt)}.</p>` : ''}
+  <div class="card"><pre class="preview">${esc(r.text)}</pre></div>
+  <details class="card"><summary>Settings (saved on this phone)</summary>
+    <label for="s-unit">Unit name</label><input id="s-unit" value="${esc(settings.unit)}">
+    <label for="s-cb">Crew callback number</label><input id="s-cb" inputmode="tel" value="${esc(settings.callback)}">
+    <label for="s-dest">Destination</label><input id="s-dest" value="${esc(settings.destination)}">
+    <label for="s-fax">ED email-to-fax address</label><input id="s-fax" inputmode="email" value="${esc(settings.faxEmail)}" placeholder="from your fax service, e.g. 1XXXXXXXXXX@...">
+    <p class="muted">The fax service must have a signed BAA with JRMA. Its delivery receipt arrives in the sending mailbox.</p>
+  </details>`;
+}
+
+function bindPrearrival() {
+  const pa = call.prearrival;
+  $('#eta').oninput = e => { pa.etaMin = e.target.value; save(); };
+  $('#eta').onchange = () => render();
+  $('#lvl').onchange = e => { pa.level = e.target.value; commitQuiet(); };
+  for (const key of ['alerts', 'requests']) {
+    view.querySelectorAll(`[data-${key}]`).forEach(el => el.onchange = () => {
+      const v = el.dataset[key];
+      pa[key] = el.checked ? [...pa[key], v] : pa[key].filter(x => x !== v);
+      commitQuiet();
+    });
+  }
+  const setting = (id, key) => { $('#' + id).onchange = e => { settings[key] = e.target.value.trim(); saveSettings(); render(); }; };
+  setting('s-unit', 'unit'); setting('s-cb', 'callback'); setting('s-dest', 'destination'); setting('s-fax', 'faxEmail');
+  const markSent = how => {
+    pa.sentAt = Date.now();
+    call.events.push({ t: pa.sentAt, kind: 'note', text: `Pre-arrival report sent to ${settings.destination} (${how})` });
+    save();
+  };
+  $('#sendFax').onclick = () => {
+    if (!settings.faxEmail) { alert('Add the ED email-to-fax address in Settings first.'); return; }
+    const r = buildPrearrival(call, settings, BY_ID);
+    markSent('email-to-fax');
+    location.href = mailtoLink(r, settings.faxEmail);
+  };
+  $('#sharePdf').onclick = async () => {
+    const r = buildPrearrival(call, settings, BY_ID);
+    const file = new File([buildPdf(r.lines)], `prearrival-${E.hhmm(Date.now())}.pdf`, { type: 'application/pdf' });
+    try {
+      if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title: r.subject }); markSent('shared PDF'); render(); return; }
+    } catch (e) { if (e.name === 'AbortError') return; }
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(file), download: file.name });
+    a.click();
+    markSent('downloaded PDF');
+    render();
+  };
+}
+
+// Re-render without jumping to the top (checkbox lists).
+function commitQuiet() { const y = window.scrollY; save(); render(); window.scrollTo(0, y); }
+
 // ---------- router ----------
 const TABS = {
   call: [renderCall, bindCall],
@@ -266,6 +356,7 @@ const TABS = {
   vitals: [renderVitals, bindVitals],
   history: [renderHistory, bindHistory],
   report: [renderReport, bindReport],
+  prearrival: [renderPrearrival, bindPrearrival],
 };
 
 function render() {

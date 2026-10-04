@@ -3,7 +3,7 @@ export default {
   title: 'Suspected Opioid Overdose',
   category: 'Medical',
   verified: false,
-  source: { doc: 'DRAFT from general EMT-B practice; NH v9.2 text not loaded', section: null, page: null },
+  source: { doc: 'DRAFT from general EMT-B practice; NH v9.3 text not loaded', section: null, page: null },
   keywords: ['overdose', 'od', 'opioid', 'heroin', 'fentanyl', 'narcan', 'naloxone', 'unresponsive'],
   start: 'pulse',
   nodes: {
@@ -43,7 +43,7 @@ export default {
       type: 'action',
       text: 'Naloxone intranasal',
       dose: 'Goal: restore breathing, not full wakefulness',
-      verify: 'NH v9.2 EMT naloxone route, dose, and repeat interval',
+      verify: 'NH v9.3 EMT naloxone route, dose, and repeat interval',
       report: 'Naloxone IN',
       critical: true,
       next: 'response',

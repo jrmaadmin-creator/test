@@ -3,7 +3,7 @@ export default {
   title: 'Allergic Reaction / Anaphylaxis',
   category: 'Medical',
   verified: false,
-  source: { doc: 'DRAFT from general EMT-B practice; NH v9.2 text not loaded', section: null, page: null },
+  source: { doc: 'DRAFT from general EMT-B practice; NH v9.3 text not loaded', section: null, page: null },
   keywords: ['allergy', 'allergic', 'anaphylaxis', 'hives', 'bee sting', 'epipen', 'swelling'],
   start: 'exposure',
   nodes: {
@@ -49,7 +49,7 @@ export default {
       type: 'question',
       text: 'Meets anaphylaxis criteria? (typically 2+ body systems, or any airway/breathing/BP compromise)',
       help: 'Review the findings above. When in doubt with airway or BP involvement, treat.',
-      verify: 'NH v9.2 anaphylaxis definition',
+      verify: 'NH v9.3 anaphylaxis definition',
       answers: [
         { label: 'Yes: anaphylaxis', finding: 'Meets anaphylaxis criteria', suggest: ['Anaphylaxis'], next: 'epi' },
         { label: 'No: localized / mild reaction', next: 'mild' },
@@ -59,7 +59,7 @@ export default {
       type: 'action',
       text: 'Epinephrine IM, anterolateral thigh',
       dose: 'Auto-injector 0.3 mg adult / 0.15 mg pediatric is the common national dosing',
-      verify: 'NH v9.2 EMT epinephrine form (auto-injector vs draw-up), weight cutoffs, and repeat interval',
+      verify: 'NH v9.3 EMT epinephrine form (auto-injector vs draw-up), weight cutoffs, and repeat interval',
       report: 'Epinephrine IM',
       critical: true,
       next: 'support',
@@ -75,7 +75,7 @@ export default {
       type: 'info',
       text: 'Reassess every few minutes',
       items: ['Repeat vitals', 'Prepare for second epi dose if no improvement', 'Biphasic reactions can recur hours later: transport even if improved'],
-      verify: 'NH v9.2 repeat epi timing',
+      verify: 'NH v9.3 repeat epi timing',
       next: 'END',
     },
     mild: {

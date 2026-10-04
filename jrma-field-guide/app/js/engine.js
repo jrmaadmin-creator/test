@@ -15,6 +15,8 @@ export function newCall(now = Date.now()) {
     patient: { age: '', ageUnit: 'yr', sex: '' },
     dispatch: '',
     chiefComplaint: '',
+    moi: '',
+    prearrival: { etaMin: '', level: 'BLS', alerts: [], requests: [], sentAt: null },
     destination: '',
     milestones: { dispatched: now },
     events: [],
