@@ -216,7 +216,7 @@ export function missedActions(call, protocol) {
   const path = run.current ? run.history.concat(run.current) : run.history;
   return [...new Set(path)]
     .filter(id => protocol.nodes[id]?.type === 'action' && protocol.nodes[id].critical)
-    .filter(id => !['done', 'contraindicated'].includes(recorded.get(id)))
+    .filter(id => !['done', 'contraindicated', 'above-level'].includes(recorded.get(id)))
     .map(id => ({ id, text: protocol.nodes[id].text, status: recorded.get(id) || 'not reached' }));
 }
 
@@ -300,5 +300,19 @@ export function validateProtocol(p) {
     }
   }
   for (const id of ids) if (!targets.has(id)) errs.push(`${p.id}.${id}: unreachable node`);
+  // Protocols built from NH text (nh: '9.3') must cite every node and level every action.
+  if (p.nh) {
+    for (const [id, n] of Object.entries(p.nodes)) {
+      if (!n.cite || !/\d/.test(n.cite)) errs.push(`${p.id}.${id}: missing cite (protocol number and page)`);
+      if (n.type === 'action' && !LEVELS.includes(n.level)) errs.push(`${p.id}.${id}: action needs level (${LEVELS.join(', ')})`);
+    }
+  }
   return errs;
+}
+
+// NH license levels, lowest first.
+export const LEVELS = ['EMR', 'EMT', 'AEMT', 'Paramedic'];
+export function aboveLevel(nodeLevel, myLevel) {
+  if (!nodeLevel || !myLevel) return false;
+  return LEVELS.indexOf(nodeLevel) > LEVELS.indexOf(myLevel);
 }

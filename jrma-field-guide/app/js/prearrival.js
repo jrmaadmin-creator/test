@@ -10,6 +10,7 @@ export const DEFAULT_SETTINGS = {
   unit: 'JRMA',
   callback: '',
   destination: 'Monadnock Community Hospital ED',
+  myLevel: 'EMT',
   faxEmail: '',  // fax vendor email-to-fax address for the ED fax, e.g. 1XXXXXXXXXX@vendor-domain
 };
 

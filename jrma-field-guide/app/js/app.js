@@ -104,6 +104,8 @@ function renderCall() {
     <button class="primary" data-open="assessment">Start primary survey</button>
   </div>
   <div class="card">
+    <label for="myLevel">My license level (saved on this phone)</label>
+    <select id="myLevel">${E.LEVELS.slice(1).map(l => `<option ${settings.myLevel === l ? 'selected' : ''}>${l}</option>`).join('')}</select>
     <label for="reMode">Reassessment interval</label>
     <select id="reMode">
       <option value="stable" ${reassessMode === 'stable' ? 'selected' : ''}>Stable: every 15 min</option>
@@ -131,6 +133,7 @@ function bindCall() {
   field('moi', v => call.moi = v);
   $('#cc').onchange = () => { call.chiefComplaint = $('#cc').value; commit(); };
   $('#reMode').onchange = e => { reassessMode = e.target.value; tick(); };
+  $('#myLevel').onchange = e => { settings.myLevel = e.target.value; saveSettings(); };
   $('#endCall').onclick = () => {
     if (!confirm('Erase this call from the phone? Copy the report first if you need it.')) return;
     call = E.newCall();
@@ -155,7 +158,7 @@ function renderProtocol() {
   const run = call.runs[p.id];
   const node = E.currentNode(call, p);
   const banner = p.verified ? '' : `<div class="unverified">UNVERIFIED: not yet checked against NH Patient Care Protocols v9.3. Follow the official protocol.</div>`;
-  const src = `<p class="muted">Source: ${esc(p.source.doc)}${p.source.section ? `, ${esc(p.source.section)}` : ''}${p.source.page ? `, p. ${esc(p.source.page)}` : ''}</p>`;
+  const src = `<p class="muted">Source: ${esc(p.source.doc)}${p.source.section ? `, ${esc(p.source.section)}` : ''}${p.source.page ? `, ${esc(p.source.page)}` : ''}</p>`;
   let body;
   if (!node) {
     const missed = E.missedActions(call, p);
@@ -163,15 +166,18 @@ function renderProtocol() {
       ${missed.length ? `<h3>Critical steps not done</h3><ul class="missed">${missed.map(m => `<li>${esc(m.text)} (${esc(m.status)})</li>`).join('')}</ul>` : '<p>All critical steps on this path recorded.</p>'}
       <div class="row"><button data-back>Back one step</button><button data-list>Other protocols</button></div></div>`;
   } else {
+    const above = node.type === 'action' && E.aboveLevel(node.level, settings.myLevel);
     body = `<div class="card">
+      ${node.level || node.cite ? `<div class="meta">${node.level ? `<span class="pill lvl lvl-${esc(node.level)}">${esc(node.level)}</span>` : ''}${node.cite ? `<span class="muted">NH ${esc(node.cite)}</span>` : ''}</div>` : ''}
       <div class="node-title">${esc(node.text)}</div>
+      ${above ? `<div class="verify">${esc(node.level)} step, above your level (${esc(settings.myLevel)}). Request ALS or let the ${esc(node.level)} on scene do it.</div>` : ''}
       ${node.ask ? `<div class="ask">"${esc(node.ask)}"</div>` : ''}
       ${node.help ? `<p class="muted">${esc(node.help)}</p>` : ''}
       ${node.detail ? `<p>${esc(node.detail)}</p>` : ''}
       ${node.items ? `<ul class="items">${node.items.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}
       ${node.dose ? `<div class="dose">${esc(node.dose)}</div>` : ''}
       ${node.verify ? `<div class="verify">VERIFY: ${esc(node.verify)}</div>` : ''}
-      <div class="stack" style="margin-top:12px">${nodeButtons(node)}</div>
+      <div class="stack" style="margin-top:12px">${nodeButtons(node, above)}</div>
       ${run.history.length ? '<button data-back style="margin-top:12px">Back</button>' : ''}
     </div>`;
   }
@@ -181,8 +187,12 @@ function renderProtocol() {
   return `<h2>${esc(p.title)}</h2>${banner}${src}${body}${consider}<button data-list style="width:100%">All protocols</button>`;
 }
 
-function nodeButtons(node) {
+function nodeButtons(node, above = false) {
   if (node.type === 'question') return node.answers.map((a, i) => `<button data-answer="${i}">${esc(a.label)}</button>`).join('');
+  if (node.type === 'action' && above) return `
+    <button class="primary" data-act="above-level">Above my level: ALS requested</button>
+    <button data-act="done">Done by ALS on scene</button>
+    <button data-act="not-done">Not done</button>`;
   if (node.type === 'action') return `
     <button class="primary" data-act="done">Done</button>
     <button data-act="not-done">Not done</button>
@@ -195,7 +205,7 @@ function bindProtocol() {
   view.querySelectorAll('[data-answer]').forEach(b => b.onclick = () => { E.answer(call, p, Number(b.dataset.answer)); commit(); });
   view.querySelectorAll('[data-act]').forEach(b => b.onclick = () => {
     const status = b.dataset.act;
-    const note = status === 'done' ? '' : (prompt('Reason (optional):') || '');
+    const note = status === 'done' || status === 'above-level' ? '' : (prompt('Reason (optional):') || '');
     E.completeAction(call, p, status, note);
     commit();
   });

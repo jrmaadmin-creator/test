@@ -138,3 +138,8 @@ table.drugs th, table.drugs td { text-align: left; padding: 8px 4px; border-bott
 .seg button { border: 0; border-radius: 0; }
 .seg button.on { background: var(--accent); color: var(--accent-text); font-weight: 700; }
 .card.dose > div { margin-top: 4px; }
+
+.meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+.pill.lvl { font-weight: 700; }
+.lvl-AEMT { background: var(--warn-bg); color: var(--warn); border-color: transparent; }
+.lvl-Paramedic { background: var(--crit-bg); color: var(--crit); border-color: transparent; }

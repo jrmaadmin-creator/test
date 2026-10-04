@@ -95,3 +95,23 @@ test('service worker caches every app file', () => {
   for (const f of protoFiles) assert.ok(sw.includes(`js/protocols/${f}`), `sw.js missing ${f}`);
   for (const f of ['js/app.js', 'js/engine.js', 'css/app.css', 'index.html']) assert.ok(sw.includes(f), f);
 });
+
+test('level ordering and above-level actions are not flagged as missed', () => {
+  assert.equal(E.aboveLevel('Paramedic', 'EMT'), true);
+  assert.equal(E.aboveLevel('EMT', 'AEMT'), false);
+  assert.equal(E.aboveLevel(undefined, 'EMT'), false);
+  const p = { id: 't', title: 'T', category: 'M', verified: false, source: { doc: 'd' }, start: 'a',
+    nodes: { a: { type: 'action', text: 'Give drug', critical: true, level: 'Paramedic', next: 'END' } } };
+  const c = E.newCall(0);
+  E.startProtocol(c, p);
+  E.completeAction(c, p, 'above-level');
+  assert.deepEqual(E.missedActions(c, p), []);
+});
+
+test('nh protocols must cite every node and level every action', () => {
+  const p = { id: 'n', nh: '9.3', title: 'N', category: 'M', verified: false, source: { doc: 'd' }, start: 'a',
+    nodes: { a: { type: 'action', text: 'X', next: 'END' } } };
+  const errs = E.validateProtocol(p);
+  assert.ok(errs.some(e => e.includes('missing cite')));
+  assert.ok(errs.some(e => e.includes('action needs level')));
+});
