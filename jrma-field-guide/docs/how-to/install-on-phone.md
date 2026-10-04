@@ -3,7 +3,7 @@
 Live site: **https://jrma-field-guide.netlify.app** (Netlify project `jrma-field-guide`).
 
 ## Access
-The site currently requires a Netlify team login (the team's default visitor protection). Log in to Netlify in the phone's browser first, then open the site.
+Public link (owner's choice, 2026-10-04). The app stores no patient data and every screen shows its UNVERIFIED status.
 
 ## Install
 - **iPhone:** open the site in Safari → Share → *Add to Home Screen*.

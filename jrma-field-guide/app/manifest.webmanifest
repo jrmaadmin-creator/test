@@ -1,6 +1,6 @@
 {
-  "name": "EMT Call Guide",
-  "short_name": "EMT Guide",
+  "name": "JRMA Field Guide",
+  "short_name": "JRMA Guide",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -153,3 +153,7 @@ table.drugs th, table.drugs td { text-align: left; padding: 8px 4px; border-bott
 .cpr-clock.due { border-color: var(--crit); background: var(--crit-bg); }
 .cpr-btns button { min-height: 64px; font-weight: 700; }
 button.big { min-height: 72px; font-size: 20px; }
+
+/* Netlify injects a fixed "Powered by Netlify" badge (/.netlify/scripts/hud) at bottom-right,
+   on top of the tab bar, where it blocks the Meds and To ED tabs on phones. */
+#nl-badge-frame { display: none !important; }
