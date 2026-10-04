@@ -2,6 +2,7 @@ import * as E from './engine.js';
 import { PROTOCOLS, BY_ID, OPQRST, SAMPLE } from './protocols/index.js';
 import { ALERTS, REQUESTS, DEFAULT_SETTINGS, buildPrearrival, mailtoLink } from './prearrival.js';
 import { buildPdf } from './pdf.js';
+import { A3, BANDS, bandsForWeight, bandForLength, bandByColor, citation } from './peds.js';
 
 const STORE = 'emt-call-v1';
 const REASSESS_MS = { stable: 15 * 60e3, unstable: 5 * 60e3 };
@@ -12,6 +13,7 @@ let call = load() || E.newCall();
 call.moi ??= '';
 call.prearrival ??= { etaMin: '', level: 'BLS', alerts: [], requests: [], sentAt: null };
 let settings = loadSettings();
+let pedsLookup = { kg: '', cm: '', q: '' };
 let tab = 'call';
 let reassessMode = 'stable';
 
@@ -277,6 +279,65 @@ function bindReport() {
   };
 }
 
+// ---------- PEDS tab (NH v9.3 Appendix A3) ----------
+const SWATCH = { Gray: '#9ca3af', Pink: '#f9a8d4', Red: '#ef4444', Purple: '#a855f7', Yellow: '#facc15', White: '#ffffff', Blue: '#3b82f6', Orange: '#f97316', Green: '#22c55e' };
+const DARK_TEXT = new Set(['Gray', 'Pink', 'Yellow', 'White', 'Orange', 'Green']);
+
+function renderPeds() {
+  const { kg, cm, q } = pedsLookup;
+  const lookup = kg ? bandsForWeight(kg) : cm ? bandForLength(cm) : { bands: [], note: '' };
+  const chosen = call.pedsBand ? bandByColor(call.pedsBand) : null;
+  const band = chosen || (lookup.bands.length === 1 ? lookup.bands[0] : null);
+  const swatch = b => `background:${SWATCH[b.color]};color:${DARK_TEXT.has(b.color) ? '#111' : '#fff'}`;
+  const ql = q.trim().toLowerCase();
+  const drugs = band ? band.drugs.filter(d => !ql || d.drug.toLowerCase().includes(ql)) : [];
+  return `
+  <h2>Pediatric reference</h2>
+  <div class="unverified">UNVERIFIED transcription of NH v9.3 Appendix A3. Check the printed page before relying on a value. Give only drugs within your license level and the NH protocol.</div>
+  <div class="card">
+    <div class="grid2">
+      <div><label for="p-kg">Weight (kg)</label><input id="p-kg" inputmode="decimal" value="${esc(kg)}"></div>
+      <div><label for="p-cm">Length (cm)</label><input id="p-cm" inputmode="decimal" value="${esc(cm)}"></div>
+    </div>
+    ${lookup.note ? `<p class="verify">${esc(lookup.note)}</p>` : ''}
+    <label>Or tap the tape color</label>
+    <div class="swatches">${BANDS.map(b => `<button class="swatch ${band === b ? 'on' : ''} ${lookup.bands.includes(b) ? 'hint' : ''}" style="${swatch(b)}" data-band="${b.color}">${b.color}</button>`).join('')}</div>
+  </div>
+  ${band ? `
+  <div class="card band">
+    <div class="band-head" style="${swatch(band)}">${esc(band.color)} · ${esc(band.weightKg)} · ${esc(band.length)} · ${esc(band.ageLabel)}</div>
+    <table class="kv">
+      <tr><th>HR</th><td>${esc(band.vitals.heartRate)}</td><th>RR</th><td>${esc(band.vitals.respirations)}</td></tr>
+      <tr><th>SBP</th><td>${esc(band.vitals.bpSystolic)}</td><th>NS bolus</th><td>${esc(band.fluids.normalSaline)}</td></tr>
+      <tr><th>ET tube</th><td>${esc(band.equipment.etTube)}</td><th>Blade</th><td>${esc(band.equipment.bladeSize)}</td></tr>
+      <tr><th>Defib</th><td>${esc(band.energies.defibrillation)}</td><th>Cardiovert</th><td>${esc(band.energies.cardioversion)}</td></tr>
+    </table>
+    <p class="muted">A3 prints no OPA, NPA, SGA, BVM, suction, IV/IO, or gastric tube sizes: use the length-based tape.</p>
+    <label for="p-q">Find drug</label><input id="p-q" value="${esc(q)}" placeholder="e.g. epi, midazolam">
+    <table class="drugs"><thead><tr><th>Drug</th><th>Dose (as printed)</th></tr></thead><tbody>
+      ${drugs.map(d => `<tr><td>${esc(d.drug)}${d.route ? ` <span class="muted">${esc(d.route)}</span>` : ''}</td>
+        <td><b>${esc(d.dose)}</b>${d.mL ? `<br>${esc(d.mL)}` : ''}${d.note ? `<div class="verify">CHECK SOURCE: ${esc(d.note)}</div>` : ''}</td></tr>`).join('')}
+    </tbody></table>
+    <p class="muted">${esc(citation(band))}. mL volumes are not printed in A3 except D10, racemic epi, and NS.</p>
+  </div>` : ''}
+  <div class="card"><p class="muted">${esc(A3.pediatricDefinition.verbatim)} (NH 1.0)</p></div>`;
+}
+
+function bindPeds() {
+  const kg = $('#p-kg'), cm = $('#p-cm');
+  kg.onchange = () => { pedsLookup = { ...pedsLookup, kg: kg.value.trim(), cm: '' }; call.pedsBand = null; renderKeep(); };
+  cm.onchange = () => { pedsLookup = { ...pedsLookup, cm: cm.value.trim(), kg: '' }; call.pedsBand = null; renderKeep(); };
+  view.querySelectorAll('[data-band]').forEach(b => b.onclick = () => {
+    call.pedsBand = b.dataset.band;
+    call.events.push({ t: Date.now(), kind: 'note', text: `Pediatric band: ${call.pedsBand}` });
+    save(); renderKeep();
+  });
+  const q = $('#p-q');
+  if (q) q.oninput = () => { pedsLookup.q = q.value; const pos = q.selectionStart; renderKeep(); const n = $('#p-q'); n.focus(); n.setSelectionRange(pos, pos); };
+}
+
+function renderKeep() { const y = window.scrollY; render(); window.scrollTo(0, y); }
+
 // ---------- PRE-ARRIVAL tab ----------
 function renderPrearrival() {
   const pa = call.prearrival;
@@ -356,6 +417,7 @@ const TABS = {
   vitals: [renderVitals, bindVitals],
   history: [renderHistory, bindHistory],
   report: [renderReport, bindReport],
+  peds: [renderPeds, bindPeds],
   prearrival: [renderPrearrival, bindPrearrival],
 };
 

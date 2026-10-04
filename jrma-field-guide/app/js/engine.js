@@ -263,6 +263,7 @@ export function buildReport(call, protocolsById) {
     imp.length ? `Field impression: ${imp.join(', ')}.` : '',
     flags.length ? `RED FLAGS: ${flags.join('; ')}.` : '',
     protocolsUsed.length ? `Protocols: ${protocolsUsed.join(', ')}.` : '',
+    call.pedsBand ? `Pediatric band (NH A3): ${call.pedsBand}.` : '',
     historyLine(call.history),
     call.notes ? `Notes: ${call.notes}` : '',
   ].filter(Boolean);

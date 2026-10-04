@@ -42,7 +42,7 @@ export function buildPrearrival(call, settings, protocolsById, now = Date.now())
   for (const a of pa.alerts || []) lines.push({ style: 'alert', text: `*** ${a} ***` });
   lines.push(
     { style: 'head', text: 'PATIENT' },
-    { text: `${ageText(call.patient)} ${sex}` },
+    { text: `${ageText(call.patient)} ${sex}${call.pedsBand ? `, length-tape band ${call.pedsBand}` : ''}` },
     { text: `Chief complaint: ${call.chiefComplaint || 'not recorded'}` },
     { text: `MOI/NOI: ${call.moi || 'not recorded'}` },
   );

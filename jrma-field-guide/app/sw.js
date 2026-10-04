@@ -1,6 +1,6 @@
 // Cache-first app shell so the app works with no cell signal.
 // Bump VERSION whenever any file below changes, or phones keep the old copy.
-const VERSION = 'v2';
+const VERSION = 'v3';
 const FILES = [
   './',
   'index.html',
@@ -11,6 +11,8 @@ const FILES = [
   'js/engine.js',
   'js/prearrival.js',
   'js/pdf.js',
+  'js/peds.js',
+  'js/data/nh-a3.js',
   'js/protocols/index.js',
   'js/protocols/assessment.js',
   'js/protocols/chest-pain.js',
