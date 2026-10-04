@@ -4,6 +4,7 @@ import { ALERTS, REQUESTS, DEFAULT_SETTINGS, buildPrearrival, mailtoLink } from 
 import { buildPdf } from './pdf.js';
 import { A3, BANDS, bandsForWeight, bandForLength, bandByColor, citation } from './peds.js';
 import { searchDoses, doseSummary } from './doses.js';
+import { ARREST, newCpr, cprLog, cycleLeft, epiLeft, milestones, mmss as cmmss } from './cpr.js';
 
 const STORE = 'emt-call-v1';
 const REASSESS_MS = { stable: 15 * 60e3, unstable: 5 * 60e3 };
@@ -59,6 +60,7 @@ function tick() {
   btn.classList.toggle('due', left <= 0);
 }
 $('#reassessBtn').addEventListener('click', () => { tab = 'vitals'; render(); });
+$('#cprBtn').addEventListener('click', () => { tab = 'cpr'; render(); window.scrollTo(0, 0); });
 
 function renderFlags() {
   const flags = E.redFlags(call);
@@ -292,6 +294,114 @@ function bindReport() {
   };
 }
 
+// ---------- CPR timer (NH 3.2A / 3.2P / 3.6) ----------
+let metro = null;
+function metronome(on) {
+  if (metro) { clearInterval(metro.timer); metro.ctx.close(); metro = null; }
+  if (!on) return;
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const beep = () => { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 880; g.gain.value = 0.3; o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.05); };
+  metro = { ctx, timer: setInterval(beep, 60000 / ARREST.metronome.bpm) };
+}
+
+const CPR_BUTTONS = [
+  ['check', 'Rhythm / pulse check', ''],
+  ['shock', 'Shock delivered', ''],
+  ['epi', 'Epinephrine given', ''],
+  ['airway', 'Airway placed (BVM/SGA/ETI)', ''],
+  ['access', 'IV / IO established', ''],
+  ['rosc', 'ROSC', 'primary'],
+];
+const CPR_TEXT = { check: 'Rhythm/pulse check', shock: 'Defibrillation', epi: 'Epinephrine', airway: 'Advanced airway', access: 'IV/IO access', rosc: 'ROSC', start: 'CPR started', resume: 'CPR resumed (loss of ROSC)' };
+
+function renderCpr() {
+  const c = call.cpr;
+  const ref = g => ARREST[g];
+  if (!c) {
+    return `<h2>Cardiac arrest</h2>
+      <div class="unverified">UNVERIFIED extraction of NH v9.3 3.2A / 3.2P / 3.6. Follow the protocol book.</div>
+      <div class="stack"><button class="primary big" data-cpr-start="adult">Start CPR: adult</button>
+      <button class="big" data-cpr-start="pediatric">Start CPR: pediatric</button></div>
+      <p class="muted">Compressions first. The timer runs ${ARREST.cycleSeconds / 60}-minute cycles and the metronome at ${ARREST.metronome.bpm}/min (NH range: ${esc(ARREST.metronome.range.value)}, ${esc(ARREST.metronome.range.cite)}).</p>`;
+  }
+  const now = Date.now();
+  const left = cycleLeft(c, now);
+  const epi = epiLeft(c, now);
+  const g = ref(c.group);
+  const band = call.pedsBand ? bandByColor(call.pedsBand) : null;
+  const bandEpi = band && c.group === 'pediatric' ? band.drugs.find(d => /Epinephrine 1:10,000/.test(d.drug)) : null;
+  return `
+  <div class="cpr-clock ${left <= 0 ? 'due' : left <= 15 ? 'soon' : ''}">
+    <div><small>Arrest time</small><b id="cprTotal">${cmmss(Math.round((now - c.startedAt) / 1000))}</b></div>
+    <div><small>${left <= 0 ? 'ANALYZE NOW' : 'Next check'}</small><b id="cprCycle">${cmmss(left)}</b></div>
+    <div><small>Epi ${epi == null ? '' : epi <= 0 ? 'DUE' : 'in'}</small><b id="cprEpi">${epi == null ? '--' : epi <= 0 ? 'NOW' : cmmss(epi)}</b></div>
+  </div>
+  ${c.rosc ? `<div class="flag" style="background:var(--ok-bg);color:var(--ok)">ROSC ${E.hhmm(c.rosc)}: follow 3.4 Post Resuscitative Care</div>` : ''}
+  ${milestones(c, now).map(m => `<div class="verify">${esc(m.text)} (NH ${esc(m.cite)})</div>`).join('')}
+  <div class="grid2" style="margin-top:10px">
+    <button class="${metro ? 'primary' : ''}" id="metro">${metro ? 'Metronome ON' : 'Metronome OFF'}</button>
+    <div class="muted" style="align-self:center">${c.group === 'adult' ? 'Adult' : 'Pediatric'} · cycles ${c.cycles} · shocks ${c.shocks} · epi ${c.epiCount}</div>
+  </div>
+  <div class="grid2 cpr-btns">${CPR_BUTTONS.map(([k, label, cls]) => k === 'rosc' && c.rosc
+    ? `<button data-cpr="resume">Loss of ROSC: resume</button>`
+    : `<button class="${cls}" data-cpr="${k}">${label}</button>`).join('')}</div>
+  <details class="card" open><summary>NH reference (${c.group})</summary>
+    <ul class="items">
+      <li><b>Ventilation:</b> ${esc(g.ventilation.value)} <span class="muted">${esc(g.ventilation.cite)}</span></li>
+      ${g.advancedAirway ? `<li><b>Advanced airway:</b> ${esc(g.advancedAirway.value)} <span class="muted">${esc(g.advancedAirway.cite)}</span></li>` : ''}
+      <li><b>Epinephrine (${esc(g.epi.level)}):</b> ${esc(g.epi.src.value)} <span class="muted">${esc(g.epi.src.cite)}</span></li>
+      ${g.epi.src2 ? `<li>${esc(g.epi.src2.value)} <span class="muted">${esc(g.epi.src2.cite)}</span></li>` : ''}
+      ${bandEpi ? `<li><b>${esc(band.color)} band (A3):</b> ${esc(bandEpi.drug)} ${esc(bandEpi.dose)}; defib ${esc(band.energies.defibrillation)}</li>` : ''}
+      <li><b>Defibrillation:</b> ${esc(g.defib.value)} <span class="muted">${esc(g.defib.cite)}</span></li>
+      <li><b>Anti-dysrhythmic:</b> ${esc(g.antidysrhythmic.value)} <span class="muted">${esc(g.antidysrhythmic.cite)}</span></li>
+      <li><b>Compressor rotation:</b> ${ARREST.rotation.map(r => `${esc(r.value)} <span class="muted">(${esc(r.cite)})</span>`).join('; ')}. NH states both.</li>
+      <li><b>ETCO2:</b> ${esc(ARREST.etco2.value)} <span class="muted">${esc(ARREST.etco2.cite)}</span></li>
+      <li><b>Reversible causes:</b> ${g.causes.map(x => esc(x.value)).join('; ')}</li>
+      <li><b>Mechanical CPR:</b> ${esc(g.mechanical.value)} <span class="muted">${esc(g.mechanical.cite)}</span></li>
+      <li><b>TOR:</b> ${esc(ARREST.torMinimum.value)} <span class="muted">${esc(ARREST.torMinimum.cite)}</span>. ${esc(ARREST.torExtended.value)}</li>
+    </ul>
+  </details>
+  <div class="card"><h3>Arrest log</h3><ul class="items">${c.events.slice().reverse().map(e => `<li>${E.hhmm(e.t)} ${esc(e.text)}</li>`).join('')}</ul></div>
+  <button class="danger" id="cprEnd" style="width:100%">Close CPR timer (log stays in report)</button>`;
+}
+
+function cprEvent(kind) {
+  const now = Date.now();
+  const text = CPR_TEXT[kind];
+  cprLog(call.cpr, kind, text, now);
+  if (kind === 'resume') call.cpr.rosc = null;
+  if (kind !== 'check') call.events.push({ t: now, kind: 'action', protocolId: 'cpr', text, status: 'done', note: '' });
+  else call.events.push({ t: now, kind: 'note', text: `Rhythm/pulse check (cycle ${call.cpr.cycles})` });
+  save(); renderKeep();
+}
+
+function bindCpr() {
+  view.querySelectorAll('[data-cpr-start]').forEach(b => b.onclick = () => {
+    call.cpr = newCpr(Date.now(), b.dataset.cprStart);
+    cprLog(call.cpr, 'start', `CPR started (${b.dataset.cprStart})`);
+    call.events.push({ t: Date.now(), kind: 'action', protocolId: 'cpr', text: 'CPR started', status: 'done', note: '' });
+    metronome(true); save(); render();
+  });
+  view.querySelectorAll('[data-cpr]').forEach(b => b.onclick = () => cprEvent(b.dataset.cpr));
+  const m = $('#metro'); if (m) m.onclick = () => { metronome(!metro); renderKeep(); };
+  const end = $('#cprEnd'); if (end) end.onclick = () => { if (!confirm('Close the CPR timer?')) return; metronome(false); call.cpr = null; save(); tab = 'report'; render(); };
+}
+
+// Live clock updates without re-rendering the buttons.
+function tickCpr() {
+  if (tab !== 'cpr' || !call.cpr) return;
+  const c = call.cpr, now = Date.now(), left = cycleLeft(c, now), epi = epiLeft(c, now);
+  // Re-render when a prompt or label changes; otherwise only update the numbers.
+  const state = `${left <= 0}|${epi != null && epi <= 0}|${milestones(c, now).length}`;
+  if (state !== tickCpr.last) { tickCpr.last = state; renderKeep(); return; }
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('cprTotal', cmmss(Math.round((now - c.startedAt) / 1000)));
+  set('cprCycle', cmmss(left));
+  set('cprEpi', epi == null ? '--' : epi <= 0 ? 'NOW' : cmmss(epi));
+  const box = document.querySelector('.cpr-clock');
+  if (box) { box.classList.toggle('due', left <= 0); box.classList.toggle('soon', left > 0 && left <= 15); }
+}
+
 // ---------- PEDS tab (NH v9.3 Appendix A3) ----------
 const SWATCH = { Gray: '#9ca3af', Pink: '#f9a8d4', Red: '#ef4444', Purple: '#a855f7', Yellow: '#facc15', White: '#ffffff', Blue: '#3b82f6', Orange: '#f97316', Green: '#22c55e' };
 const DARK_TEXT = new Set(['Gray', 'Pink', 'Yellow', 'White', 'Orange', 'Green']);
@@ -477,6 +587,7 @@ const TABS = {
   history: [renderHistory, bindHistory],
   report: [renderReport, bindReport],
   peds: [renderMeds, bindMeds],
+  cpr: [renderCpr, bindCpr],
   prearrival: [renderPrearrival, bindPrearrival],
 };
 
@@ -496,7 +607,7 @@ function render() {
 function commit() { save(); render(); window.scrollTo(0, 0); }
 
 document.querySelectorAll('.tabs button').forEach(btn => btn.onclick = () => { tab = btn.dataset.tab; render(); window.scrollTo(0, 0); });
-setInterval(tick, 1000);
+setInterval(() => { tick(); tickCpr(); }, 1000);
 render();
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});

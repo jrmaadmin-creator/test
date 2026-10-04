@@ -22,5 +22,6 @@ Offline phone app (PWA) for JRMA crews (EMT, AEMT, Paramedic): call flow, MIST h
 - `app/js/prearrival.js`, `app/js/pdf.js` — ED pre-arrival report and fax-ready PDF
 - `app/js/peds.js`, `app/js/data/nh-a3.js` — NH A3 pediatric color bands (ADR 0006)
 - `app/js/doses.js`, `app/js/data/nh-doses.js` — NH v9.3 dosing statements, searchable; conflicts in `docs/reference/nh-doses-notes.md`
+- `app/js/cpr.js`, `app/js/data/nh-arrest.js` — CPR timer; every number traces to NH text (ADR 0007)
 - `app/js/protocols/` — one file per protocol (see its CLAUDE.md)
 - `docs/` — Diataxis: tutorials, how-to, reference, explanation; `docs/adr/` decision records

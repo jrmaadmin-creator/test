@@ -17,7 +17,7 @@ test('validator catches a broken link and an unreachable node', () => {
 });
 
 test('verified protocol must cite section and page', () => {
-  const p = { ...BY_ID['stroke'], verified: true };
+  const p = { ...BY_ID['stroke'], verified: true, source: { doc: 'NH Patient Care Protocols v9.3' } };
   assert.ok(E.validateProtocol(p).some(e => e.includes('needs source.section')));
 });
 
