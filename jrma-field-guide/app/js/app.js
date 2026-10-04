@@ -3,6 +3,7 @@ import { PROTOCOLS, BY_ID, OPQRST, SAMPLE } from './protocols/index.js';
 import { ALERTS, REQUESTS, DEFAULT_SETTINGS, buildPrearrival, mailtoLink } from './prearrival.js';
 import { buildPdf } from './pdf.js';
 import { A3, BANDS, bandsForWeight, bandForLength, bandByColor, citation } from './peds.js';
+import { searchDoses, doseSummary } from './doses.js';
 
 const STORE = 'emt-call-v1';
 const REASSESS_MS = { stable: 15 * 60e3, unstable: 5 * 60e3 };
@@ -14,6 +15,8 @@ call.moi ??= '';
 call.prearrival ??= { etaMin: '', level: 'BLS', alerts: [], requests: [], sentAt: null };
 let settings = loadSettings();
 let pedsLookup = { kg: '', cm: '', q: '' };
+let medsView = 'bands';
+let doseQuery = { q: '', level: 'All', group: 'All' };
 let tab = 'call';
 let reassessMode = 'stable';
 
@@ -283,6 +286,52 @@ function bindReport() {
 const SWATCH = { Gray: '#9ca3af', Pink: '#f9a8d4', Red: '#ef4444', Purple: '#a855f7', Yellow: '#facc15', White: '#ffffff', Blue: '#3b82f6', Orange: '#f97316', Green: '#22c55e' };
 const DARK_TEXT = new Set(['Gray', 'Pink', 'Yellow', 'White', 'Orange', 'Green']);
 
+function renderMeds() {
+  const sw = `<div class="seg"><button data-mv="bands" class="${medsView === 'bands' ? 'on' : ''}">Peds color bands</button><button data-mv="lookup" class="${medsView === 'lookup' ? 'on' : ''}">Dose lookup</button></div>`;
+  return sw + (medsView === 'bands' ? renderPeds() : renderDoseLookup());
+}
+function bindMeds() {
+  view.querySelectorAll('[data-mv]').forEach(b => b.onclick = () => { medsView = b.dataset.mv; render(); });
+  (medsView === 'bands' ? bindPeds : bindDoseLookup)();
+}
+
+function renderDoseLookup() {
+  const { q, level, group } = doseQuery;
+  const hits = q.trim().length >= 2 ? searchDoses(q, { level, group }) : [];
+  const opt = (id, list, cur) => `<select id="${id}">${list.map(x => `<option ${x === cur ? 'selected' : ''}>${x}</option>`).join('')}</select>`;
+  return `
+  <div class="unverified">UNVERIFIED extraction of NH v9.3 protocols and Appendix A2. Values as printed. Confirm against the protocol book; give only within your license level.</div>
+  <div class="card">
+    <label for="d-q">Drug, indication, or protocol number</label>
+    <input id="d-q" value="${esc(q)}" placeholder="e.g. ketamine pain, 3.5A, naloxone">
+    <div class="grid2">
+      <div><label for="d-level">Level stated</label>${opt('d-level', ['All', 'EMT', 'AEMT', 'Paramedic'], level)}</div>
+      <div><label for="d-group">Patient</label>${opt('d-group', ['All', 'Adult', 'Pediatric'], group)}</div>
+    </div>
+    ${q.trim().length >= 2 ? `<p class="muted">${hits.length} statement${hits.length === 1 ? '' : 's'}</p>` : '<p class="muted">Type at least 2 letters. Pediatric weight-band doses are under Peds color bands.</p>'}
+  </div>
+  ${hits.slice(0, 60).map(d => `
+  <div class="card dose">
+    <div class="node-title">${esc(d.drug)}</div>
+    <div class="muted">${esc(d.indication)} · ${esc(d.group)}</div>
+    <div class="dose">${esc(doseSummary(d))}${d.route ? ` <span class="muted">${esc(d.route)}</span>` : ''}</div>
+    ${d.maxSingle ? `<div>Max single: <b>${esc(d.maxSingle)}</b></div>` : ''}
+    ${d.maxTotal ? `<div>Max total: <b>${esc(d.maxTotal)}</b></div>` : ''}
+    ${d.repeat ? `<div>Repeat: ${esc(d.repeat)}</div>` : ''}
+    ${d.concentration ? `<div>Concentration stated: ${esc(d.concentration)}</div>` : ''}
+    ${d.cautions ? `<div class="verify">${esc(d.cautions)}</div>` : ''}
+    <div class="muted">Level: ${esc(d.level || 'not stated')} · ${esc(d.protocol)} ${esc(d.protocolTitle)} · ${esc(d.page)}</div>
+    <details><summary>Protocol text</summary><p>${esc(d.verbatim)}</p></details>
+  </div>`).join('')}
+  ${hits.length > 60 ? '<p class="muted">Showing first 60. Narrow the search.</p>' : ''}`;
+}
+function bindDoseLookup() {
+  const q = $('#d-q');
+  q.oninput = () => { doseQuery.q = q.value; const pos = q.selectionStart; renderKeep(); const n = $('#d-q'); n.focus(); n.setSelectionRange(pos, pos); };
+  $('#d-level').onchange = e => { doseQuery.level = e.target.value; renderKeep(); };
+  $('#d-group').onchange = e => { doseQuery.group = e.target.value; renderKeep(); };
+}
+
 function renderPeds() {
   const { kg, cm, q } = pedsLookup;
   const lookup = kg ? bandsForWeight(kg) : cm ? bandForLength(cm) : { bands: [], note: '' };
@@ -417,7 +466,7 @@ const TABS = {
   vitals: [renderVitals, bindVitals],
   history: [renderHistory, bindHistory],
   report: [renderReport, bindReport],
-  peds: [renderPeds, bindPeds],
+  peds: [renderMeds, bindMeds],
   prearrival: [renderPrearrival, bindPrearrival],
 };
 

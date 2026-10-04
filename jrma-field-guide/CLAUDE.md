@@ -8,6 +8,7 @@ Offline phone app (PWA) for JRMA crews (EMT, AEMT, Paramedic): call flow, MIST h
 - No patient identifiers (name, DOB, address) anywhere in the app. Age and sex only.
 - Every intervention carries its NH license level (EMT, AEMT, Paramedic).
 - Pre-arrival report: never add Notes, History, names, DOB, or addresses (ADR 0005). Tests enforce it.
+- Medication data is shown as printed; never correct a State value in code. Flag it with a `note`.
 - No build step, no dependencies. Plain ES modules.
 
 ## Commands
@@ -19,5 +20,7 @@ Offline phone app (PWA) for JRMA crews (EMT, AEMT, Paramedic): call flow, MIST h
 - `app/js/engine.js` — pure logic (runner, vitals flags, impressions, report). No DOM.
 - `app/js/app.js` — UI
 - `app/js/prearrival.js`, `app/js/pdf.js` — ED pre-arrival report and fax-ready PDF
+- `app/js/peds.js`, `app/js/data/nh-a3.js` — NH A3 pediatric color bands (ADR 0006)
+- `app/js/doses.js`, `app/js/data/nh-doses.js` — NH v9.3 dosing statements, searchable; conflicts in `docs/reference/nh-doses-notes.md`
 - `app/js/protocols/` — one file per protocol (see its CLAUDE.md)
 - `docs/` — Diataxis: tutorials, how-to, reference, explanation; `docs/adr/` decision records

@@ -133,3 +133,8 @@ table.kv, table.drugs { width: 100%; border-collapse: collapse; font-size: 16px;
 table.kv th { text-align: left; color: var(--muted); font-weight: 600; padding: 6px 4px; width: 22%; }
 table.kv td { font-weight: 700; padding: 6px 4px; }
 table.drugs th, table.drugs td { text-align: left; padding: 8px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 12px 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; }
+.seg button.on { background: var(--accent); color: var(--accent-text); font-weight: 700; }
+.card.dose > div { margin-top: 4px; }

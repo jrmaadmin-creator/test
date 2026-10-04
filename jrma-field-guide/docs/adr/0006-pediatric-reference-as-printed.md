@@ -14,3 +14,5 @@ Status: Accepted · 2026-10-04
 - + No calculation errors possible: the app is a faster way to read the State's own table.
 - − Less than Handtevy: no mL for most drugs, no equipment beyond ETT and blade (A3 prints none).
 - Next: a stock file (drug, concentration, source) approved by the medical director, then mL = printed mg ÷ concentration, tested against a hand-calculated table.
+
+**Addendum 2026-10-04.** The same rule covers the Dose lookup (Meds tab): 485 NH v9.3 dosing statements from the protocols and Appendix A2, searchable by drug, indication, or protocol number, filtered by the level text NH states. Shown as printed with page and verbatim text. Extraction conflicts are listed in `docs/reference/nh-doses-notes.md`.
