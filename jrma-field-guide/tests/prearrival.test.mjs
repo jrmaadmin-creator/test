@@ -73,3 +73,22 @@ test('service worker caches every top-level js file', () => {
   const sw = readFileSync(new URL('../app/sw.js', import.meta.url), 'utf8');
   for (const f of readdirSync(new URL('../app/js/', import.meta.url)).filter(f => f.endsWith('.js'))) assert.ok(sw.includes(`js/${f}`), f);
 });
+
+import { faxDigits, faxAddress } from '../app/js/prearrival.js';
+
+test('fax numbers normalize to 10 digits and build the SRFax address', () => {
+  assert.equal(faxDigits('603-532-2405'), '6035322405');
+  assert.equal(faxDigits('1 (603) 532-2405'), '6035322405');
+  assert.equal(faxDigits('532-2405'), null);
+  assert.equal(faxAddress({ faxService: 'srfax', faxNumber: '603-532-2405' }), '16035322405@srfax.com');
+  assert.equal(faxAddress({ faxService: 'srfax', faxNumber: '' }), null);
+  assert.equal(faxAddress({ faxService: 'custom', faxEmail: ' x@y.example ' }), 'x@y.example');
+});
+
+test('test mode stamps the report top and bottom and the subject', () => {
+  const r = buildPrearrival(sampleCall(), { testMode: true }, BY_ID);
+  assert.equal(r.lines[0].text, '*** TEST - NOT A PATIENT ***');
+  assert.equal(r.lines[r.lines.length - 1].text, '*** TEST - NOT A PATIENT ***');
+  assert.match(r.subject, /^TEST - /);
+  assert.doesNotMatch(buildPrearrival(sampleCall(), {}, BY_ID).text, /TEST - NOT/);
+});

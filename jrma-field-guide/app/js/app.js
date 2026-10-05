@@ -1,6 +1,6 @@
 import * as E from './engine.js';
 import { PROTOCOLS, BY_ID, OPQRST, SAMPLE } from './protocols/index.js';
-import { ALERTS, REQUESTS, DEFAULT_SETTINGS, buildPrearrival, mailtoLink } from './prearrival.js';
+import { ALERTS, REQUESTS, DEFAULT_SETTINGS, FAX_SERVICES, buildPrearrival, mailtoLink, faxAddress } from './prearrival.js';
 import { buildPdf } from './pdf.js';
 import { A3, BANDS, bandsForWeight, bandForLength, bandByColor, citation } from './peds.js';
 import { searchDoses, doseSummary } from './doses.js';
@@ -523,6 +523,7 @@ function renderPrearrival() {
     <h3>Alerts</h3>${chk(ALERTS, 'alerts')}
     <h3>Requests</h3>${chk(REQUESTS, 'requests')}
   </div>
+  ${settings.testMode ? '<div class="flag">TEST MODE: reports are stamped "TEST - NOT A PATIENT"</div>' : ''}
   <div class="stack">
     <button class="primary" id="sendFax">Email to ${esc(settings.destination)} fax</button>
     <button id="sharePdf">Share PDF</button>
@@ -533,8 +534,13 @@ function renderPrearrival() {
     <label for="s-unit">Unit name</label><input id="s-unit" value="${esc(settings.unit)}">
     <label for="s-cb">Crew callback number</label><input id="s-cb" inputmode="tel" value="${esc(settings.callback)}">
     <label for="s-dest">Destination</label><input id="s-dest" value="${esc(settings.destination)}">
-    <label for="s-fax">ED email-to-fax address</label><input id="s-fax" inputmode="email" value="${esc(settings.faxEmail)}" placeholder="from your fax service, e.g. 1XXXXXXXXXX@...">
-    <p class="muted">The fax service must have a signed BAA with JRMA. Its delivery receipt arrives in the sending mailbox.</p>
+    <label for="s-svc">Fax service</label>
+    <select id="s-svc">${Object.entries(FAX_SERVICES).map(([k, v]) => `<option value="${k}" ${settings.faxService === k ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}</select>
+    ${settings.faxService === 'custom'
+      ? `<label for="s-fax">Full email-to-fax address</label><input id="s-fax" inputmode="email" value="${esc(settings.faxEmail)}">`
+      : `<label for="s-faxnum">Destination fax number</label><input id="s-faxnum" inputmode="tel" value="${esc(settings.faxNumber)}" placeholder="603-555-0100">`}
+    <p class="muted">Sends to: <b>${esc(faxAddress(settings) || 'not set')}</b>. Send from the email address registered with the fax service; it must have a signed BAA with JRMA. The delivery receipt comes back to that mailbox.</p>
+    <label class="chk"><input type="checkbox" id="s-test" ${settings.testMode ? 'checked' : ''}> Test mode: stamp reports "TEST - NOT A PATIENT"</label>
   </details>`;
 }
 
@@ -551,17 +557,21 @@ function bindPrearrival() {
     });
   }
   const setting = (id, key) => { $('#' + id).onchange = e => { settings[key] = e.target.value.trim(); saveSettings(); render(); }; };
-  setting('s-unit', 'unit'); setting('s-cb', 'callback'); setting('s-dest', 'destination'); setting('s-fax', 'faxEmail');
+  setting('s-unit', 'unit'); setting('s-cb', 'callback'); setting('s-dest', 'destination'); setting('s-svc', 'faxService');
+  if ($('#s-fax')) setting('s-fax', 'faxEmail');
+  if ($('#s-faxnum')) setting('s-faxnum', 'faxNumber');
+  $('#s-test').onchange = e => { settings.testMode = e.target.checked; saveSettings(); renderKeep(); };
   const markSent = how => {
     pa.sentAt = Date.now();
     call.events.push({ t: pa.sentAt, kind: 'note', text: `Pre-arrival report sent to ${settings.destination} (${how})` });
     save();
   };
   $('#sendFax').onclick = () => {
-    if (!settings.faxEmail) { alert('Add the ED email-to-fax address in Settings first.'); return; }
+    const to = faxAddress(settings);
+    if (!to) { alert('Set the fax service and a 10-digit fax number in Settings first.'); return; }
     const r = buildPrearrival(call, settings, BY_ID);
-    markSent('email-to-fax');
-    location.href = mailtoLink(r, settings.faxEmail);
+    markSent(settings.testMode ? 'email-to-fax, TEST' : 'email-to-fax');
+    location.href = mailtoLink(r, to);
   };
   $('#sharePdf').onclick = async () => {
     const r = buildPrearrival(call, settings, BY_ID);

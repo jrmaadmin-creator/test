@@ -11,8 +11,33 @@ export const DEFAULT_SETTINGS = {
   callback: '',
   destination: 'Monadnock Community Hospital ED',
   myLevel: 'EMT',
-  faxEmail: '',  // fax vendor email-to-fax address for the ED fax, e.g. 1XXXXXXXXXX@vendor-domain
+  faxService: 'srfax',
+  faxNumber: '',  // destination fax number; the address is built from the service's format
+  faxEmail: '',   // full email-to-fax address, used only when faxService is 'custom'
+  testMode: false,
 };
+
+// Email-to-fax address formats. Add a service only with its documented format.
+// SRFax: country code + area code + number @srfax.com (https://www.srfax.com/support/how-srfax-works/).
+export const FAX_SERVICES = {
+  srfax: { label: 'SRFax', address: digits => `1${digits}@srfax.com` },
+  custom: { label: 'Other (type the full address)' },
+};
+
+// US fax number to 10 digits, or null.
+export function faxDigits(input) {
+  let d = String(input || '').replace(/\D/g, '');
+  if (d.length === 11 && d.startsWith('1')) d = d.slice(1);
+  return d.length === 10 ? d : null;
+}
+
+export function faxAddress(settings) {
+  const s = { ...DEFAULT_SETTINGS, ...settings };
+  if (s.faxService === 'custom') return s.faxEmail.trim() || null;
+  const svc = FAX_SERVICES[s.faxService];
+  const d = faxDigits(s.faxNumber);
+  return svc && svc.address && d ? svc.address(d) : null;
+}
 
 export function ageText(patient) {
   if (patient.age === '' || patient.age == null) return 'Age unknown';
@@ -35,7 +60,9 @@ export function buildPrearrival(call, settings, protocolsById, now = Date.now())
   const imp = impressions(call).slice(0, 3).map(i => i.name);
   const flags = redFlags(call);
 
+  const test = s.testMode ? [{ style: 'title', text: '*** TEST - NOT A PATIENT ***' }] : [];
   const lines = [
+    ...test,
     { style: 'title', text: `${s.unit} PRE-ARRIVAL REPORT` },
     { text: `To: ${s.destination}` },
     { text: `Sent ${hhmm(now)}  |  ${etaLine}  |  ${pa.level || 'BLS'}${s.callback ? `  |  Callback ${s.callback}` : ''}` },
@@ -64,9 +91,10 @@ export function buildPrearrival(call, settings, protocolsById, now = Date.now())
   lines.push(
     { text: '' },
     { text: 'Contains no patient name, DOB, or address by design. Verbal report on arrival; full PCR to follow in NHESR.' },
+    ...test,
   );
   const text = lines.map(l => l.text).join('\n');
-  return { lines, text, subject: `${s.unit} pre-arrival: ${ageText(call.patient)} ${sex}, ${call.chiefComplaint || 'no CC'}, ${etaLine}` };
+  return { lines, text, subject: `${s.testMode ? 'TEST - ' : ''}${s.unit} pre-arrival: ${ageText(call.patient)} ${sex}, ${call.chiefComplaint || 'no CC'}, ${etaLine}` };
 }
 
 // mailto: link that opens the phone's mail app addressed to the email-to-fax gateway.

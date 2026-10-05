@@ -1,6 +1,6 @@
 // Cache-first app shell so the app works with no cell signal.
 // Bump VERSION whenever any file below changes, or phones keep the old copy.
-const VERSION = 'v7';
+const VERSION = 'v8';
 const FILES = [
   './',
   'index.html',
