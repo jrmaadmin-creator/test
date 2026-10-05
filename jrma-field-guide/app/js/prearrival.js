@@ -12,9 +12,12 @@ export const DEFAULT_SETTINGS = {
   destination: 'Monadnock Community Hospital ED',
   myLevel: 'EMT',
   faxService: 'srfax',
-  faxNumber: '',  // destination fax number; the address is built from the service's format
+  // Destination fax number. Set to JRMA station fax (603-532-2405) for testing, owner's request 2026-10-05.
+  // Change to the receiving ED's fax after testing. SRFax only accepts email from registered senders,
+  // so a public default does not let strangers send faxes.
+  faxNumber: '603-532-2405',
   faxEmail: '',   // full email-to-fax address, used only when faxService is 'custom'
-  testMode: false,
+  testMode: true, // stamps TEST - NOT A PATIENT until turned off in Settings
 };
 
 // Email-to-fax address formats. Add a service only with its documented format.

@@ -90,5 +90,11 @@ test('test mode stamps the report top and bottom and the subject', () => {
   assert.equal(r.lines[0].text, '*** TEST - NOT A PATIENT ***');
   assert.equal(r.lines[r.lines.length - 1].text, '*** TEST - NOT A PATIENT ***');
   assert.match(r.subject, /^TEST - /);
-  assert.doesNotMatch(buildPrearrival(sampleCall(), {}, BY_ID).text, /TEST - NOT/);
+  assert.doesNotMatch(buildPrearrival(sampleCall(), { testMode: false }, BY_ID).text, /TEST - NOT/);
+});
+
+test('default settings send to the JRMA station fax via SRFax, in test mode', async () => {
+  const { DEFAULT_SETTINGS } = await import('../app/js/prearrival.js');
+  assert.equal(faxAddress(DEFAULT_SETTINGS), '16035322405@srfax.com');
+  assert.equal(DEFAULT_SETTINGS.testMode, true);
 });

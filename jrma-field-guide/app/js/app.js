@@ -31,7 +31,11 @@ function save() {
 
 // Settings (unit name, callback, fax address) survive End Call; they hold no patient data.
 function loadSettings() {
-  try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS) || '{}') }; } catch { return { ...DEFAULT_SETTINGS }; }
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(SETTINGS) || '{}'); } catch { /* storage blocked */ }
+  const s = { ...DEFAULT_SETTINGS, ...saved };
+  if (!s.faxNumber) s.faxNumber = DEFAULT_SETTINGS.faxNumber; // phones saved before the default existed
+  return s;
 }
 function saveSettings() {
   try { localStorage.setItem(SETTINGS, JSON.stringify(settings)); } catch { /* ignore */ }
