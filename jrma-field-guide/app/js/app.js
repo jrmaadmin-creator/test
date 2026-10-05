@@ -532,7 +532,7 @@ function renderPrearrival() {
     <button class="primary" id="sendFax">Email to ${esc(settings.destination)} fax</button>
     <button id="sharePdf">Share PDF</button>
   </div>
-  ${pa.sentAt ? `<p class="muted">Last sent ${E.hhmm(pa.sentAt)}.</p>` : ''}
+  ${pa.sentAt ? `<p class="muted">Mail app opened ${E.hhmm(pa.sentAt)}. The app cannot see whether the email went out: the fax service's delivery receipt arrives in your email inbox.</p>` : ''}
   <div class="card"><pre class="preview">${esc(r.text)}</pre></div>
   <details class="card"><summary>Settings (saved on this phone)</summary>
     <label for="s-unit">Unit name</label><input id="s-unit" value="${esc(settings.unit)}">
@@ -568,7 +568,7 @@ function bindPrearrival() {
   $('#s-test').onchange = e => { settings.testMode = e.target.checked; saveSettings(); renderKeep(); };
   const markSent = how => {
     pa.sentAt = Date.now();
-    call.events.push({ t: pa.sentAt, kind: 'note', text: `Pre-arrival report sent to ${settings.destination} (${how})` });
+    call.events.push({ t: pa.sentAt, kind: 'note', text: `Pre-arrival report handed to ${how} for ${settings.destination}` });
     save();
   };
   $('#sendFax').onclick = () => {
