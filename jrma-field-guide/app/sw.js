@@ -1,6 +1,6 @@
-// Cache-first app shell so the app works with no cell signal.
+// Offline app shell: files are cached at install so the app works with no cell signal.
 // Bump VERSION whenever any file below changes, or phones keep the old copy.
-const VERSION = 'v10';
+const VERSION = 'v11';
 const FILES = [
   './',
   'index.html',
@@ -35,7 +35,16 @@ self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
+// Network first: with signal, always serve the latest files (and refresh the cache);
+// with no signal, fall back to the cached copy. Protocol content must not go stale silently.
 self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
-  e.respondWith(caches.match(e.request, { ignoreSearch: true }).then(hit => hit || fetch(e.request)));
+  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
+  e.respondWith(
+    fetch(e.request)
+      .then(res => {
+        if (res.ok) { const copy = res.clone(); caches.open(VERSION).then(c => c.put(e.request, copy)); }
+        return res;
+      })
+      .catch(() => caches.match(e.request, { ignoreSearch: true }))
+  );
 });

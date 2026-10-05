@@ -625,4 +625,12 @@ document.querySelectorAll('.tabs button').forEach(btn => btn.onclick = () => { t
 setInterval(() => { tick(); tickCpr(); }, 1000);
 render();
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator) {
+  // When an updated service worker takes over, reload once so the page runs the new code.
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hadController && !reloaded) { reloaded = true; location.reload(); }
+  });
+  navigator.serviceWorker.register('sw.js').then(r => r.update()).catch(() => {});
+}
