@@ -19,6 +19,7 @@ export const DEFAULT_SETTINGS = {
   faxEmail: '',   // full email-to-fax address, used only when faxService is 'custom'
   replyFax: '603-386-6611', // JRMA's SRFax number (inbound); printed on the report so the ED can fax back
   testMode: true, // stamps TEST - NOT A PATIENT until turned off in Settings
+  senderEmail: '', // Gmail account to send from; must be an SRFax authorized sender
 };
 
 // Email-to-fax address formats. Add a service only with its documented format.
@@ -99,7 +100,22 @@ export function buildPrearrival(call, settings, protocolsById, now = Date.now())
     ...test,
   );
   const text = lines.map(l => l.text).join('\n');
-  return { lines, text, subject: `${s.testMode ? 'TEST - ' : ''}${s.unit} pre-arrival: ${ageText(call.patient)} ${sex}, ${call.chiefComplaint || 'no CC'}, ${etaLine}` };
+  const subject = `${s.testMode ? 'TEST - ' : ''}${s.unit} pre-arrival: ${ageText(call.patient)} ${sex}, ${call.chiefComplaint || 'no CC'}, ${etaLine}`;
+  return { lines, text, subject: safeSubject(subject) };
+}
+
+// SRFax reads "Key=value" pairs separated by "/" in the subject as cover-page settings
+// (https://www.srfax.com/support/fax-email-guide/). Strip both characters so free text can't trigger them.
+export function safeSubject(subject) {
+  return subject.replace(/[\/=]/g, '-');
+}
+
+// Gmail compose link (works in any browser, and opens the Gmail app on phones that have it).
+// authuser picks which signed-in Google account sends; it must be an SRFax authorized sender.
+export function gmailLink(report, to, senderEmail = '') {
+  const q = new URLSearchParams({ view: 'cm', fs: '1', to, su: report.subject, body: report.text });
+  if (senderEmail) q.set('authuser', senderEmail);
+  return `https://mail.google.com/mail/?${q.toString()}`;
 }
 
 // mailto: link that opens the phone's mail app addressed to the email-to-fax gateway.

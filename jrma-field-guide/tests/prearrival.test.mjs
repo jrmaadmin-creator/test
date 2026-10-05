@@ -102,3 +102,21 @@ test('default settings send to the JRMA station fax via SRFax, in test mode', as
 test('report prints the JRMA reply fax', () => {
   assert.match(buildPrearrival(sampleCall(), {}, BY_ID).text, /Reply fax: 603-386-6611/);
 });
+
+import { gmailLink, safeSubject } from '../app/js/prearrival.js';
+
+test('Gmail link pre-fills recipient, subject, body, and sending account', () => {
+  const r = buildPrearrival(sampleCall(), {}, BY_ID);
+  const u = new URL(gmailLink(r, '16035322405@srfax.com', 'crew@example.org'));
+  assert.equal(u.hostname, 'mail.google.com');
+  assert.equal(u.searchParams.get('to'), '16035322405@srfax.com');
+  assert.equal(u.searchParams.get('authuser'), 'crew@example.org');
+  assert.match(u.searchParams.get('body'), /PRE-ARRIVAL REPORT/);
+  assert.equal(u.searchParams.get('su'), r.subject);
+});
+
+test('subject cannot carry SRFax cover-page commands', () => {
+  assert.equal(safeSubject('CC: fall / To=John'), 'CC: fall - To-John');
+  const c = sampleCall(); c.chiefComplaint = 'SOB/CP';
+  assert.doesNotMatch(buildPrearrival(c, {}, BY_ID).subject, /[\/=]/);
+});
