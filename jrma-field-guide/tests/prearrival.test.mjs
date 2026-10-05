@@ -98,3 +98,7 @@ test('default settings send to the JRMA station fax via SRFax, in test mode', as
   assert.equal(faxAddress(DEFAULT_SETTINGS), '16035322405@srfax.com');
   assert.equal(DEFAULT_SETTINGS.testMode, true);
 });
+
+test('report prints the JRMA reply fax', () => {
+  assert.match(buildPrearrival(sampleCall(), {}, BY_ID).text, /Reply fax: 603-386-6611/);
+});

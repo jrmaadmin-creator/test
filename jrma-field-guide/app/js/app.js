@@ -538,6 +538,7 @@ function renderPrearrival() {
     <label for="s-unit">Unit name</label><input id="s-unit" value="${esc(settings.unit)}">
     <label for="s-cb">Crew callback number</label><input id="s-cb" inputmode="tel" value="${esc(settings.callback)}">
     <label for="s-dest">Destination</label><input id="s-dest" value="${esc(settings.destination)}">
+    <label for="s-reply">JRMA reply fax (printed on the report)</label><input id="s-reply" inputmode="tel" value="${esc(settings.replyFax)}">
     <label for="s-svc">Fax service</label>
     <select id="s-svc">${Object.entries(FAX_SERVICES).map(([k, v]) => `<option value="${k}" ${settings.faxService === k ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}</select>
     ${settings.faxService === 'custom'
@@ -561,7 +562,7 @@ function bindPrearrival() {
     });
   }
   const setting = (id, key) => { $('#' + id).onchange = e => { settings[key] = e.target.value.trim(); saveSettings(); render(); }; };
-  setting('s-unit', 'unit'); setting('s-cb', 'callback'); setting('s-dest', 'destination'); setting('s-svc', 'faxService');
+  setting('s-unit', 'unit'); setting('s-cb', 'callback'); setting('s-dest', 'destination'); setting('s-svc', 'faxService'); setting('s-reply', 'replyFax');
   if ($('#s-fax')) setting('s-fax', 'faxEmail');
   if ($('#s-faxnum')) setting('s-faxnum', 'faxNumber');
   $('#s-test').onchange = e => { settings.testMode = e.target.checked; saveSettings(); renderKeep(); };

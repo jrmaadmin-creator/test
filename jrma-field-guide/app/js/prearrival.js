@@ -17,6 +17,7 @@ export const DEFAULT_SETTINGS = {
   // so a public default does not let strangers send faxes.
   faxNumber: '603-532-2405',
   faxEmail: '',   // full email-to-fax address, used only when faxService is 'custom'
+  replyFax: '603-386-6611', // JRMA's SRFax number (inbound); printed on the report so the ED can fax back
   testMode: true, // stamps TEST - NOT A PATIENT until turned off in Settings
 };
 
@@ -70,6 +71,7 @@ export function buildPrearrival(call, settings, protocolsById, now = Date.now())
     { text: `To: ${s.destination}` },
     { text: `Sent ${hhmm(now)}  |  ${etaLine}  |  ${pa.level || 'BLS'}${s.callback ? `  |  Callback ${s.callback}` : ''}` },
   ];
+  if (s.replyFax) lines.push({ text: `Reply fax: ${s.replyFax}` });
   for (const a of pa.alerts || []) lines.push({ style: 'alert', text: `*** ${a} ***` });
   lines.push(
     { style: 'head', text: 'PATIENT' },
