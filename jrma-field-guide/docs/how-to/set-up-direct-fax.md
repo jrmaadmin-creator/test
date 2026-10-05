@@ -7,8 +7,8 @@ Netlify → project **jrma-field-guide** → Project configuration → Environme
 
 | Key | Value | Set by |
 |---|---|---|
-| `SRFAX_ACCESS_ID` | SRFax account number (Account Summary page) | Owner |
-| `SRFAX_ACCESS_PWD` | SRFax login password | Owner |
+| `SRFAX_ACCESS_ID` | SRFax account number (Account Summary page) | Done 2026-10-05 |
+| `SRFAX_ACCESS_PWD` | SRFax login password | Done 2026-10-05 (rotate: change in SRFax, then here, then redeploy) |
 | `SRFAX_CALLER_ID` | 6033866611 | Done |
 | `SRFAX_SENDER_EMAIL` | cgill@jaffreyrindgeambulance.com (receives SRFax confirmations) | Done |
 | `FAX_ALLOWED_NUMBERS` | 6035322405 (comma-separate more, e.g. the MCH ED fax) | Done |
@@ -22,3 +22,5 @@ To ED → Settings → **Fax PIN**. Keep **Test mode** on. Tap **Fax now**; the 
 
 ## Adding the MCH ED fax later
 Add its 10-digit number to `FAX_ALLOWED_NUMBERS`, redeploy, and change the fax number in the app's Settings.
+
+First live test 2026-10-05: SRFax fax #1758142057 to 603-532-2405, 1 page, status Sent at 6:15 PM.
