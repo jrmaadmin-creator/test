@@ -20,6 +20,7 @@ export const DEFAULT_SETTINGS = {
   replyFax: '603-386-6611', // JRMA's SRFax number (inbound); printed on the report so the ED can fax back
   testMode: true, // stamps TEST - NOT A PATIENT until turned off in Settings
   senderEmail: '', // Gmail account to send from; must be an SRFax authorized sender
+  faxPin: '',      // crew PIN for direct fax through the JRMA server (/api/fax)
 };
 
 // Email-to-fax address formats. Add a service only with its documented format.

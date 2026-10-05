@@ -1,6 +1,6 @@
 // Offline app shell: files are cached at install so the app works with no cell signal.
 // Bump VERSION whenever any file below changes, or phones keep the old copy.
-const VERSION = 'v13';
+const VERSION = 'v14';
 const FILES = [
   './',
   'index.html',
@@ -38,7 +38,9 @@ self.addEventListener('activate', e => {
 // Network first: with signal, always serve the latest files (and refresh the cache);
 // with no signal, fall back to the cached copy. Protocol content must not go stale silently.
 self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
+  const url = new URL(e.request.url);
+  // Never cache the fax API.
+  if (e.request.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/')) return;
   e.respondWith(
     fetch(e.request)
       .then(res => {

@@ -157,3 +157,8 @@ button.big { min-height: 72px; font-size: 20px; }
 /* Netlify injects a fixed "Powered by Netlify" badge (/.netlify/scripts/hud) at bottom-right,
    on top of the tab bar, where it blocks the Meds and To ED tabs on phones. */
 #nl-badge-frame { display: none !important; }
+
+.fax-status { margin: 0; }
+.fax-status.sent { background: var(--ok-bg); color: var(--ok); }
+.fax-status.failed { background: var(--crit-bg); color: var(--crit); }
+.fax-status.pending { background: var(--warn-bg); color: var(--warn); }

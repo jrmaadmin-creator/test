@@ -529,7 +529,9 @@ function renderPrearrival() {
   </div>
   ${settings.testMode ? '<div class="flag">TEST MODE: reports are stamped "TEST - NOT A PATIENT"</div>' : ''}
   <div class="stack">
-    <button class="primary" id="sendGmail">Send with Gmail${settings.senderEmail ? ` (${esc(settings.senderEmail)})` : ''}</button>
+    <button class="primary big" id="faxNow">Fax now</button>
+    ${pa.fax ? `<div class="card fax-status ${pa.fax.state}"><b>Fax ${esc(pa.fax.state === 'sent' ? 'delivered' : pa.fax.state === 'failed' ? 'FAILED' : 'in progress')}</b><br>${esc(pa.fax.text)}</div>` : ''}
+    <button id="sendGmail">Send with Gmail${settings.senderEmail ? ` (${esc(settings.senderEmail)})` : ''}</button>
     <button id="sendFax">Send with phone Mail app</button>
     <button id="sharePdf">Share PDF</button>
   </div>
@@ -546,6 +548,7 @@ function renderPrearrival() {
       ? `<label for="s-fax">Full email-to-fax address</label><input id="s-fax" inputmode="email" value="${esc(settings.faxEmail)}">`
       : `<label for="s-faxnum">Destination fax number</label><input id="s-faxnum" inputmode="tel" value="${esc(settings.faxNumber)}" placeholder="603-555-0100">`}
     <p class="muted">Sends to: <b>${esc(faxAddress(settings) || 'not set')}</b>. Send from the email address registered with the fax service; it must have a signed BAA with JRMA. The delivery receipt comes back to that mailbox.</p>
+    <label for="s-pin">Fax PIN (from your Lieutenant; needed for Fax now)</label><input id="s-pin" inputmode="numeric" autocomplete="off" value="${esc(settings.faxPin)}">
     <label for="s-from">Send from (Gmail address registered in SRFax as an authorized sender)</label><input id="s-from" inputmode="email" value="${esc(settings.senderEmail)}" placeholder="you@jaffreyrindgeambulance.com">
     <label class="chk"><input type="checkbox" id="s-test" ${settings.testMode ? 'checked' : ''}> Test mode: stamp reports "TEST - NOT A PATIENT"</label>
   </details>`;
@@ -564,7 +567,7 @@ function bindPrearrival() {
     });
   }
   const setting = (id, key) => { $('#' + id).onchange = e => { settings[key] = e.target.value.trim(); saveSettings(); render(); }; };
-  setting('s-unit', 'unit'); setting('s-cb', 'callback'); setting('s-dest', 'destination'); setting('s-svc', 'faxService'); setting('s-reply', 'replyFax'); setting('s-from', 'senderEmail');
+  setting('s-unit', 'unit'); setting('s-cb', 'callback'); setting('s-dest', 'destination'); setting('s-svc', 'faxService'); setting('s-reply', 'replyFax'); setting('s-from', 'senderEmail'); setting('s-pin', 'faxPin');
   if ($('#s-fax')) setting('s-fax', 'faxEmail');
   if ($('#s-faxnum')) setting('s-faxnum', 'faxNumber');
   $('#s-test').onchange = e => { settings.testMode = e.target.checked; saveSettings(); renderKeep(); };
@@ -580,6 +583,7 @@ function bindPrearrival() {
     markSent(settings.testMode ? 'email-to-fax, TEST' : 'email-to-fax');
     location.href = mailtoLink(r, to);
   };
+  $('#faxNow').onclick = () => faxDirect();
   $('#sendGmail').onclick = () => {
     const to = faxAddress(settings);
     if (!to) { alert('Set the fax service and a 10-digit fax number in Settings first.'); return; }
@@ -599,6 +603,61 @@ function bindPrearrival() {
     markSent('downloaded PDF');
     render();
   };
+}
+
+// ---------- direct fax through /api/fax (Netlify function -> SRFax API) ----------
+function pdfBase64(bytes) {
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+async function faxDirect() {
+  const pa = call.prearrival;
+  const to = settings.faxNumber;
+  if (!settings.faxPin) { alert('Enter the Fax PIN in Settings first.'); return; }
+  const r = buildPrearrival(call, settings, BY_ID);
+  const setFax = (state, text) => { pa.fax = { ...(pa.fax || {}), state, text }; save(); if (tab === 'prearrival') renderKeep(); };
+  setFax('pending', `Sending to ${to}...`);
+  try {
+    const res = await fetch('api/fax', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: settings.faxPin, to, subject: r.subject, pdf: pdfBase64(buildPdf(r.lines)) }),
+    });
+    const data = await res.json().catch(() => ({ ok: false, error: `Server error (HTTP ${res.status})` }));
+    if (!data.ok) { setFax('failed', data.error); return; }
+    pa.fax.id = data.faxId;
+    pa.sentAt = Date.now();
+    call.events.push({ t: pa.sentAt, kind: 'note', text: `Pre-arrival faxed to ${settings.destination} (${to}), SRFax #${data.faxId}${settings.testMode ? ', TEST' : ''}` });
+    setFax('pending', `Queued with SRFax (#${data.faxId}). Waiting for delivery...`);
+    pollFax(data.faxId, 0);
+  } catch {
+    setFax('failed', 'No connection. Use the radio report; try again when you have signal.');
+  }
+}
+
+// SRFax statuses: In Progress, Sent, Failed, Sending Email. Poll every 10 s for up to 5 min.
+async function pollFax(id, n) {
+  const pa = call.prearrival;
+  if (!pa.fax || pa.fax.id !== id) return;
+  if (n > 30) { pa.fax.text = `Still in progress after 5 min (SRFax #${id}). Check the SRFax email receipt.`; save(); if (tab === 'prearrival') renderKeep(); return; }
+  await new Promise(ok => setTimeout(ok, 10000));
+  try {
+    const res = await fetch(`api/fax?id=${encodeURIComponent(id)}`, { headers: { 'X-Fax-Pin': settings.faxPin } });
+    const d = await res.json();
+    if (d.ok && d.status === 'Sent') {
+      pa.fax.state = 'sent'; pa.fax.text = `Delivered ${d.sent || ''}, ${d.pages || '?'} page(s). SRFax #${id}`;
+      call.events.push({ t: Date.now(), kind: 'note', text: `Pre-arrival fax delivered (SRFax #${id})` });
+    } else if (d.ok && d.status === 'Failed') {
+      pa.fax.state = 'failed'; pa.fax.text = `SRFax could not deliver: ${d.error || 'unknown reason'}. Give a radio report.`;
+    } else {
+      pa.fax.text = `${d.ok ? d.status : d.error} (SRFax #${id})`;
+      save(); if (tab === 'prearrival') renderKeep();
+      return pollFax(id, n + 1);
+    }
+    save(); if (tab === 'prearrival') renderKeep();
+  } catch { return pollFax(id, n + 1); }
 }
 
 // Re-render without jumping to the top (checkbox lists).
