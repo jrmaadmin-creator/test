@@ -1,0 +1,21 @@
+# Static site: no build step. Publish the app folder as-is.
+[build]
+  publish = "app"
+  command = ""
+
+# Phones must re-check the service worker on every visit or they keep stale content.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
