@@ -1,5 +1,7 @@
 # Heart Conduction Lab
 
+`fleet-telemetry/` is a separate project with its own `CLAUDE.md`; these instructions do not apply there.
+
 3D conduction system + synced EKG, 12-lead, timeline, quiz. Vanilla JS + three.js, bundled by esbuild into one offline HTML file.
 
 ## Commands
