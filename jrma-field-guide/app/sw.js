@@ -1,6 +1,6 @@
 // Offline app shell: files are cached at install so the app works with no cell signal.
 // Bump VERSION whenever any file below changes, or phones keep the old copy.
-const VERSION = 'v14';
+const VERSION = 'v15';
 const FILES = [
   './',
   'index.html',
