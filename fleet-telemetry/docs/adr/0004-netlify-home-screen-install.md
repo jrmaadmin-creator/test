@@ -16,4 +16,5 @@ Build a small static site (`dist/`: one HTML page with inline JS and CSS, a web 
 - Free, https, works offline after the first load.
 - The URL is public, but the page holds no data. Trip data lives only on the phone.
 - Uses the owner's connected Netlify account.
+- The screen wake lock works in Home Screen web apps only from iOS 18.4 (WebKit), so the rig phone must run iOS 18.4 or later.
 - The app requests persistent storage and reminds the user to export weekly.

@@ -14,6 +14,7 @@ Last updated 2026-10-08. Read this first when resuming in a new session.
 ## Done
 
 - Design approved in chat (scope, privacy, events, hosting). Written spec and ADRs drafted.
+- Starting thresholds sourced (GPS Insight by GVWR class; Geotab Car for personal mode) and iPhone platform limits cited in the spec (sections 7 and 11).
 
 ## Owner decisions
 
@@ -35,7 +36,9 @@ Last updated 2026-10-08. Read this first when resuming in a new session.
 - Chief question (DRAFT, pending legal review), for the weekly Chief list:
   > May I mount a dedicated iPhone in [rig] to test a driving recorder on my own driving only? It records speed and hard-brake, hard-acceleration and hard-cornering events. It stores no location, so no call addresses. Data stays on the phone. I will share results with you before any wider use, and nothing about other crew members is recorded.
 - Legal review: whether time-stamped speed records without location are PHI or discoverable; retention period.
-- Rig chassis details (native stage, OBD-II).
+- GVWR from each rig's door label (picks the threshold set).
+- Dedicated phone must run iOS 18.4 or later (screen wake lock in Home Screen apps).
+- Rig chassis make, model, year (native stage, OBD-II).
 
 ## Resume in a new session
 

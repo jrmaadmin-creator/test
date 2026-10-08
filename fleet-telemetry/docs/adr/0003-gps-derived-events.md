@@ -12,11 +12,11 @@ Hard braking, hard acceleration and hard cornering can be measured from the phon
 - Forward events (brake, accelerate): change in GPS speed over consecutive 1-second fixes.
 - Cornering events: lateral acceleration = speed x heading change rate, only above 10 mph, where GPS heading is reliable.
 - Motion sensors: store the largest jolt in each second (bumps, rough ride) for the chart. No events from motion sensors in v1.
-- Thresholds start at cited published values (see the design spec) and are tuned after field tests. Each trip records the threshold set version it used.
+- Thresholds start at GPS Insight's published starting points by vehicle weight class (design spec, section 7) and are tuned after field tests. Each trip records the threshold set version it used.
 
 ## Consequences
 
 - Works with any mount angle and no calibration step.
-- GPS updates about once per second, so very short spikes are smoothed out. Events are hard maneuvers lasting a second or more.
+- Acceleration is averaged over the time between GPS fixes, so very short spikes are smoothed out. The phone sets the update rate; the field test measures it.
 - Fixes with poor accuracy or a gap longer than 5 s are not used for events.
 - Motion-sensor events can be added later with a mount-calibration step.
