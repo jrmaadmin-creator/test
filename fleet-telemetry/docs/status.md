@@ -2,6 +2,8 @@
 
 Last updated 2026-10-08. Read this first when resuming in a new session.
 
+**Paused 10/08/2026 by the owner ("save this for later").** Next step: the owner decides iPhone web app or native Android app (`docs/explanation/platform-choice.md`, recommendation: Android), then reviews the spec. No app code written yet.
+
 ## Where things are
 
 | Item | Location |
@@ -10,6 +12,8 @@ Last updated 2026-10-08. Read this first when resuming in a new session.
 | Design spec | `docs/superpowers/specs/2026-10-08-recorder-design.md` |
 | Decisions | `docs/adr/0001` to `0004` |
 | Liability log entry | Owner's "JRMA Work Record and Liability Log", Risks table, 10/08/2026 (rig test) |
+| Draft PR | https://github.com/jrmaadmin-creator/test/pull/4 (design docs only) |
+| Platform analysis | `docs/explanation/platform-choice.md` |
 
 ## Done
 
@@ -32,7 +36,10 @@ Last updated 2026-10-08. Read this first when resuming in a new session.
 
 ## Open
 
+- **Decision: iPhone web app or native Android app.** Recommendation: Android ($0 for up to 20 phones, screen-off recording, classic Bluetooth OBD-II, no Mac). If Android: new ADR superseding 0001 and 0004, spec sections 3 and 11 rewritten.
 - Owner review of the written spec.
+- Where the owner keeps the weekly Chief question list.
+- Whether time on this project goes in the Lieutenant admin time log.
 - Chief question (DRAFT, pending legal review), for the weekly Chief list:
   > May I mount a dedicated iPhone in [rig] to test a driving recorder on my own driving only? It records speed and hard-brake, hard-acceleration and hard-cornering events. It stores no location, so no call addresses. Data stays on the phone. I will share results with you before any wider use, and nothing about other crew members is recorded.
 - Legal review: whether time-stamped speed records without location are PHI or discoverable; retention period.
