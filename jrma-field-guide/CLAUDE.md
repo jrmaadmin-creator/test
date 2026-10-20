@@ -2,6 +2,8 @@
 
 Offline phone app (PWA) for JRMA crews (EMT, AEMT, Paramedic): call flow, MIST handoff, pre-arrival report to the ED.
 
+Status, blockers and handoff: `docs/status.md`. Update it at the end of each work session.
+
 ## Rules
 - Never write protocol steps, doses, or thresholds from memory. Content comes from NH Patient Care Protocols v9.3 (owner's Google Drive; see `protocols-source/README.md`), cited by protocol number and page.
 - A protocol is `verified: true` only after the user checks it against the PDF. The validator enforces the citation.
