@@ -1,6 +1,6 @@
 # Project status and handoff
 
-Last updated 2026-09-30. Read this first when resuming in a new session.
+Last updated 2026-10-20. Read this first when resuming in a new session.
 
 ## Where things live
 
@@ -9,6 +9,7 @@ Last updated 2026-09-30. Read this first when resuming in a new session.
 | Code | `main` (PR https://github.com/jrmaadmin-creator/test/pull/1 merged 2026-09-30) |
 | Offline app | `dist/heart-conduction-lab.html` (open directly; no network needed) |
 | Shared online version | https://claude.ai/artifact/XStqD5VpYNmgcCw4JA8Mjr (crew progress database; `db` + `user` capabilities) |
+| Textbook handoff | `textbook-kit/HANDOFF.md` (for Codex: embed views, IDs, placements, rules). Zip = built app + handoff + example + embed-resize.js + `app-source/` |
 | NH protocol source | NH Patient Care Protocols v9.3 (Nov 2025), uploaded by the owner as .docx. Not committed (ADR 0004). Re-upload it to any new session that edits treatment content |
 
 ## Done
@@ -18,6 +19,7 @@ Last updated 2026-09-30. Read this first when resuming in a new session.
 - Scenarios: 9 calls (7 adult, 2 pediatric), graded against NH v9.3, optional timed mode (20 s per decision).
 - Treatment: NH v9.3 adult (1.0, 3.0, 3.1A, 3.2A, 3.4, 3.5A, 3.6) and pediatric (3.1P, 3.2P, 3.5P), Adult/Pediatric switch.
 - Crew table: quiz accuracy, mastered rhythms, scenario calls.
+- Embed mode for textbooks: `?embed=heart|strip|twelve|compare|quiz|scenario|full` (2026-10-20). Narrow-screen overflow fixed down to 320 px.
 
 ## Owner decisions
 
@@ -33,6 +35,8 @@ Last updated 2026-09-30. Read this first when resuming in a new session.
 
 ## Open
 
+- Textbook integration handed to Codex (platform and chapter list unknown to this repo).
+- Embed timing under heavy WebGL load at 390 px not re-verified (one slow run; likely test-machine load).
 - Not tested: a second crew member saving results to the shared database.
 - Offered, not yet answered:
   - Weight-based pediatric dose calculator (NH v9.3 doses only).

@@ -7,14 +7,35 @@ import { HeartView, STRUCTURE_SEGS } from './heart3d.js';
 import { LEADS, LEAD_NAMES, vectorAt } from './ecg.js';
 import { TwelveLead, drawAxes, axisWords } from './twelve.js';
 import { TREATMENT, TREATMENT_FOR, TWELVE, TWELVE_BASICS, NH_STATUS, SOURCES, INSTABILITY, treatQuestionFor, TREATMENT_PEDS, PEDS_NOTE } from './clinical.js';
-import { ScenarioView } from './scenarios.js';
+import { ScenarioView, SCENARIOS } from './scenarios.js';
 import { CompareView, SETS } from './compare.js';
 import { Quiz } from './quiz.js';
 import { initCrew } from './crew.js';
 
 const $ = (s) => document.querySelector(s);
+
+// Embed mode: ?embed=<view> shows one figure for an inline <iframe> (textbooks,
+// course pages). Options come from the query string; see textbook-kit/HANDOFF.md.
+// Embeds keep no preferences, never touch the URL and pause when scrolled away.
+const params = new URLSearchParams(location.search);
+const EMBED_MODE = { heart: 'learn', strip: 'learn', twelve: 'twelve', compare: 'compare', quiz: 'quiz', scenario: 'scenario' };
+const EMBED = EMBED_MODE[params.get('embed')] ? params.get('embed') : null;
+const flag = (k) => (params.has(k) ? params.get(k) !== '0' : null);
+// ?embed=full is the whole app inline: normal preferences and #links, plus the
+// offscreen pause and height messages below.
+const FULL = params.get('embed') === 'full';
+const EMBED_CLASS = EMBED
+  ? ` embed embed-${EMBED}${flag('controls') === false ? ' embed-bare' : ''}${flag('note') === false ? ' embed-nonote' : ''}`
+  : '';
+if (EMBED) {
+  document.documentElement.classList.add('embedded');
+  const theme = params.get('theme');
+  if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+}
+
 const store = {
   get(k, d) {
+    if (EMBED) return d;
     try {
       const v = localStorage.getItem(`hcl:${k}`);
       return v == null ? d : JSON.parse(v);
@@ -23,6 +44,7 @@ const store = {
     }
   },
   set(k, v) {
+    if (EMBED) return;
     try {
       localStorage.setItem(`hcl:${k}`, JSON.stringify(v));
     } catch {
@@ -51,12 +73,21 @@ const state = {
   tabs: store.get('tabs', {}),
   treatAge: store.get('treatAge', 'adult'),
 };
+if (EMBED) {
+  const opts = { labels: 'labels', vector: 'vector', waves: 'waveLabels', intervals: 'intervals', ladder: 'ladder', pulse: 'pulse' };
+  for (const [p, key] of Object.entries(opts)) if (flag(p) != null) state[key] = flag(p);
+  if (flag('autoplay') === false) state.playing = false;
+  const speed = Number(params.get('speed'));
+  if ([0.1, 0.25, 0.5, 1].includes(speed)) state.speed = speed;
+  if (SETS[params.get('set')]) state.compareSet = params.get('set');
+}
 
 const engine = new Engine();
 const strip = new Strip($('#strip'), { ladder: state.ladder, pulse: state.pulse });
 let heart = null;
 try {
-  heart = new HeartView($('#viewport'), $('#labels'), { onSelect: selectStructure });
+  // Strip, 12-lead and compare embeds skip WebGL so a page can hold many of them.
+  if (!EMBED || ['heart', 'quiz', 'scenario'].includes(EMBED)) heart = new HeartView($('#viewport'), $('#labels'), { onSelect: selectStructure });
 } catch (err) {
   const msg = document.createElement('p');
   msg.className = 'webgl-fallback';
@@ -72,6 +103,7 @@ const quiz = new Quiz($('#panel-quiz'), {
   groups: GROUPS,
   onLoad: (id) => loadRhythm(id, { quiz: true }),
   onStudy: (id) => {
+    if (EMBED) return;
     setMode('learn');
     loadRhythm(id);
   },
@@ -174,7 +206,7 @@ function loadRhythm(id, o = {}) {
 }
 
 function writeHash() {
-  if (!state.rhythm) return;
+  if (!state.rhythm || EMBED) return;
   const h =
     QUIZLIKE.has(state.mode)
       ? state.mode
@@ -217,7 +249,7 @@ function applyModeLayout() {
   const m = state.mode;
   const app = $('#app');
   const quizlike = QUIZLIKE.has(m);
-  app.className = `app mode-${m}${quizlike ? ' quizlike' : ''}${m === 'quiz' && quiz.settings.stripOnly ? ' strip-only' : ''}`;
+  app.className = `app mode-${m}${quizlike ? ' quizlike' : ''}${m === 'quiz' && quiz.settings.stripOnly ? ' strip-only' : ''}${EMBED_CLASS}`;
   $('#monitor').hidden = !(m === 'learn' || m === 'scenario' || (m === 'quiz' && !quiz.settings.stripOnly));
   $('#pathway').hidden = m !== 'learn';
   $('#twelve-view').hidden = m !== 'twelve';
@@ -450,6 +482,7 @@ function renderComparePanel() {
     store.set('compareSet', sel.value);
     const set = compare.show(sel.value);
     note.textContent = set.note;
+    $('#compare-note').textContent = `${set.name}. ${set.note}`;
     writeHash();
   };
   sel.addEventListener('change', show);
@@ -735,7 +768,7 @@ function bindControls() {
   };
   window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', retheme);
   new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
-  window.addEventListener('hashchange', () => routeHash());
+  if (!EMBED) window.addEventListener('hashchange', () => routeHash());
 }
 
 function routeHash() {
@@ -758,10 +791,15 @@ function routeHash() {
 // ---------- Clock ----------
 
 let last = performance.now();
+let onScreen = true;
 function frame(now) {
   const dt = Math.min((now - last) / 1000, 0.1);
   last = now;
-  const live = state.mode !== 'compare';
+  if (!onScreen) {
+    requestAnimationFrame(frame);
+    return;
+  }
+  const live = state.mode !== 'compare' && EMBED !== 'twelve';
   const dtSim = state.playing && live ? dt * state.speed : 0;
   state.simT += dtSim;
   engine.ensure(state.simT + 3);
@@ -786,6 +824,52 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
+// ---------- Embed ----------
+
+function startEmbed() {
+  const only = (params.get('rhythms') || '').split(',').filter((id) => byId[id]);
+  loadRhythm(byId[params.get('rhythm')] ? params.get('rhythm') : only[0] || 'nsr');
+  const lead = LEAD_NAMES.find((n) => n.toLowerCase() === (params.get('lead') || '').toLowerCase());
+  if (lead) setLead(lead);
+  if (EMBED === 'quiz') {
+    // Fixed settings; the reader's own quiz settings are neither used nor changed.
+    if (only.length) quiz.only = new Set(only);
+    Object.assign(quiz.settings, { hard: false, stripOnly: false, treatment: flag('treat') !== false, artifacts: only.some((id) => byId[id].group === 'Monitor artifacts') });
+  }
+  if (EMBED === 'scenario') scenario.timed = flag('timed') === true;
+  setMode(EMBED_MODE[EMBED]);
+  const kase = params.get('case');
+  if (EMBED === 'scenario' && SCENARIOS.some((s) => s.id === kase)) scenario.start(kase);
+  if (EMBED === 'twelve') $('#twelve-view .strip-spec').textContent = '10-second capture · 25 mm/s · 10 mm/mV';
+
+  watchHost();
+}
+
+// Stop drawing while the figure is scrolled out of the reader's view, and tell
+// the host page how tall to make the iframe. The full app fills a fixed height
+// on wide screens (?height=, default 860) and grows with its content on phones.
+function watchHost() {
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver((entries) => {
+      onScreen = entries[entries.length - 1].isIntersecting;
+    }).observe($('#app'));
+  }
+  if (window.parent === window) return;
+  const id = params.get('id');
+  const narrow = window.matchMedia('(max-width: 760px)');
+  const fixed = Math.min(Math.max(Number(params.get('height')) || 860, 480), 1600);
+  let lastH = 0;
+  const post = () => {
+    const h = FULL && !narrow.matches ? fixed : Math.ceil($('#app').getBoundingClientRect().height);
+    if (h === lastH) return;
+    lastH = h;
+    window.parent.postMessage({ type: 'hcl:resize', id, height: h }, '*');
+  };
+  new ResizeObserver(post).observe($('#app'));
+  narrow.addEventListener?.('change', post);
+  post();
+}
+
 const initialHash = location.hash;
 buildPickers();
 renderAnatomyPanel();
@@ -793,19 +877,24 @@ renderReadingPanel();
 bindControls();
 setSpeed([0.1, 0.25, 0.5, 1].includes(state.speed) ? state.speed : 0.25);
 setPlaying(state.playing);
-loadRhythm(store.get('rhythm', 'nsr'));
-setMode('learn');
-if (initialHash.length > 1) {
-  try {
-    history.replaceState(null, '', initialHash);
-  } catch {
-    /* ignore */
+if (EMBED) startEmbed();
+else {
+  loadRhythm(store.get('rhythm', 'nsr'));
+  setMode('learn');
+  if (initialHash.length > 1) {
+    try {
+      history.replaceState(null, '', initialHash);
+    } catch {
+      /* ignore */
+    }
+    routeHash();
   }
-  routeHash();
+  if (FULL) watchHost();
+  else
+    initCrew($('#panel-crew'), RHYTHMS).then((c) => {
+      crew = c;
+    });
 }
-initCrew($('#panel-crew'), RHYTHMS).then((c) => {
-  crew = c;
-});
 requestAnimationFrame(frame);
 
 // Test hook: lets automated checks drive the app deterministically.

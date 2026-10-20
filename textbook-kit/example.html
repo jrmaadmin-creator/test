@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Embed example: Heart Conduction Lab</title>
+<style>
+  body { margin: 0; font: 17px/1.6 Georgia, serif; color: #1b1b1b; background: #fff; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1, h2 { font-family: system-ui, sans-serif; line-height: 1.2; }
+  figure { margin: 24px 0; }
+  figcaption { font: 14px/1.4 system-ui, sans-serif; color: #555; margin-top: 6px; }
+  /* Reference embed style. Heights are starting values; embed-resize.js sets the real height. */
+  iframe.hcl { display: block; width: 100%; border: 0; border-radius: 6px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Embed example</h1>
+  <p>One of each embed view, the way a textbook chapter would use them. Open this file next to <code>heart-conduction-lab.html</code>, served over http (for example <code>python3 -m http.server</code>).</p>
+
+  <h2>Normal conduction (heart)</h2>
+  <figure>
+    <iframe class="hcl" data-hcl loading="lazy" style="height:760px"
+      title="Interactive figure: 3D heart conduction system with a live lead II strip, normal sinus rhythm"
+      src="heart-conduction-lab.html?embed=heart&rhythm=nsr"></iframe>
+    <figcaption>Figure 1. The impulse leaves the SA node, pauses in the AV node and spreads through the ventricles. Drag to rotate the heart.</figcaption>
+  </figure>
+
+  <h2>Second-degree AV block, type I (strip)</h2>
+  <figure>
+    <iframe class="hcl" data-hcl loading="lazy" style="height:330px"
+      title="Interactive figure: rhythm strip, second-degree AV block type I"
+      src="heart-conduction-lab.html?embed=strip&rhythm=avb2-1&intervals=1"></iframe>
+    <figcaption>Figure 2. The PR interval lengthens until a P wave is not conducted.</figcaption>
+  </figure>
+
+  <h2>Right bundle branch block (12-lead)</h2>
+  <figure>
+    <iframe class="hcl" data-hcl loading="lazy" style="height:560px"
+      title="Interactive figure: 12-lead ECG, right bundle branch block"
+      src="heart-conduction-lab.html?embed=twelve&rhythm=rbbb"></iframe>
+    <figcaption>Figure 3. RSR' in V1 and a wide, slurred S wave in I and V6.</figcaption>
+  </figure>
+
+  <h2>AV blocks side by side (compare)</h2>
+  <figure>
+    <iframe class="hcl" data-hcl loading="lazy" style="height:1100px"
+      title="Interactive figure: AV blocks compared with ladder-diagram timelines"
+      src="heart-conduction-lab.html?embed=compare&set=avblocks"></iframe>
+    <figcaption>Figure 4. Read the AV tier of each timeline.</figcaption>
+  </figure>
+
+  <h2>Check yourself (quiz)</h2>
+  <figure>
+    <iframe class="hcl" data-hcl loading="lazy" style="height:1100px"
+      title="Practice quiz: name the AV block"
+      src="heart-conduction-lab.html?embed=quiz&rhythms=avb1,avb2-1,avb2-2,avb3"></iframe>
+  </figure>
+
+  <h2>The full lab</h2>
+  <p><a href="heart-conduction-lab.html" target="_blank" rel="noopener">Open the Heart Conduction Lab full screen</a> (all 29 rhythms, 12-lead, compare, quiz, scenarios, NH v9.3 treatment).</p>
+  <figure>
+    <iframe class="hcl" data-hcl loading="lazy" style="height:860px"
+      title="Heart Conduction Lab: the complete interactive app"
+      src="heart-conduction-lab.html?embed=full#avb3"></iframe>
+    <figcaption>The complete app, opened on third-degree AV block. Everything in the standalone version works here.</figcaption>
+  </figure>
+
+  <h2>Case study (scenario)</h2>
+  <figure>
+    <iframe class="hcl" data-hcl loading="lazy" style="height:1200px"
+      title="Case study: complete heart block, graded against NH Patient Care Protocols v9.3"
+      src="heart-conduction-lab.html?embed=scenario&case=brady-inferior"></iframe>
+  </figure>
+</main>
+<script src="embed-resize.js" defer></script>
+</body>
+</html>

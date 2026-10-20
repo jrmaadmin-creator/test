@@ -50,7 +50,9 @@ export class Quiz {
   }
 
   pick() {
-    const pool = this.pool().filter((r) => r.id !== this.current);
+    // `only` (set by an embed) limits which rhythms are asked; answer choices still come from the full pool.
+    let pool = this.pool().filter((r) => !this.only || this.only.has(r.id));
+    if (pool.length > 1) pool = pool.filter((r) => r.id !== this.current);
     const weights = pool.map((r) => {
       const p = this.stats.per[r.id] || { r: 0, w: 0 };
       return Math.min(5, Math.max(0.35, 1 + 2 * p.w - 0.5 * p.r));
