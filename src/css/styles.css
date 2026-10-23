@@ -574,6 +574,11 @@ kbd { font: 600 0.72rem var(--font-mono); border: 1px solid var(--line); border-
   .strip-toggles { gap: 4px 12px; }
   .legend { font-size: 11px; }
   .strip-hint { margin-left: 0; }
+  .info { grid-template-columns: minmax(0, 1fr); }
+  .tabs { flex-wrap: wrap; }
+}
+@media (max-width: 400px) {
+  .modes button { min-width: 0; padding-inline: 4px; font-size: 0.75rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   .pathway li { transition: none; }
@@ -585,3 +590,29 @@ kbd { font: 600 0.72rem var(--font-mono); border: 1px solid var(--line); border-
 .case-timer[data-low="1"] { color: var(--block); }
 .case-record { font: 600 0.75rem var(--font-mono); color: var(--accent); }
 .struct strong small { margin-left: auto; }
+
+/* ---------- Embed mode (?embed=heart|strip|twelve|compare|quiz|scenario) ----------
+   One figure stacked top to bottom, sized by its content so the host page can
+   fit the iframe to it. Viewport height follows the iframe width only. */
+.compare-note { display: none; margin: 0; }
+html.embedded, html.embedded body { height: auto; }
+.app.embed { height: auto; display: flex; flex-direction: column; gap: 10px; padding: 10px 12px; }
+.app.embed .topbar { order: 1; }
+.app.embed .stage { order: 2; }
+.app.embed .strip-wrap { order: 3; }
+.app.embed .info { order: 4; display: none; }
+.app.embed .brand, .app.embed .modes, .app.embed .rhythm-select, .app.embed .rail, .app.embed .tabs { display: none; }
+.app.embed .viewport { height: clamp(240px, 58vw, 440px); min-height: 240px; }
+.app.embed .caption { font-size: var(--step--1); }
+.app.embed-strip .stage { display: none; }
+.app.embed-twelve .topbar, .app.embed-twelve .strip-wrap,
+.app.embed-compare .topbar, .app.embed-compare .strip-wrap { display: none; }
+.app.embed .twelve-scroll { flex: none; }
+.app.embed .compare-view { overflow: visible; }
+.app.embed-compare .compare-note { display: block; font-size: var(--step--1); color: var(--muted); }
+.app.embed-nonote .compare-note { display: none; }
+.app.embed-quiz .info, .app.embed-scenario .info { display: block; }
+.app.embed .panel { overflow: visible; padding: 12px 14px 14px; }
+.app.embed .quiz-settings, .app.embed .quiz-weak, .app.embed #quiz-study { display: none; }
+.app.embed-bare .topbar, .app.embed-bare .strip-toggles, .app.embed-bare .strip-hint,
+.app.embed-bare .view-tools, .app.embed-bare .hint-drag, .app.embed-bare .twelve-head .btn { display: none; }

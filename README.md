@@ -29,6 +29,8 @@ Double-click `dist/heart-conduction-lab.html`. It is one self-contained file and
 | Pulse | Arterial pulse per beat from filling time, atrial kick and coordination. Shows pulse deficit, PEA and arrest |
 | Treatment | NH Patient Care Protocols v9.3, adult (3.1A, 3.2A, 3.4, 3.5A, 3.6) and pediatric (3.1P, 3.2P, 3.5P) with an Adult/Pediatric switch; tagged by level and cited by protocol number (ADR 0004) |
 
+Embedding (textbooks, course pages): `heart-conduction-lab.html?embed=heart&rhythm=avb3` shows one figure; views `heart`, `strip`, `twelve`, `compare`, `quiz`, `scenario`, `full`. Options, IDs and the Codex handoff: [textbook-kit/HANDOFF.md](textbook-kit/HANDOFF.md).
+
 Controls: Space plays/pauses, left/right arrows change rhythm, 1–4 answer quiz questions, Enter goes to the next one. Links: `#avb2-1` (learn), `#12lead.rbbb`, `#compare.avblocks`, `#quiz`, `#scenario`.
 
 ## Develop
